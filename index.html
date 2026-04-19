@@ -2,24 +2,41 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Casatonda — Piumogna</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Casatonda</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-:root{--t1:#B5D4F4;--t1t:#0C447C;--t2:#C0DD97;--t2t:#27500A;--t3:#FAC775;--t3t:#633806;--t4:#F4C0D1;--t4t:#72243E;--bk:#378ADD;--di:#E6A817;--ab:#E24B4A;--al:#7F77DD;--bg:#f5f5f5;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--text2:#666;--text3:#999;--info:#185FA5;--success:#3B6D11;--danger:#A32D2D;--r-md:8px;--r-lg:12px;}
+:root{
+  --t2:#C0DD97;--t2t:#27500A;--t3:#FAC775;--t3t:#633806;--t4:#F4C0D1;--t4t:#72243E;--t1:#B5D4F4;--t1t:#0C447C;
+  --bk:#378ADD;--di:#E6A817;--ab:#E24B4A;--al:#7F77DD;
+  --bg:#f5f5f5;--card:#fff;--border:#e0e0e0;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --info:#185FA5;--success:#3B6D11;--danger:#A32D2D;
+  --r-md:8px;--r-lg:12px;
+}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* HEADER */
 .hdr{background:var(--text);color:white;padding:10px 14px;position:sticky;top:0;z-index:50;}
-.hdr-logo{font-size:17px;font-weight:500;margin-bottom:10px;}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.hdr-logo{font-size:17px;font-weight:500;}
 .hdr-logo span{opacity:0.5;}
+.casa-sel{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;}
+.casa-sel option{background:#1a1a1a;color:white;}
 .profiles{display:flex;gap:6px;flex-wrap:wrap;}
-.pb{padding:7px 16px;border-radius:20px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;cursor:pointer;}
+.pb{padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.75);font-size:12px;font-weight:500;cursor:pointer;}
 .pb.on{background:white;color:var(--text);}
-.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto;scrollbar-width:none;position:sticky;top:90px;z-index:40;}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto;scrollbar-width:none;position:sticky;top:92px;z-index:40;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{padding:12px 16px;font-size:12px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;}
+.tab{padding:11px 16px;font-size:12px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;}
 .tab.on{color:var(--text);border-bottom-color:var(--text);font-weight:500;}
+
 .sec{display:none;padding:12px;max-width:700px;margin:0 auto;}
 .sec.on{display:block;}
+
+/* COMMON */
 .mnav{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 .mnav button{background:none;border:1px solid var(--border);border-radius:var(--r-md);padding:5px 12px;cursor:pointer;font-size:15px;}
 .mnav-lbl{font-size:15px;font-weight:500;flex:1;text-align:center;}
@@ -28,9 +45,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sbox .sv{font-size:19px;font-weight:500;}
 .sbox .sl{font-size:10px;color:var(--text2);margin-top:2px;}
 .scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:var(--r-lg);}
+.leg{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.li{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);}
+.ld{width:24px;height:10px;border-radius:2px;}
+.card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:12px;}
+.card h3{font-size:15px;font-weight:600;margin-bottom:12px;}
+.lbl{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+.row-bw{display:flex;justify-content:space-between;align-items:center;}
+
+/* PRENOTAZIONI CAL */
 .cal{border-collapse:separate;border-spacing:0;font-size:11px;min-width:max-content;width:100%;}
 .cal th{background:#f8f8f8;border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;position:sticky;top:0;}
-.cal th.thc{position:sticky;left:0;z-index:20;background:#f8f8f8;text-align:left;padding:6px 8px;font-size:10px;color:var(--text2);font-weight:500;border-right:2px solid var(--border);min-width:72px;}
+.cal th.thc{position:sticky;left:0;z-index:20;background:#f8f8f8;text-align:left;padding:6px 8px;font-size:10px;color:var(--text2);font-weight:500;border-right:2px solid var(--border);min-width:80px;}
 .thd{text-align:center;padding:4px 0;min-width:34px;width:34px;}
 .thd.we{color:#E6A817;}.thd.tod{color:var(--info);font-weight:600;}
 .thd-n{font-size:12px;font-weight:500;display:block;}
@@ -47,9 +73,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bl{font-size:9px;font-weight:500;white-space:nowrap;padding:0 3px;overflow:hidden;text-overflow:ellipsis;}
 .fc{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);}
 .fc:hover::after{content:'+';}
+
+/* TURNI GRID */
 .gt{border-collapse:separate;border-spacing:0;font-size:11px;min-width:max-content;width:100%;}
 .gt th{background:#f8f8f8;border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;position:sticky;top:0;}
-.gt th.gtp{position:sticky;left:0;z-index:20;background:#f8f8f8;text-align:left;padding:6px 8px;font-size:10px;font-weight:500;color:var(--text2);border-right:2px solid var(--border);min-width:82px;}
+.gt th.gtp{position:sticky;left:0;z-index:20;background:#f8f8f8;text-align:left;padding:6px 8px;font-size:10px;font-weight:500;color:var(--text2);border-right:2px solid var(--border);min-width:86px;}
 .gtd-h{text-align:center;padding:4px 0;min-width:46px;width:46px;}
 .gtd-h.we{color:#E6A817;}.gtd-h.tod{color:var(--info);font-weight:600;}
 .gt td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:0;height:46px;vertical-align:middle;cursor:pointer;background:white;}
@@ -59,12 +87,83 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tt{border-radius:3px;padding:2px 5px;font-size:9px;font-weight:500;display:block;text-align:center;}
 .tt1{background:var(--t1);color:var(--t1t);}.tt2{background:var(--t2);color:var(--t2t);}.tt3{background:var(--t3);color:var(--t3t);}.tt4{background:var(--t4);color:var(--t4t);}
 .cm{font-size:8px;color:var(--text3);line-height:1.2;text-align:center;}
-.leg{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-.li{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);}
-.ld{width:24px;height:10px;border-radius:2px;}
+
+/* COMPENSI */
+.comp-t{width:100%;border-collapse:collapse;font-size:12px;}
+.comp-t th{text-align:left;font-size:10px;color:var(--text2);padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;}
+.comp-t td{padding:10px 8px;border-bottom:1px solid #f0f0f0;}
+.comp-t tr:last-child td{border-bottom:none;}
+.amt{font-weight:600;color:var(--info);}
+.tot-bar{background:#f0f5ff;border-radius:var(--r-md);padding:14px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;}
+.tot-v{font-size:24px;font-weight:600;color:var(--info);}
+
+/* RIEPILOGO */
+.rp{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;}
+.rph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.rpn{font-size:15px;font-weight:600;}.rpr{font-size:10px;color:var(--text2);margin-top:2px;}.rpt{font-size:22px;font-weight:600;}
+.rpb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.rpi{background:#f8f8f8;border-radius:var(--r-md);padding:8px;text-align:center;}
+.rpi .rl{font-size:10px;color:var(--text2);}.rpi .rv{font-size:14px;font-weight:500;margin-top:2px;}
+.pagbtn{width:100%;margin-top:10px;padding:9px;border-radius:var(--r-md);border:1px dashed var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;}
+.pagbtn.pg{background:#f0faf0;color:var(--success);border:1px solid var(--success);font-weight:500;}
+
+/* MIO MESE */
+.mio-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;}
+.giorno-box{border-radius:var(--r-md);padding:6px 2px;text-align:center;min-height:56px;border:1px solid var(--border);background:white;}
+.giorno-box.oggi{outline:2px solid var(--info);outline-offset:-2px;}
+.gb-num{font-size:12px;font-weight:500;margin-bottom:3px;}
+.gb-num.oggi-n{background:var(--text);color:white;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 3px;font-size:11px;}
+.gb-tag{font-size:8px;font-weight:500;padding:1px 3px;border-radius:2px;display:block;margin:1px auto;max-width:36px;}
+.gb-cam{font-size:7px;color:var(--text3);margin-top:1px;}
+
+/* CAMERA STATUS */
+.cam-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.cam-status-card{border-radius:var(--r-lg);padding:14px;border:2px solid var(--border);background:white;}
+.cam-status-card.pronta{background:#f0faf0;border-color:var(--success);}
+.cam-num-big{font-size:18px;font-weight:600;margin-bottom:2px;}
+.cam-name-s{font-size:10px;color:var(--text2);}
+.cam-osp{font-size:11px;margin-top:4px;color:var(--text2);}
+.cam-stato{font-size:11px;font-weight:500;margin-top:6px;}
+.cam-pronta-btn{width:100%;padding:11px;border-radius:var(--r-md);border:none;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;}
+.cam-pronta-btn.da-fare{background:var(--t2);color:var(--t2t);}
+.cam-pronta-btn.fatta{background:#f0faf0;color:var(--success);border:1px solid var(--success);}
+
+/* EXTRA */
+.extra-section{margin-top:16px;background:#fffbf0;border-radius:var(--r-lg);padding:14px;border:1px solid #f0e0a0;}
+.extra-title{font-size:14px;font-weight:600;margin-bottom:12px;}
+.extra-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.extra-item{border-radius:var(--r-md);border:2px solid var(--border);padding:10px 6px;cursor:pointer;background:white;text-align:center;}
+.extra-item.sel{border-color:var(--t3t);background:var(--t3);}
+.ei-icon{font-size:20px;margin-bottom:3px;}
+.ei-name{font-size:11px;font-weight:600;}
+.ei-price{font-size:10px;color:var(--text2);margin-top:1px;}
+.extra-item.sel .ei-price{color:var(--t3t);}
+.extra-vetri{border-radius:var(--r-md);border:1px solid var(--border);padding:12px;background:white;margin-bottom:10px;}
+.extra-vetri-title{font-size:12px;font-weight:600;margin-bottom:8px;}
+.vetri-cam-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.vetri-cam{padding:8px 3px;border-radius:var(--r-md);border:1px solid var(--border);text-align:center;font-size:10px;cursor:pointer;background:white;font-weight:500;}
+.vetri-cam.sel{background:var(--t2);color:var(--t2t);border-color:var(--t2t);}
+.ore-extra{border-radius:var(--r-md);border:1px solid var(--border);padding:12px;background:white;margin-bottom:10px;}
+.ore-extra label{font-size:12px;font-weight:600;display:block;margin-bottom:8px;}
+.ore-input{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.ore-field{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.ore-field label{font-size:10px;color:var(--text2);}
+.ore-field input{width:60px;border:1px solid var(--border);border-radius:var(--r-md);padding:8px;font-size:16px;font-weight:600;text-align:center;font-family:inherit;}
+.note-extra{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;background:white;}
+.extra-summary{background:white;border-radius:var(--r-md);padding:12px;margin-bottom:10px;border:1px solid #f0e0a0;}
+.extra-summary-title{font-size:11px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;font-weight:500;}
+.extra-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
+.extra-total{display:flex;justify-content:space-between;font-size:15px;font-weight:600;padding-top:8px;margin-top:6px;border-top:1px solid var(--border);}
+
+.mt-card{background:#f8f8f8;border-radius:var(--r-lg);padding:16px;margin-bottom:12px;border-left:4px solid var(--border);}
+.mt-tit{font-size:16px;font-weight:600;margin-bottom:3px;}
+.mt-ora{font-size:12px;color:var(--text2);margin-bottom:8px;}
+
+/* POPUP */
 .pbg{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
 .pbox{background:white;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
-.pbox h3{font-size:17px;font-weight:600;margin-bottom:3px;}.psub{font-size:12px;color:var(--text2);margin-bottom:16px;}
+.pbox h3{font-size:17px;font-weight:600;margin-bottom:3px;}
+.psub{font-size:12px;color:var(--text2);margin-bottom:16px;}
 .pcl{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);margin-top:-4px;}
 .topts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .topt{padding:12px;border-radius:var(--r-md);border:1px solid var(--border);cursor:pointer;text-align:center;font-size:13px;}
@@ -78,77 +177,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cko .cn2{font-size:12px;font-weight:500;}
 .canopts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
 .canopt{padding:9px 4px;border-radius:var(--r-md);border:1px solid var(--border);text-align:center;cursor:pointer;font-size:11px;font-weight:500;color:var(--text2);}
-.canopt.sbk{background:#E6F1FB;color:#0C447C;border-color:var(--bk);}.canopt.sdi{background:#FEF7E0;color:#7A5200;border-color:var(--di);}
-.canopt.sab{background:#FCEBEB;color:#791F1F;border-color:var(--ab);}.canopt.sal{background:#EEEDFE;color:#26215C;border-color:var(--al);}
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}.fg.f1{grid-template-columns:1fr;}
+.canopt.sbk{background:#E6F1FB;color:#0C447C;border-color:var(--bk);}
+.canopt.sdi{background:#FEF7E0;color:#7A5200;border-color:var(--di);}
+.canopt.sab{background:#FCEBEB;color:#791F1F;border-color:var(--ab);}
+.canopt.sal{background:#EEEDFE;color:#26215C;border-color:var(--al);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.fg.f1{grid-template-columns:1fr;}
 .fl label{display:block;font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;}
 .fl input,.fl select{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:13px;font-family:inherit;}
 .det{background:#f8f8f8;border-radius:var(--r-md);padding:12px;margin-bottom:14px;}
 .dr{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);}
-.dr:last-child{border-bottom:none;}.dr span:first-child{color:var(--text2);}.dr span:last-child{font-weight:500;}
-.comp-t{width:100%;border-collapse:collapse;font-size:12px;}
-.comp-t th{text-align:left;font-size:10px;color:var(--text2);padding:6px 8px;border-bottom:1px solid var(--border);text-transform:uppercase;}
-.comp-t td{padding:10px 8px;border-bottom:1px solid #f0f0f0;}
-.comp-t tr:last-child td{border-bottom:none;}.amt{font-weight:600;color:var(--info);}
-.tot-bar{background:#f0f5ff;border-radius:var(--r-md);padding:14px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;}
-.tot-v{font-size:24px;font-weight:600;color:var(--info);}
-.rp{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:10px;}
-.rph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
-.rpn{font-size:15px;font-weight:600;}.rpr{font-size:10px;color:var(--text2);margin-top:2px;}.rpt{font-size:22px;font-weight:600;}
-.rpb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.rpi{background:#f8f8f8;border-radius:var(--r-md);padding:8px;text-align:center;}
-.rpi .rl{font-size:10px;color:var(--text2);}.rpi .rv{font-size:14px;font-weight:500;margin-top:2px;}
-.pagbtn{width:100%;margin-top:10px;padding:9px;border-radius:var(--r-md);border:1px dashed var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;}
-.pagbtn.pg{background:#f0faf0;color:var(--success);border:1px solid var(--success);font-weight:500;}
-.mio-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;}
-.giorno-box{border-radius:var(--r-md);padding:6px 2px;text-align:center;min-height:56px;border:1px solid var(--border);background:white;}
-.giorno-box.oggi{outline:2px solid var(--info);outline-offset:-2px;}
-.gb-num{font-size:12px;font-weight:500;margin-bottom:3px;}
-.gb-num.oggi-n{background:var(--text);color:white;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 3px;font-size:11px;}
-.gb-tag{font-size:8px;font-weight:500;padding:1px 3px;border-radius:2px;display:block;margin:1px auto;max-width:36px;}
-.gb-cam{font-size:7px;color:var(--text3);margin-top:1px;}
-.cam-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
-.cam-status-card{border-radius:var(--r-lg);padding:14px;border:2px solid var(--border);background:white;}
-.cam-status-card.pronta{background:#f0faf0;border-color:var(--success);}
-.cam-num-big{font-size:20px;font-weight:600;margin-bottom:2px;}
-.cam-name-s{font-size:11px;color:var(--text2);}
-.cam-osp{font-size:11px;margin-top:4px;color:var(--text2);}
-.cam-stato{font-size:11px;font-weight:500;margin-top:6px;}
-.cam-pronta-btn{width:100%;padding:12px;border-radius:var(--r-md);border:none;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;}
-.cam-pronta-btn.da-fare{background:var(--t2);color:var(--t2t);}
-.cam-pronta-btn.fatta{background:#f0faf0;color:var(--success);border:1px solid var(--success);}
-/* EXTRA */
-.extra-section{margin-top:16px;background:#fffbf0;border-radius:var(--r-lg);padding:14px;border:1px solid #f0e0a0;}
-.extra-title{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text);}
-.extra-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
-.extra-item{border-radius:var(--r-md);border:2px solid var(--border);padding:10px 6px;cursor:pointer;background:white;text-align:center;transition:all 0.15s;}
-.extra-item.sel{border-color:var(--t3t);background:var(--t3);}
-.ei-icon{font-size:22px;margin-bottom:4px;}
-.ei-name{font-size:11px;font-weight:600;}
-.ei-price{font-size:10px;color:var(--text2);margin-top:2px;}
-.extra-item.sel .ei-price{color:var(--t3t);}
-.extra-vetri{border-radius:var(--r-md);border:1px solid var(--border);padding:12px;background:white;margin-bottom:10px;}
-.extra-vetri-title{font-size:12px;font-weight:600;margin-bottom:8px;}
-.vetri-cam-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
-.vetri-cam{padding:8px 3px;border-radius:var(--r-md);border:1px solid var(--border);text-align:center;font-size:11px;cursor:pointer;background:white;font-weight:500;}
-.vetri-cam.sel{background:var(--t2);color:var(--t2t);border-color:var(--t2t);}
-.ore-extra{border-radius:var(--r-md);border:1px solid var(--border);padding:12px;background:white;margin-bottom:10px;}
-.ore-extra label{font-size:12px;font-weight:600;display:block;margin-bottom:8px;}
-.ore-input{display:flex;align-items:center;gap:12px;}
-.ore-input button{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:white;font-size:20px;cursor:pointer;}
-.ore-val{font-size:22px;font-weight:600;min-width:30px;text-align:center;}
-.note-extra{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;background:white;}
-.extra-summary{background:white;border-radius:var(--r-md);padding:12px;margin-bottom:10px;border:1px solid #f0e0a0;}
-.extra-summary-title{font-size:11px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;font-weight:500;}
-.extra-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
-.extra-total{display:flex;justify-content:space-between;font-size:15px;font-weight:600;padding-top:8px;margin-top:6px;border-top:1px solid var(--border);}
-.mt-card{background:#f8f8f8;border-radius:var(--r-lg);padding:16px;margin-bottom:12px;border-left:4px solid var(--border);}
-.mt-tit{font-size:16px;font-weight:600;margin-bottom:3px;}
-.mt-ora{font-size:12px;color:var(--text2);margin-bottom:8px;}
-.card{background:white;border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:12px;}
-.card h3{font-size:15px;font-weight:600;margin-bottom:12px;}
-.lbl{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
-.row-bw{display:flex;justify-content:space-between;align-items:center;}
+.dr:last-child{border-bottom:none;}
+.dr span:first-child{color:var(--text2);}.dr span:last-child{font-weight:500;}
+
 .bsave{width:100%;padding:13px;border-radius:var(--r-md);border:none;background:var(--text);color:white;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;}
 .bdel{width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--danger);background:transparent;color:var(--danger);font-size:13px;cursor:pointer;margin-top:8px;}
 .bcan{width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;margin-top:6px;}
@@ -156,232 +197,510 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bdg{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;}
 .bdg-bk{background:#E6F1FB;color:#0C447C;}.bdg-di{background:#FEF7E0;color:#7A5200;}
 .bdg-ab{background:#FCEBEB;color:#791F1F;}.bdg-al{background:#EEEDFE;color:#26215C;}
+
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;padding:12px 20px;border-radius:var(--r-md);font-size:13px;z-index:999;transition:transform 0.25s;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
+
 <div class="hdr">
-  <div class="hdr-logo">Casa<span>tonda</span> — Piumogna</div>
-  <div class="profiles">
-    <button class="pb on" onclick="setP('admin')" id="pb-admin">Staff</button>
-    <button class="pb" onclick="setP('isa')" id="pb-isa">Isa</button>
-    <button class="pb" onclick="setP('graziella')" id="pb-graziella">Graziella</button>
-    <button class="pb" onclick="setP('julka')" id="pb-julka">Julka</button>
+  <div class="hdr-top">
+    <div class="hdr-logo">Casa<span>tonda</span></div>
+    <select class="casa-sel" id="casa-sel" onchange="setCasa(this.value)">
+      <option value="piumogna">🏠 Casa Piumogna</option>
+      <option value="cvb">🍷 Casa Vino e Birra</option>
+      <option value="liberty">🌸 Casa Liberty</option>
+      <option value="rustico">🌿 Rustico Conceprio</option>
+      <option value="rurale">🌾 Casa Rurale</option>
+    </select>
   </div>
+  <div class="profiles" id="profiles-bar"></div>
 </div>
-<div class="tabs">
-  <div class="tab on" data-t="pren" onclick="sw('pren')" id="tab-pren">Prenotazioni</div>
-  <div class="tab" data-t="turni" onclick="sw('turni')">Turni</div>
-  <div class="tab adm" data-t="comp" onclick="sw('comp')">Compensi</div>
-  <div class="tab adm" data-t="riepilogo" onclick="sw('riepilogo')">Riepilogo</div>
-  <div class="tab col" data-t="mio" onclick="sw('mio')">Il mio mese</div>
-</div>
-<div class="sec on" id="sec-pren">
-  <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-p">Aprile 2026</span><button onclick="chM(1)">&#8250;</button></div></div>
+
+<div class="tabs" id="tabs-bar"></div>
+
+<div class="sec" id="sec-pren">
+  <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-p"></span><button onclick="chM(1)">&#8250;</button></div></div>
   <div class="stats" id="stats-p"></div>
   <div class="leg"><div class="li"><div class="ld" style="background:var(--bk)"></div>Booking</div><div class="li"><div class="ld" style="background:var(--di)"></div>Interno</div><div class="li"><div class="ld" style="background:var(--ab)"></div>Airbnb</div><div class="li"><div class="ld" style="background:var(--al)"></div>Altro</div></div>
   <div class="scroll-x"><table class="cal" id="cal-p"></table></div>
 </div>
+
 <div class="sec" id="sec-turni">
-  <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-t">Aprile 2026</span><button onclick="chM(1)">&#8250;</button></div></div>
-  <div class="leg"><div class="li"><div class="ld" style="background:var(--t1)"></div>T1 colazione</div><div class="li"><div class="ld" style="background:var(--t2)"></div>T2 pulizie</div><div class="li"><div class="ld" style="background:var(--t3)"></div>T3 cena</div><div class="li"><div class="ld" style="background:var(--t4)"></div>T4 brunch</div></div>
+  <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-t"></span><button onclick="chM(1)">&#8250;</button></div></div>
+  <div class="leg"><div class="li"><div class="ld" style="background:var(--t1)"></div>T1</div><div class="li"><div class="ld" style="background:var(--t2)"></div>T2</div><div class="li"><div class="ld" style="background:var(--t3)"></div>T3</div><div class="li"><div class="ld" style="background:var(--t4)"></div>T4</div></div>
   <div class="scroll-x"><table class="gt" id="grid-t"></table></div>
 </div>
+
 <div class="sec" id="sec-comp">
   <div class="card">
     <div class="row-bw" style="margin-bottom:12px;"><h3 style="margin:0;">Compensi</h3><div style="display:flex;gap:6px;"><button onclick="chD(-1)" style="background:none;border:1px solid var(--border);border-radius:var(--r-md);padding:4px 10px;cursor:pointer;font-size:15px;">&#8249;</button><span style="font-size:13px;font-weight:500;padding:4px 8px;" id="dlbl-c"></span><button onclick="chD(1)" style="background:none;border:1px solid var(--border);border-radius:var(--r-md);padding:4px 10px;cursor:pointer;font-size:15px;">&#8250;</button></div></div>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:12px;">T1 calcolato su camere di ieri · T2 Fr.30/camera · Extra inclusi</p>
     <table class="comp-t"><thead><tr><th>Persona</th><th>Turno</th><th>Dettaglio</th><th>Fr.</th></tr></thead><tbody id="comp-body"></tbody></table>
-    <div class="tot-bar"><span style="font-size:12px;color:var(--text2);">Totale personale</span><span class="tot-v" id="comp-tot">Fr. 0</span></div>
+    <div class="tot-bar"><span style="font-size:12px;color:var(--text2);">Totale</span><span class="tot-v" id="comp-tot">Fr. 0</span></div>
   </div>
   <div class="card"><h3>Entrate vs costi</h3><div class="stats" id="stats-comp"></div></div>
 </div>
+
 <div class="sec" id="sec-riepilogo">
-  <div class="row-bw" style="margin-bottom:12px;"><span style="font-size:15px;font-weight:600;" id="riepilogo-lbl">Aprile 2026</span><select onchange="chRiep(this.value)" style="font-size:12px;border:1px solid var(--border);border-radius:var(--r-md);padding:6px;"><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option></select></div>
+  <div class="row-bw" style="margin-bottom:12px;"><span style="font-size:15px;font-weight:600;" id="riepilogo-lbl"></span><select onchange="chRiep(this.value)" style="font-size:12px;border:1px solid var(--border);border-radius:var(--r-md);padding:6px;"><option value="3">Aprile</option><option value="4">Maggio</option><option value="5">Giugno</option><option value="6">Luglio</option><option value="7">Agosto</option></select></div>
   <div id="riepilogo-list"></div>
-  <div style="background:var(--text);color:white;border-radius:var(--r-lg);padding:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:10px;opacity:0.6;">Costo personale</div><div style="font-size:24px;font-weight:600;margin-top:3px;">Fr. 2'855</div></div><div style="text-align:right;"><div style="font-size:10px;opacity:0.6;">Entrate stimate</div><div style="font-size:24px;font-weight:600;color:#B5D4F4;margin-top:3px;">Fr. 4'320</div></div></div>
 </div>
+
 <div class="sec" id="sec-mio"><div id="mio-content"></div></div>
+
 <div id="pop-root"></div>
 <div class="toast" id="toast"></div>
+
 <script>
-const CAM=[{n:'101',nm:'Celeste'},{n:'102',nm:'Suite Rossa'},{n:'201',nm:'Gialla'},{n:'202',nm:'Suite Dec.'},{n:'301',nm:'Verde'},{n:'302',nm:'White'},{n:'401',nm:'M.Monte'},{n:'402',nm:'M.Valle'}];
-const PERS=['Serena','Isa','Graziella','Julka'];
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const GG=['Do','Lu','Ma','Me','Gi','Ve','Sa'];
 const GGF=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
 const CL={booking:'bk',diretto:'di',airbnb:'ab',altro:'al'};
 const TI={T1:{l:'T1 — Colazione + Lavanderia',o:'07:30–11:00',c:'tt1',bg:'#B5D4F4',tc:'#0C447C'},T2:{l:'T2 — Pulizie camere',o:'11:00–15:00',c:'tt2',bg:'#C0DD97',tc:'#27500A'},T3:{l:'T3 — Cena / Evento',o:'18:00–22:00',c:'tt3',bg:'#FAC775',tc:'#633806'},T4:{l:'T4 — Brunch domenicale',o:'09:00–13:00',c:'tt4',bg:'#F4C0D1',tc:'#72243E'}};
-const EXTRAS_DEF=[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:15,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'}];
-let profile='admin',vMonth=new Date(2026,3,1),vDay=new Date(2026,3,11);
+
+// ── CASE ──
+const CASE={
+  piumogna:{
+    nome:'Casa Piumogna',
+    camere:[{n:'101',nm:'Celeste'},{n:'102',nm:'Suite Rossa'},{n:'201',nm:'Gialla'},{n:'202',nm:'Suite Dec.'},{n:'301',nm:'Verde'},{n:'302',nm:'White'},{n:'401',nm:'M.Monte'},{n:'402',nm:'M.Valle'}],
+    personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5','Personale 6'],
+    hasPren:true,
+    turniTypes:['T1','T2','T3','T4'],
+    extras:[
+      {id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},
+      {id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},
+      {id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'},
+    ],
+    hasVetri:true,
+    vetriPrezzo:20,
+    tariffaT1Base:true
+  },
+  cvb:{
+    nome:'Casa Vino e Birra',
+    camere:[{n:'Piazzetta',nm:'Studio Piazzetta'},{n:'Tiglio',nm:'Studio Il Tiglio'},{n:'Ticinella',nm:'Studio Ticinella'},{n:'Nala',nm:'Openspace La Nala'},{n:'Loft',nm:'Loft al Pozzon'},{n:'Cascata0',nm:'Cascata 0'},{n:'Cascata1',nm:'Cascata 1'},{n:'Cascata2',nm:'Cascata 2'}],
+    tariffeCam:{Piazzetta:30,Tiglio:30,Ticinella:30,Cascata0:30,Cascata1:35,Cascata2:35,Nala:40,Loft:45},
+    supOspiti:5,
+    personale:['Fernanda','Personale 2','Personale 3','Personale 4'],
+    hasPren:true,
+    turniTypes:['T2'],
+    extras:[
+      {id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},
+      {id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},
+      {id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},
+      {id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},
+      {id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},
+      {id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},
+      {id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},
+    ],
+    hasVetri:true,
+    vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10}
+  },
+  liberty:{
+    nome:'Casa Liberty',
+    camere:[{n:'DolceVita',nm:'Dolce Vita'},{n:'VoceLuna',nm:'Voce della Luna'},{n:'Mansarda',nm:'Mansarda della Cascata'}],
+    tariffeCam:{DolceVita:45,VoceLuna:45,Mansarda:45},
+    supOspiti:5,
+    personale:['Nadja','Personale 2','Personale 3','Personale 4'],
+    hasPren:true,
+    turniTypes:['T2'],
+    extras:[
+      {id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},
+      {id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},
+      {id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},
+      {id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},
+    ],
+    hasVetri:false
+  },
+  rustico:{
+    nome:'Rustico Conceprio',
+    camere:[{n:'R1',nm:'Conceprio 1'}],
+    personale:['Manuela','Personale 2','Personale 3'],
+    hasPren:true,
+    turniTypes:['T2'],
+    extras:[
+      {id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},
+    ],
+    hasVetri:false,
+    hasLetti:true,
+    lettoPrezzzo:10
+  },
+  rurale:{
+    nome:'Casa Rurale',
+    camere:[{n:'CR1',nm:'Casa Rurale 1'}],
+    personale:['Nadja','Personale 2','Personale 3'],
+    hasPren:true,
+    turniTypes:['T2'],
+    extras:[
+      {id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},
+    ],
+    hasVetri:false,
+    hasLetti:true,
+    lettoPrezzzo:10
+  }
+};
+
+let casaId='piumogna',profile='admin';
+let vMonth=new Date(2026,3,1),vDay=new Date(2026,3,11);
 const TODAY=new Date(2026,3,11),TK=fmtD(TODAY);
 let nextId=100,selCan='diretto',popTipo=null,popCamere=[];
 const camereState={},extraState={};
-const pren=[{id:'p1',cam:'101',ci:'2026-04-09',co:'2026-04-14',osp:2,tar:120,can:'booking',nome:'Rossi'},{id:'p2',cam:'101',ci:'2026-04-16',co:'2026-04-19',osp:2,tar:130,can:'diretto',nome:'Müller'},{id:'p3',cam:'102',ci:'2026-04-11',co:'2026-04-13',osp:2,tar:120,can:'airbnb',nome:'Smith'},{id:'p4',cam:'102',ci:'2026-04-20',co:'2026-04-25',osp:2,tar:140,can:'diretto',nome:'Bianchi'},{id:'p5',cam:'201',ci:'2026-04-08',co:'2026-04-12',osp:3,tar:140,can:'booking',nome:'Wagner'},{id:'p6',cam:'201',ci:'2026-04-18',co:'2026-04-22',osp:2,tar:120,can:'diretto',nome:'Ferrari'},{id:'p7',cam:'202',ci:'2026-04-11',co:'2026-04-16',osp:3,tar:150,can:'airbnb',nome:'Dubois'},{id:'p8',cam:'301',ci:'2026-04-14',co:'2026-04-17',osp:2,tar:120,can:'booking',nome:'Chen'},{id:'p9',cam:'302',ci:'2026-04-10',co:'2026-04-11',osp:1,tar:120,can:'diretto',nome:'Colombo'},{id:'p10',cam:'302',ci:'2026-04-22',co:'2026-04-28',osp:2,tar:130,can:'booking',nome:'Bernasconi'},{id:'p11',cam:'401',ci:'2026-04-05',co:'2026-04-08',osp:2,tar:120,can:'diretto',nome:'Galli'},{id:'p12',cam:'401',ci:'2026-04-19',co:'2026-04-24',osp:2,tar:140,can:'airbnb',nome:'Nakamura'},{id:'p13',cam:'402',ci:'2026-04-12',co:'2026-04-15',osp:2,tar:120,can:'diretto',nome:'Fontana'},{id:'p14',cam:'402',ci:'2026-04-25',co:'2026-04-29',osp:2,tar:130,can:'booking',nome:'Huber'}];
-const turni={'2026-04-11':{Isa:{t:'T1'},Graziella:{t:'T2',c:['101','302']}},'2026-04-12':{Serena:{t:'T1'},Isa:{t:'T2',c:['101','201','302']}},'2026-04-13':{Serena:{t:'T1'},Isa:{t:'T2',c:['101','201']}},'2026-04-14':{Serena:{t:'T1'},Graziella:{t:'T2',c:['302']}},'2026-04-15':{Isa:{t:'T1'},Graziella:{t:'T2',c:['201','202']}},'2026-04-16':{Isa:{t:'T1'},Graziella:{t:'T2',c:['201','202']},Serena:{t:'T3'}},'2026-04-17':{Serena:{t:'T4'},Isa:{t:'T4'},Graziella:{t:'T2',c:['201','202','401']}},'2026-04-18':{Serena:{t:'T1'},Isa:{t:'T2',c:['201','301','401']}},'2026-04-19':{Serena:{t:'T1'},Isa:{t:'T2',c:['201']},Julka:{t:'T1'}},'2026-04-20':{Serena:{t:'T1'},Graziella:{t:'T2',c:['201','302']}},'2026-04-21':{Serena:{t:'T1'},Isa:{t:'T2',c:['302']}},'2026-04-22':{Graziella:{t:'T1'},Isa:{t:'T2',c:['101','302']}},'2026-04-23':{Serena:{t:'T1'},Isa:{t:'T2',c:['101','201']},Julka:{t:'T2',c:['302']}},'2026-04-24':{Serena:{t:'T1'},Graziella:{t:'T2',c:['401','402']}},'2026-04-25':{Isa:{t:'T1'},Graziella:{t:'T2',c:['101','201','301']}},'2026-04-26':{Serena:{t:'T4'},Isa:{t:'T4'},Graziella:{t:'T2',c:['302','402']}},'2026-04-28':{Serena:{t:'T1'},Graziella:{t:'T2',c:['101','201','301']}}};
+
+// Dati prenotazioni per casa
+const prenData={
+  piumogna:[
+    {id:'p1',cam:'101',ci:'2026-04-09',co:'2026-04-14',osp:2,tar:120,can:'booking',nome:'Rossi'},
+    {id:'p2',cam:'102',ci:'2026-04-11',co:'2026-04-13',osp:2,tar:120,can:'airbnb',nome:'Smith'},
+    {id:'p3',cam:'201',ci:'2026-04-08',co:'2026-04-12',osp:3,tar:140,can:'booking',nome:'Wagner'},
+    {id:'p4',cam:'202',ci:'2026-04-11',co:'2026-04-16',osp:3,tar:150,can:'airbnb',nome:'Dubois'},
+    {id:'p5',cam:'301',ci:'2026-04-14',co:'2026-04-17',osp:2,tar:120,can:'booking',nome:'Chen'},
+    {id:'p6',cam:'401',ci:'2026-04-19',co:'2026-04-24',osp:2,tar:140,can:'airbnb',nome:'Nakamura'},
+    {id:'p7',cam:'402',ci:'2026-04-12',co:'2026-04-15',osp:2,tar:120,can:'diretto',nome:'Fontana'},
+  ],
+  cvb:[
+    {id:'c1',cam:'Piazzetta',ci:'2026-04-15',co:'2026-04-19',osp:2,tar:90,can:'airbnb',nome:'Müller'},
+    {id:'c2',cam:'Nala',ci:'2026-04-12',co:'2026-04-16',osp:4,tar:120,can:'booking',nome:'Ferrari'},
+  ],
+  liberty:[],rustico:[],rurale:[]
+};
+
+const turniData={
+  piumogna:{
+    '2026-04-11':{Isa:{t:'T1'},Graziella:{t:'T2',c:['101','302']}},
+    '2026-04-12':{Serena:{t:'T1'},Isa:{t:'T2',c:['101','201','302']}},
+    '2026-04-15':{Isa:{t:'T1'},Graziella:{t:'T2',c:['201','202']}},
+    '2026-04-17':{Serena:{t:'T4'},Isa:{t:'T4'}},
+    '2026-04-19':{Serena:{t:'T1'},Julka:{t:'T1'}},
+  },
+  cvb:{
+    '2026-04-16':{Fernanda:{t:'T2',c:['Piazzetta']}},
+    '2026-04-19':{Fernanda:{t:'T2',c:['Nala']}},
+  },
+  liberty:{},rustico:{},rurale:{}
+};
+
+function casa(){return CASE[casaId];}
+function pren(){return prenData[casaId]||[];}
+function turni(){return turniData[casaId]||{};}
 function fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseD(s){return new Date(s+'T12:00:00');}
 function addD(d,n){return new Date(d.getTime()+n*86400000);}
 function diffD(a,b){return Math.round((parseD(b)-parseD(a))/86400000);}
-function getPren(cam,key){return pren.find(p=>p.cam===cam&&p.ci<=key&&p.co>key);}
+function getPren(cam,key){return pren().find(p=>p.cam===cam&&p.ci<=key&&p.co>key);}
 function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 function capF(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
-function getEx(key,persona){if(!extraState[key])extraState[key]={};if(!extraState[key][persona])extraState[key][persona]={scale:false,culla:false,sputnik:false,vetri:[],ore:0,note:''};return extraState[key][persona];}
-function calcExTot(ex){let t=0;if(ex.scale)t+=20;if(ex.culla)t+=15;if(ex.sputnik)t+=35;t+=ex.vetri.length*20;return t;}
+function isAdmin(){return profile==='admin';}
+function getPersonaKey(){
+  const m={};
+  casa().personale.forEach(p=>{ m[p.toLowerCase().replace(/\s+/g,'_')]=p; });
+  return m;
+}
+function profileToPersName(){
+  if(profile==='admin')return null;
+  const m=getPersonaKey();
+  return m[profile]||null;
+}
+
+function setCasa(id){
+  casaId=id;
+  profile='admin';
+  buildUI();
+  renderAll();
+  toast('Casa: '+casa().nome);
+}
+
+function buildUI(){
+  // Profiles
+  const pb=document.getElementById('profiles-bar');
+  const people=['admin',...casa().personale.map(p=>p.toLowerCase().replace(/\s+/g,'_'))];
+  const labels=['Staff',...casa().personale];
+  pb.innerHTML=people.map((p,i)=>`<button class="pb${profile===p?' on':''}" onclick="setP('${p}')" id="pb-${p}">${labels[i]}</button>`).join('');
+  // Tabs
+  const tb=document.getElementById('tabs-bar');
+  let tabs='';
+  if(isAdmin()){
+    tabs+=`<div class="tab${curTab==='pren'?' on':''}" data-t="pren" onclick="sw('pren')">Prenotazioni</div>`;
+  }
+  tabs+=`<div class="tab${curTab==='turni'?' on':''}" data-t="turni" onclick="sw('turni')">Turni</div>`;
+  if(isAdmin()){
+    tabs+=`<div class="tab${curTab==='comp'?' on':''}" data-t="comp" onclick="sw('comp')">Compensi</div>`;
+    tabs+=`<div class="tab${curTab==='riepilogo'?' on':''}" data-t="riepilogo" onclick="sw('riepilogo')">Riepilogo</div>`;
+  } else {
+    tabs+=`<div class="tab${curTab==='mio'?' on':''}" data-t="mio" onclick="sw('mio')">Il mio mese</div>`;
+  }
+  tb.innerHTML=tabs;
+}
+
+let curTab='pren';
 function setP(p){
   profile=p;
-  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('on'));
-  document.getElementById('pb-'+p).classList.add('on');
-  document.querySelectorAll('.adm').forEach(el=>el.style.display=p==='admin'?'':'none');
-  document.querySelectorAll('.col').forEach(el=>el.style.display=p!=='admin'?'':'none');
-  document.getElementById('tab-pren').style.display=p==='admin'?'':'none';
-  if(p!=='admin'){const at=document.querySelector('.tab.on');if(at&&(at.classList.contains('adm')||at.dataset.t==='pren'))sw('turni');else{renderTurni();renderMio();}}
-  else{document.getElementById('tab-pren').style.display='';renderTurni();}
-  toast('Profilo: '+capF(p));
+  if(!isAdmin()&&(curTab==='pren'||curTab==='comp'||curTab==='riepilogo'))curTab='turni';
+  if(!isAdmin())curTab='turni';
+  buildUI();
+  renderAll();
+  toast('Profilo: '+(p==='admin'?'Staff':casa().personale.find(x=>x.toLowerCase().replace(/\s+/g,'_')===p)||p));
 }
-function sw(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));document.querySelector('[data-t="'+t+'"]').classList.add('on');document.getElementById('sec-'+t).classList.add('on');if(t==='pren')renderPren();if(t==='turni')renderTurni();if(t==='comp')renderComp();if(t==='riepilogo')renderRiep();if(t==='mio')renderMio();}
+
+function sw(t){
+  curTab=t;
+  buildUI();
+  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
+  document.getElementById('sec-'+t).classList.add('on');
+  if(t==='pren')renderPren();
+  if(t==='turni')renderTurni();
+  if(t==='comp')renderComp();
+  if(t==='riepilogo')renderRiep();
+  if(t==='mio')renderMio();
+}
+
+function renderAll(){
+  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
+  const t=curTab;
+  const el=document.getElementById('sec-'+t);
+  if(el)el.classList.add('on');
+  if(t==='pren')renderPren();
+  else if(t==='turni')renderTurni();
+  else if(t==='comp')renderComp();
+  else if(t==='riepilogo')renderRiep();
+  else if(t==='mio')renderMio();
+}
+
 function chM(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);renderPren();renderTurni();}
 function chD(d){vDay=addD(vDay,d);document.getElementById('dlbl-c').textContent=fmtLbl(vDay);renderComp();}
+
 function renderPren(){
+  if(!isAdmin())return;
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-p').textContent=MESI[M]+' '+Y;
   const ms=fmtD(new Date(Y,M,1)),me=fmtD(new Date(Y,M,days));
   let notti=0,ent=0;
-  pren.forEach(p=>{if(p.ci<=me&&p.co>ms){const s=p.ci<ms?ms:p.ci,e=p.co>me?fmtD(addD(new Date(Y,M,days),1)):p.co;const n=diffD(s,e);notti+=n;ent+=n*p.tar;}});
-  const occ=Math.round(notti/(days*CAM.length)*100);
+  pren().forEach(p=>{if(p.ci<=me&&p.co>ms){const s=p.ci<ms?ms:p.ci,e=p.co>me?fmtD(addD(new Date(Y,M,days),1)):p.co;const n=diffD(s,e);notti+=n;ent+=n*p.tar;}});
+  const occ=Math.round(notti/(days*casa().camere.length)*100);
   document.getElementById('stats-p').innerHTML=`<div class="sbox"><div class="sv">${occ}%</div><div class="sl">Occupazione</div></div><div class="sbox"><div class="sv">${notti}</div><div class="sl">Notti</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent.toLocaleString('it-CH')}</div><div class="sl">Entrate</div></div>`;
   let th='<thead><tr><th class="thc">Camera</th>';
   for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),dw=dt.getDay();th+=`<th class="thd${dw===0||dw===6?' we':''}${k===TK?' tod':''}"><span class="thd-n">${d}</span><span class="thd-g">${GG[dw]}</span></th>`;}
   th+='</tr></thead><tbody>';
-  CAM.forEach(cam=>{
+  casa().camere.forEach(cam=>{
     th+=`<tr><td class="tdc"><div class="cn">${cam.n}</div><div class="cs">${cam.nm}</div></td>`;
-    for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+CL[p.can];if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${isCI?p.nome+'('+p.osp+')':''}</span></div>`;}else ct=`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`;th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
+    for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';
+      if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+CL[p.can];if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${isCI?p.nome+(p.osp?'('+p.osp+')':''):''}</span></div>`;}
+      else ct=`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`;
+      th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
     th+='</tr>';
   });
   document.getElementById('cal-p').innerHTML=th+'</tbody>';
 }
+
 function renderTurni(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-t').textContent=MESI[M]+' '+Y;
-  const filtP=profile==='admin'?PERS:[capF(profile)];
+  const persona=profileToPersName();
+  const filtP=isAdmin()?casa().personale:[persona].filter(Boolean);
   let th='<thead><tr><th class="gtp">Persona</th>';
   for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),dw=dt.getDay();th+=`<th class="gtd-h${dw===0||dw===6?' we':''}${k===TK?' tod':''}"><span class="thd-n">${d}</span><span class="thd-g">${GG[dw]}</span></th>`;}
   th+='</tr></thead><tbody>';
-  filtP.forEach(persona=>{
-    th+=`<tr><td class="gtp-cell"><div class="pn">${persona}</div></td>`;
-    for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tg=turni[k]||{},tp=tg[persona];
-      const ex=extraState[k]&&extraState[k][persona],hasEx=ex&&(ex.scale||ex.culla||ex.sputnik||ex.vetri.length||ex.ore>0);
+  filtP.forEach(p=>{
+    th+=`<tr><td class="gtp-cell"><div class="pn">${p}</div></td>`;
+    for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tg=turni()[k]||{},tp=tg[p];
+      const ex=extraState[casaId+'_'+k]&&extraState[casaId+'_'+k][p];
+      const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
       let ct='<div class="gt-cell">';
-      if(tp){ct+=`<span class="tt ${tp.t==='T1'?'tt1':tp.t==='T2'?'tt2':tp.t==='T3'?'tt3':'tt4'}">${tp.t}</span>`;if(tp.c&&tp.c.length)ct+=`<div class="cm">${tp.c.join(' ')}</div>`;}
+      if(tp){ct+=`<span class="tt ${tp.t==='T1'?'tt1':tp.t==='T2'?'tt2':tp.t==='T3'?'tt3':'tt4'}">${tp.t}</span>`;if(tp.c&&tp.c.length)ct+=`<div class="cm">${tp.c.slice(0,3).join(' ')}</div>`;}
       if(hasEx)ct+=`<div style="font-size:8px;color:var(--t3t);background:var(--t3);border-radius:2px;padding:1px 3px;margin-top:1px;">+</div>`;
       ct+='</div>';
-      th+=`<td class="dc${it?' tod':''}" onclick="${profile==='admin'?`openTurno('${k}','${persona}',event)`:''}">${ct}</td>`;}
+      th+=`<td class="dc${it?' tod':''}" onclick="${isAdmin()?`openTurno('${k}','${p.replace(/'/g,"\\'")}',event)`:''}">${ct}</td>`;}
     th+='</tr>';
   });
   document.getElementById('grid-t').innerHTML=th+'</tbody>';
 }
+
+function getEx(key,persona){
+  const ck=casaId+'_'+key;
+  if(!extraState[ck])extraState[ck]={};
+  if(!extraState[ck][persona])extraState[ck][persona]={items:{},vetri:[],letti:0,ore:0,min:0,note:''};
+  return extraState[ck][persona];
+}
+
+function calcExTot(ex,camName){
+  let t=0;
+  const c=casa();
+  c.extras.forEach(e=>{ if(ex.items[e.id])t+=e.prezzo; });
+  if(c.hasVetri&&ex.vetri){
+    if(c.vetriPrezzi){ex.vetri.forEach(v=>{ t+=(c.vetriPrezzi[v]||0); });}
+    else{t+=ex.vetri.length*(c.vetriPrezzo||0);}
+  }
+  if(c.hasLetti)t+=ex.letti*(c.lettoPrezzzo||0);
+  // tariffa base camera per CVB/Liberty
+  if(c.tariffeCam&&camName&&c.tariffeCam[camName])t+=c.tariffeCam[camName];
+  return t;
+}
+
+function buildExtra(key,persona,camName){
+  const ex=getEx(key,persona);
+  const c=casa();
+  const showPrices=isAdmin();
+  const items=c.extras.map(e=>`<div class="extra-item${ex.items[e.id]?' sel':''}" onclick="togExItem('${key}','${persona.replace(/'/g,"\\'")}','${e.id}')"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div>${showPrices?`<div class="ei-price">Fr.${e.prezzo}</div>`:''}</div>`).join('');
+  
+  let vetriHtml='';
+  if(c.hasVetri){
+    const vp=c.vetriPrezzi?c.camere.map(cam=>`<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}${showPrices?`<br><span style="font-size:9px">Fr.${c.vetriPrezzi[cam.n]||0}</span>`:''}</div>`).join(''):
+    c.camere.map(cam=>`<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}</div>`).join('');
+    vetriHtml=`<div class="extra-vetri"><div class="extra-vetri-title">🪟 Vetri${showPrices&&!c.vetriPrezzi?' — Fr.'+(c.vetriPrezzo||0)+'/camera':''}</div><div class="vetri-cam-grid">${vp}</div></div>`;
+  }
+  
+  let lettiHtml='';
+  if(c.hasLetti){
+    lettiHtml=`<div class="ore-extra"><label>🛏 Letti usati${showPrices?' (Fr.'+c.lettoPrezzzo+' cad.)':''}</label><div class="ore-input"><div class="ore-field"><label>N° letti</label><input type="number" min="0" value="${ex.letti}" onchange="saveLettiVal('${key}','${persona.replace(/'/g,"\\'")}',this.value)" style="width:70px;"></div></div></div>`;
+  }
+
+  const tot=calcExTot(ex,camName);
+  const sumRows=[];
+  c.extras.forEach(e=>{if(ex.items[e.id])sumRows.push(`<div class="extra-row"><span>${e.nome}</span>${showPrices?`<span>Fr.${e.prezzo}</span>`:''}</div>`);});
+  if(c.hasVetri&&ex.vetri.length){const vt=c.vetriPrezzi?ex.vetri.reduce((s,v)=>s+(c.vetriPrezzi[v]||0),0):ex.vetri.length*(c.vetriPrezzo||0);sumRows.push(`<div class="extra-row"><span>Vetri (${ex.vetri.length})</span>${showPrices?`<span>Fr.${vt}</span>`:''}</div>`);}
+  if(c.hasLetti&&ex.letti>0)sumRows.push(`<div class="extra-row"><span>Letti (${ex.letti})</span>${showPrices?`<span>Fr.${ex.letti*c.lettoPrezzzo}</span>`:''}</div>`);
+  if(ex.ore>0||ex.min>0)sumRows.push(`<div class="extra-row"><span>Ore extra</span><span>${ex.ore}h ${ex.min>0?ex.min+'min':''}</span></div>`);
+  if(showPrices&&c.tariffeCam&&camName&&c.tariffeCam[camName])sumRows.push(`<div class="extra-row"><span>Pulizia base</span><span>Fr.${c.tariffeCam[camName]}</span></div>`);
+
+  return `<div class="extra-section">
+    <div class="extra-title">Extra del giorno</div>
+    ${items.length?`<div class="extra-grid">${items}</div>`:''}
+    ${vetriHtml}
+    ${lettiHtml}
+    <div class="ore-extra"><label>⏱ Ore extra</label><div class="ore-input">
+      <div class="ore-field"><label>Ore</label><input type="number" min="0" value="${ex.ore}" onchange="saveOreMin('${key}','${persona.replace(/'/g,"\\'")}','ore',this.value)"></div>
+      <div class="ore-field"><label>Minuti</label><input type="number" min="0" max="59" value="${ex.min}" onchange="saveOreMin('${key}','${persona.replace(/'/g,"\\'")}','min',this.value)"></div>
+      <span style="font-size:11px;color:var(--text2);">(calcolate a fine mese)</span>
+    </div></div>
+    <textarea class="note-extra" placeholder="Note..." rows="2" onchange="saveNote('${key}','${persona.replace(/'/g,"\\'")}',this.value)">${ex.note}</textarea>
+    ${sumRows.length?`<div class="extra-summary"><div class="extra-summary-title">Riepilogo</div>${sumRows.join('')}${showPrices?`<div class="extra-total"><span>Totale</span><span>Fr.${tot}${ex.ore>0||ex.min>0?' + ore':''}</span></div>`:''}</div>`:''}
+    <button class="bsave" onclick="saveEx('${key}','${persona.replace(/'/g,"\\'")}')">Salva extra</button>
+  </div>`;
+}
+
+function togExItem(key,persona,id){const ex=getEx(key,persona);ex.items[id]=!ex.items[id];renderMio();}
+function togVetri(key,persona,cam){const ex=getEx(key,persona);if(ex.vetri.includes(cam))ex.vetri=ex.vetri.filter(c=>c!==cam);else ex.vetri.push(cam);renderMio();}
+function saveOreMin(key,persona,field,val){const ex=getEx(key,persona);ex[field]=parseInt(val)||0;renderMio();}
+function saveLettiVal(key,persona,val){const ex=getEx(key,persona);ex.letti=parseInt(val)||0;renderMio();}
+function saveNote(key,persona,val){getEx(key,persona).note=val;}
+function saveEx(key,persona){renderTurni();toast('Extra salvati!');}
+
 function renderMio(){
-  const pMap={isa:'Isa',graziella:'Graziella',julka:'Julka'};
-  const persona=pMap[profile];
+  const persona=profileToPersName();
   const el=document.getElementById('mio-content');
   if(!persona){el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text2);">Seleziona il tuo profilo in alto</div>';return;}
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   const offset=(new Date(Y,M,1).getDay()||7)-1;
-  let totGG=0,totT1=0,totT2=0,totT3=0;
-  for(let d=1;d<=days;d++){const k=fmtD(new Date(Y,M,d)),tp=(turni[k]||{})[persona];if(tp){totGG++;if(tp.t==='T1'||tp.t==='T4')totT1++;if(tp.t==='T2')totT2++;if(tp.t==='T3')totT3++;}}
-  const tpOggi=(turni[TK]||{})[persona],infoOggi=tpOggi?TI[tpOggi.t]:null;
+  let totGG=0,totT2=0;
+  for(let d=1;d<=days;d++){const k=fmtD(new Date(Y,M,d)),tp=(turni()[k]||{})[persona];if(tp){totGG++;if(tp.t==='T2')totT2++;}}
+  const tpOggi=(turni()[TK]||{})[persona],infoOggi=tpOggi?TI[tpOggi.t]:null;
   let oggiHtml='';
   if(tpOggi){
     let camSec='';
-    if(tpOggi.t==='T2'&&tpOggi.c&&tpOggi.c.length){
-      const cards=tpOggi.c.map(n=>{const ci=CAM.find(c=>c.n===n),pr=pren.find(p=>p.cam===n&&p.ci<=TK&&p.co>TK),sk=TK+'_'+n,ready=camereState[sk];return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n}"><div class="cam-num-big">${n}</div><div class="cam-name-s">${ci?ci.nm:''}</div><div class="cam-osp">${pr?pr.osp+' ospiti':''}</div><div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div><button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n}','${persona}')">${ready?'✓ Camera pronta':'Segna come pronta'}</button></div>`;}).join('');
+    if(tpOggi.c&&tpOggi.c.length){
+      const cards=tpOggi.c.map(n=>{const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK),sk=casaId+'_'+TK+'_'+n,ready=camereState[sk];
+        return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}"><div class="cam-num-big">${n}</div><div class="cam-name-s">${ci?ci.nm:''}</div><div class="cam-osp">${pr?pr.osp+' ospiti':''}</div><div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div><button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')"> ${ready?'✓ Camera pronta':'Segna come pronta'}</button></div>`;}).join('');
       camSec=`<div style="margin-top:12px;"><div class="lbl">Camere da pulire oggi</div><div class="cam-status-grid">${cards}</div></div>`;
     }
+    const camName=tpOggi.c&&tpOggi.c.length===1?tpOggi.c[0]:null;
     oggiHtml=`<div class="mt-card" style="border-left-color:${infoOggi.tc};background:${infoOggi.bg}30;">
       <div style="font-size:10px;font-weight:600;color:${infoOggi.tc};margin-bottom:6px;">OGGI — ${fmtLbl(TODAY)}</div>
       <span class="tt ${infoOggi.c}" style="display:inline-block;margin-bottom:6px;">${tpOggi.t}</span>
       <div class="mt-tit">${infoOggi.l}</div><div class="mt-ora">${infoOggi.o}</div>
       ${camSec}
-      ${buildExtra(TK,persona)}
+      ${tpOggi.note?`<div style="margin-top:10px;background:white;border-radius:var(--r-md);padding:10px;border-left:3px solid var(--t3t);"><div style="font-size:10px;font-weight:600;color:var(--t3t);margin-bottom:4px;">📋 NOTE OPERATIVE</div><div style="font-size:13px;">${tpOggi.note}</div></div>`:''}
+      ${buildExtra(TK,persona,camName)}
     </div>`;
   } else {
-    oggiHtml=`<div class="mt-card"><div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:6px;">OGGI — ${fmtLbl(TODAY)}</div><div class="mt-tit">Giorno libero</div>${buildExtra(TK,persona)}</div>`;
+    oggiHtml=`<div class="mt-card"><div style="font-size:10px;font-weight:600;color:var(--text2);margin-bottom:6px;">OGGI — ${fmtLbl(TODAY)}</div><div class="mt-tit">Giorno libero</div>${buildExtra(TK,persona,null)}</div>`;
   }
   const mnav=`<div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chMMio(-1)">&#8249;</button><span class="mnav-lbl">${MESI[M]} ${Y}</span><button onclick="chMMio(1)">&#8250;</button></div></div>`;
-  const stats=`<div class="stats"><div class="sbox"><div class="sv">${totGG}</div><div class="sl">Giorni lavoro</div></div><div class="sbox"><div class="sv">${totT1+totT2}</div><div class="sl">T1+T2</div></div><div class="sbox"><div class="sv">${totT3}</div><div class="sl">Serate</div></div></div>`;
+  const stats=`<div class="stats"><div class="sbox"><div class="sv">${totGG}</div><div class="sl">Giorni lavoro</div></div><div class="sbox"><div class="sv">${totT2}</div><div class="sl">Pulizie</div></div><div class="sbox"><div class="sv">${days-totGG}</div><div class="sl">Giorni liberi</div></div></div>`;
   let cal=`<div class="card" style="padding:10px;"><div class="mio-cal">${['Lu','Ma','Me','Gi','Ve','Sa','Do'].map(g=>`<div style="text-align:center;font-size:10px;color:var(--text2);font-weight:500;padding:4px 0;">${g}</div>`).join('')}`;
   for(let i=0;i<offset;i++)cal+=`<div></div>`;
-  for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=(turni[k]||{})[persona],info=tp?TI[tp.t]:null;
-    const ex=extraState[k]&&extraState[k][persona],hasEx=ex&&(ex.scale||ex.culla||ex.sputnik||ex.vetri.length||ex.ore>0);
+  for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=(turni()[k]||{})[persona],info=tp?TI[tp.t]:null;
+    const exk=casaId+'_'+k;const ex=extraState[exk]&&extraState[exk][persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
     cal+=`<div class="giorno-box${it?' oggi':''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${tp&&tp.c&&tp.c.length?`<div class="gb-cam">${tp.c.length}cam</div>`:''}</div>`;}
   cal+='</div></div>';
   el.innerHTML=oggiHtml+mnav+stats+cal;
 }
-function buildExtra(key,persona){
-  const ex=getEx(key,persona);
-  const items=EXTRAS_DEF.map(e=>`<div class="extra-item${ex[e.id]?' sel':''}" onclick="togEx('${key}','${persona}','${e.id}')"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div><div class="ei-price">Fr.${e.prezzo}</div></div>`).join('');
-  const vcams=CAM.map(c=>`<div class="vetri-cam${ex.vetri.includes(c.n)?' sel':''}" onclick="togVetri('${key}','${persona}','${c.n}')">${c.n}</div>`).join('');
-  const tot=calcExTot(ex);
-  const sum=[];
-  if(ex.scale)sum.push({n:'Scale',p:20});if(ex.culla)sum.push({n:'Culla',p:15});if(ex.sputnik)sum.push({n:'Sputnik',p:35});
-  if(ex.vetri.length)sum.push({n:`Vetri (${ex.vetri.length} cam)`,p:ex.vetri.length*20});
-  if(ex.ore>0)sum.push({n:`${ex.ore}h extra`,p:0,note:'tariffa a fine mese'});
-  return `<div class="extra-section">
-    <div class="extra-title">Extra del giorno</div>
-    <div class="extra-grid">${items}</div>
-    <div class="extra-vetri"><div class="extra-vetri-title">🪟 Vetri — Fr.20/camera</div><div class="vetri-cam-grid">${vcams}</div></div>
-    <div class="ore-extra"><label>⏱ Ore extra</label><div class="ore-input"><button onclick="chOre('${key}','${persona}',-1)">−</button><span class="ore-val" id="ore-${key}-${persona}">${ex.ore}</span><button onclick="chOre('${key}','${persona}',1)">+</button><span style="font-size:11px;color:var(--text2);">ore (a fine mese)</span></div></div>
-    <textarea class="note-extra" placeholder="Note..." rows="2" onchange="saveNote('${key}','${persona}',this.value)">${ex.note}</textarea>
-    ${sum.length?`<div class="extra-summary"><div class="extra-summary-title">Riepilogo extra</div>${sum.map(i=>`<div class="extra-row"><span>${i.n}</span><span>${i.note||'Fr.'+i.p}</span></div>`).join('')}<div class="extra-total"><span>Totale extra</span><span>Fr.${tot}${ex.ore>0?' + ore':''}</span></div></div>`:''}
-    <button class="bsave" onclick="saveEx('${key}','${persona}')">Salva extra</button>
-  </div>`;
+
+function toggleCam(n,persona){
+  const sk=casaId+'_'+TK+'_'+n;camereState[sk]=!camereState[sk];const isR=camereState[sk];
+  const id='csc-'+n.replace(/\s/g,'_');const card=document.getElementById(id);
+  if(card){card.className='cam-status-card'+(isR?' pronta':'');card.querySelector('.cam-stato').textContent=isR?'✓ Pronta':'In attesa';card.querySelector('.cam-stato').style.color=isR?'var(--success)':'var(--text3)';card.querySelector('.cam-pronta-btn').className='cam-pronta-btn '+(isR?'fatta':'da-fare');card.querySelector('.cam-pronta-btn').textContent=isR?'✓ Camera pronta':'Segna come pronta';}
+  toast(isR?`${n} pronta!`:`${n} — in attesa`);
 }
-function togEx(key,persona,id){getEx(key,persona)[id]=!getEx(key,persona)[id];renderMio();}
-function togVetri(key,persona,cam){const ex=getEx(key,persona);if(ex.vetri.includes(cam))ex.vetri=ex.vetri.filter(c=>c!==cam);else ex.vetri.push(cam);renderMio();}
-function chOre(key,persona,d){const ex=getEx(key,persona);ex.ore=Math.max(0,ex.ore+d);const el=document.getElementById('ore-'+key+'-'+persona);if(el)el.textContent=ex.ore;renderMio();}
-function saveNote(key,persona,val){getEx(key,persona).note=val;}
-function saveEx(key,persona){renderTurni();toast('Extra salvati!');}
-function toggleCam(n,persona){const sk=TK+'_'+n;camereState[sk]=!camereState[sk];const isR=camereState[sk];const card=document.getElementById('csc-'+n);if(card){card.className='cam-status-card'+(isR?' pronta':'');card.querySelector('.cam-stato').textContent=isR?'✓ Pronta':'In attesa';card.querySelector('.cam-stato').style.color=isR?'var(--success)':'var(--text3)';card.querySelector('.cam-pronta-btn').className='cam-pronta-btn '+(isR?'fatta':'da-fare');card.querySelector('.cam-pronta-btn').textContent=isR?'✓ Camera pronta':'Segna come pronta';}toast(isR?`Camera ${n} pronta!`:`Camera ${n} — in attesa`);}
+
 function chMMio(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);renderMio();}
+
 function renderComp(){
+  if(!isAdmin())return;
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
   const key=fmtD(vDay),ieri=fmtD(addD(vDay,-1));
-  const camIeri=pren.filter(p=>p.ci<=ieri&&p.co>ieri).length;
+  const camIeri=pren().filter(p=>p.ci<=ieri&&p.co>ieri).length;
   const tarT1=camIeri<=3?50:camIeri<=5?60:70;
-  const tg=turni[key]||{};let rows=[],tot=0;
+  const tg=turni()[key]||{};let rows=[],tot=0;
   Object.entries(tg).forEach(([p,tp])=>{
     if(tp.t==='T1'||tp.t==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt ${tp.t==='T1'?'tt1':'tt4'}">${tp.t}</span></td><td>${camIeri} cam ieri→Fr.${tarT1}</td><td class="amt">Fr.${tarT1}</td></tr>`);tot+=tarT1;}
     else if(tp.t==='T2'){const nc=tp.c?tp.c.length:0,comp=nc*30;rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${nc} cam×Fr.30</td><td class="amt">Fr.${comp}</td></tr>`);tot+=comp;}
     else if(tp.t==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena/evento</td><td class="amt">—</td></tr>`);}
-    const ex=extraState[key]&&extraState[key][p];
-    if(ex){const et=calcExTot(ex);if(et>0){rows.push(`<tr><td>${p}</td><td><span style="background:var(--t3);color:var(--t3t);border-radius:3px;padding:2px 5px;font-size:9px;">EXTRA</span></td><td>${[ex.scale?'Scale':'',ex.culla?'Culla':'',ex.sputnik?'Sputnik':'',ex.vetri.length?'Vetri('+ex.vetri.length+')':''].filter(Boolean).join(', ')}</td><td class="amt">Fr.${et}</td></tr>`);tot+=et;}if(ex.ore>0)rows.push(`<tr><td>${p}</td><td><span style="background:#f0f0f0;border-radius:3px;padding:2px 5px;font-size:9px;">ORE+</span></td><td>${ex.ore}h extra</td><td class="amt">a fine mese</td></tr>`);}
+    const ck=casaId+'_'+key;const ex=extraState[ck]&&extraState[ck][p];
+    if(ex){const et=calcExTot(ex,tp.c&&tp.c.length===1?tp.c[0]:null);if(et>0){rows.push(`<tr><td>${p}</td><td><span style="background:var(--t3);color:var(--t3t);border-radius:3px;padding:2px 5px;font-size:9px;">EXTRA</span></td><td>vedi dettaglio</td><td class="amt">Fr.${et}</td></tr>`);tot+=et;}
+    if(ex.ore>0||ex.min>0)rows.push(`<tr><td>${p}</td><td><span style="background:#f0f0f0;border-radius:3px;padding:2px 5px;font-size:9px;">ORE+</span></td><td>${ex.ore}h ${ex.min>0?ex.min+'m':''}</td><td class="amt">a fine mese</td></tr>`);}
   });
   document.getElementById('comp-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:20px;">Nessun turno</td></tr>';
   document.getElementById('comp-tot').textContent='Fr.'+tot;
-  const prenOggi=pren.filter(p=>p.ci<=key&&p.co>key);
+  const prenOggi=pren().filter(p=>p.ci<=key&&p.co>key);
   const ent=prenOggi.reduce((s,p)=>s+p.tar,0),marg=ent-tot;
   document.getElementById('stats-comp').innerHTML=`<div class="sbox"><div class="sv">${prenOggi.length}</div><div class="sl">Camere occ.</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent}</div><div class="sl">Entrata</div></div><div class="sbox"><div class="sv" style="color:${marg>=0?'var(--success)':'var(--danger)'}">Fr.${marg}</div><div class="sl">Margine</div></div>`;
 }
+
 function renderRiep(){
-  const data=[{n:'Isa',r:'T1+T2 · prestazione',tot:696,t1:306,t2:390,gg:12},{n:'Graziella',r:'T2 · prestazione',tot:210,t1:0,t2:210,gg:7},{n:'Julka',r:'T1 · prestazione',tot:200,t1:200,t2:0,gg:8},{n:'Serena',r:'Gerente 50% · fisso',tot:1872,t1:0,t2:0,gg:16,fisso:true,oneri:361}];
-  document.getElementById('riepilogo-list').innerHTML=data.map(p=>`<div class="rp"><div class="rph"><div><div class="rpn">${p.n}</div><div class="rpr">${p.r}</div></div><div class="rpt">Fr.${p.tot.toLocaleString('it-CH')}</div></div><div class="rpb">${p.fisso?`<div class="rpi"><div class="rl">Stipendio</div><div class="rv">Fr.${p.tot.toLocaleString('it-CH')}</div></div><div class="rpi"><div class="rl">Oneri</div><div class="rv">Fr.${p.oneri}</div></div><div class="rpi"><div class="rl">Costo ditta</div><div class="rv">Fr.${(p.tot+p.oneri).toLocaleString('it-CH')}</div></div>`:`<div class="rpi"><div class="rl">T1</div><div class="rv">Fr.${p.t1}</div></div><div class="rpi"><div class="rl">T2</div><div class="rv">Fr.${p.t2}</div></div><div class="rpi"><div class="rl">Giorni</div><div class="rv">${p.gg}</div></div>`}</div><button class="pagbtn" onclick="this.classList.toggle('pg');this.textContent=this.classList.contains('pg')?'✓ Pagato':'Da pagare'">Da pagare</button></div>`).join('');
+  if(!isAdmin())return;
+  document.getElementById('riepilogo-lbl').textContent=MESI[vMonth.getMonth()]+' '+vMonth.getFullYear();
+  document.getElementById('riepilogo-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Riepilogo mensile — disponibile con database</div>';
 }
-function chRiep(v){document.getElementById('riepilogo-lbl').textContent=MESI[parseInt(v)]+' 2026';toast(MESI[parseInt(v)]+' — in sviluppo');}
-function openTurno(key,persona,e){e&&e.stopPropagation();if(profile!=='admin')return;const ex=(turni[key]||{})[persona];popTipo=ex?ex.t:null;popCamere=ex?ex.c||[]:[];const dt=parseD(key),isDom=dt.getDay()===0;document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts"><div class="topt${popTipo==='T1'?' s1':''}" onclick="selTipo('T1',this)">T1 — Colazione<br><span style="font-size:10px;opacity:0.7;">07:30–11:00</span></div><div class="topt${popTipo==='T2'?' s2':''}" onclick="selTipo('T2',this)">T2 — Pulizie<br><span style="font-size:10px;opacity:0.7;">11:00–15:00</span></div><div class="topt${popTipo==='T3'?' s3':''}" onclick="selTipo('T3',this)">T3 — Cena<br><span style="font-size:10px;opacity:0.7;">18:00–22:00</span></div>${isDom?`<div class="topt${popTipo==='T4'?' s4':''}" onclick="selTipo('T4',this)">T4 — Brunch<br><span style="font-size:10px;opacity:0.7;">09:00–13:00</span></div>`:'<div></div>'}</div><div id="cam-sec" style="${popTipo==='T2'?'':'display:none'}"><div class="lbl">Camere pulite</div><div class="ckopts">${CAM.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCam('${c.n}',this)"><div class="cn2">${c.n}</div><div>${c.nm}</div></div>`).join('')}</div></div><button class="bsave" onclick="saveTurno('${key}','${persona}')">Salva turno</button><button class="bcl" onclick="clearTurno('${key}','${persona}')">Rimuovi turno</button></div></div>`;}
-function selTipo(t,el){popTipo=t;document.querySelectorAll('.topt').forEach(x=>x.className='topt');el.className='topt '+(t==='T1'?'s1':t==='T2'?'s2':t==='T3'?'s3':'s4');const cs=document.getElementById('cam-sec');if(cs)cs.style.display=t==='T2'?'':'none';}
-function togCam(n,el){if(popCamere.includes(n))popCamere=popCamere.filter(x=>x!==n);else popCamere.push(n);el.classList.toggle('ck');}
-function saveTurno(key,persona){if(!popTipo){toast('Scegli un turno');return;}if(!turni[key])turni[key]={};turni[key][persona]={t:popTipo,c:[...popCamere]};closePopDirect();renderTurni();renderMio();toast('Salvato — '+persona+' '+popTipo);}
-function clearTurno(key,persona){if(turni[key])delete turni[key][persona];closePopDirect();renderTurni();renderMio();toast('Turno rimosso');}
-function openDet(id,e){e&&e.stopPropagation();const p=pren.find(x=>x.id===id);if(!p)return;const n=diffD(p.ci,p.co),tot=n*p.tar;document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>Camera ${p.cam} — ${p.nome}</h3><p class="psub">${p.ci} → ${p.co}</p><div class="det"><div class="dr"><span>Camera</span><span>${p.cam} — ${CAM.find(c=>c.n===p.cam)?.nm}</span></div><div class="dr"><span>Nome</span><span>${p.nome}</span></div><div class="dr"><span>Check-in</span><span>${p.ci}</span></div><div class="dr"><span>Check-out</span><span>${p.co}</span></div><div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:16px;font-weight:600;">${p.osp} persone</span></div><div class="dr"><span>Notti</span><span>${n}</span></div><div class="dr"><span>Tariffa/notte</span><span>Fr.${p.tar}</span></div><div class="dr"><span>Totale</span><span>Fr.${tot}</span></div><div class="dr"><span>Canale</span><span><span class="bdg bdg-${CL[p.can]}">${capF(p.can)}</span></span></div></div><button class="bdel" onclick="delPren('${id}')">Elimina</button><button class="bcan" onclick="closePopDirect()">Chiudi</button></div></div>`;}
-function openNew(cam,key,e){e&&e.stopPropagation();selCan='diretto';const next=fmtD(addD(parseD(key),1));document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>Nuova prenotazione</h3><p class="psub">Camera ${cam} — ${CAM.find(c=>c.n===cam)?.nm}</p><div class="lbl">Canale</div><div class="canopts"><div class="canopt" id="co-booking" onclick="selC('booking')">Booking</div><div class="canopt sdi" id="co-diretto" onclick="selC('diretto')">Interno</div><div class="canopt" id="co-airbnb" onclick="selC('airbnb')">Airbnb</div><div class="canopt" id="co-altro" onclick="selC('altro')">Altro</div></div><div class="fg f1"><div class="fl"><label>Nome ospite</label><input type="text" id="fn" placeholder="Cognome"></div></div><div class="fg"><div class="fl"><label>Check-in</label><input type="date" id="fci" value="${key}"></div><div class="fl"><label>Check-out</label><input type="date" id="fco" value="${next}"></div></div><div class="fg"><div class="fl"><label>N° ospiti</label><input type="number" id="fo" value="2" min="1" max="8"></div><div class="fl"><label>Tariffa/notte Fr.</label><input type="number" id="ft" value="120"></div></div><div class="fg f1"><div class="fl"><label>Note</label><input type="text" id="fno" placeholder="Allergie, culla..."></div></div><input type="hidden" id="fc" value="${cam}"><button class="bsave" onclick="savePren()">Salva prenotazione</button><button class="bcan" onclick="closePopDirect()">Annulla</button></div></div>`;}
+function chRiep(v){vMonth=new Date(vMonth.getFullYear(),parseInt(v),1);renderRiep();}
+
+// POPUP TURNO
+function openTurno(key,persona,e){
+  e&&e.stopPropagation();if(!isAdmin())return;
+  const ex=(turni()[key]||{})[persona];
+  popTipo=ex?ex.t:null;popCamere=ex?ex.c||[]:[];
+  const dt=parseD(key),isDom=dt.getDay()===0;
+  const types=casa().turniTypes;
+  const tOpts=types.map(t=>`<div class="topt${popTipo===t?' s'+t.toLowerCase():''}" onclick="selTipo('${t}',this)">${t} — ${TI[t]?TI[t].l.split('—')[1].trim():t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts">${tOpts}</div><div id="cam-sec" style="${popTipo==='T2'?'':'display:none'}"><div class="lbl">Camere</div><div class="ckopts">${casa().camere.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCamP('${c.n}',this)"><div class="cn2">${c.n}</div><div style="font-size:9px">${c.nm}</div></div>`).join('')}</div><div class="lbl" style="margin-top:10px;">Note operative</div><textarea id="pop-note" placeholder="Es: prepara 2 letti in 102, culla in 201..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;">${ex&&ex.note||''}</textarea></div><button class="bsave" onclick="saveTurno('${key}','${persona.replace(/'/g,"\\'")}')">Salva</button><button class="bcl" onclick="clearTurno('${key}','${persona.replace(/'/g,"\\'")}')">Rimuovi</button></div></div>`;
+}
+function selTipo(t,el){popTipo=t;document.querySelectorAll('.topt').forEach(x=>x.className='topt');el.className='topt s'+t.toLowerCase();const cs=document.getElementById('cam-sec');if(cs)cs.style.display=t==='T2'?'':'none';}
+function togCamP(n,el){if(popCamere.includes(n))popCamere=popCamere.filter(x=>x!==n);else popCamere.push(n);el.classList.toggle('ck');}
+function saveTurno(key,persona){if(!popTipo){toast('Scegli un turno');return;}if(!turniData[casaId][key])turniData[casaId][key]={};const noteEl=document.getElementById('pop-note');turniData[casaId][key][persona]={t:popTipo,c:[...popCamere],note:noteEl?noteEl.value:''};closePopDirect();renderTurni();renderMio();toast('Salvato!');}
+function clearTurno(key,persona){if(turniData[casaId][key])delete turniData[casaId][key][persona];closePopDirect();renderTurni();renderMio();toast('Rimosso');}
+
+// POPUP PRENOTAZIONE
+function openDet(id,e){
+  e&&e.stopPropagation();const p=pren().find(x=>x.id===id);if(!p)return;
+  const n=diffD(p.ci,p.co),tot=n*p.tar;
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${p.cam} — ${p.nome}</h3><p class="psub">${p.ci} → ${p.co}</p><div class="det"><div class="dr"><span>Camera</span><span>${p.cam}</span></div><div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:16px;font-weight:600;">${p.osp}</span></div><div class="dr"><span>Check-in</span><span>${p.ci}</span></div><div class="dr"><span>Check-out</span><span>${p.co}</span></div><div class="dr"><span>Notti</span><span>${n}</span></div><div class="dr"><span>Tariffa/notte</span><span>Fr.${p.tar}</span></div><div class="dr"><span>Totale</span><span>Fr.${tot}</span></div><div class="dr"><span>Canale</span><span><span class="bdg bdg-${CL[p.can]}">${capF(p.can)}</span></span></div></div><button class="bdel" onclick="delPren('${id}')">Elimina</button><button class="bcan" onclick="closePopDirect()">Chiudi</button></div></div>`;
+}
+function openNew(cam,key,e){
+  e&&e.stopPropagation();selCan='diretto';const next=fmtD(addD(parseD(key),1));
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>Nuova prenotazione</h3><p class="psub">Camera ${cam}</p><div class="lbl">Canale</div><div class="canopts"><div class="canopt" id="co-booking" onclick="selC('booking')">Booking</div><div class="canopt sdi" id="co-diretto" onclick="selC('diretto')">Interno</div><div class="canopt" id="co-airbnb" onclick="selC('airbnb')">Airbnb</div><div class="canopt" id="co-altro" onclick="selC('altro')">Altro</div></div><div class="fg f1"><div class="fl"><label>Nome ospite</label><input type="text" id="fn" placeholder="Cognome"></div></div><div class="fg"><div class="fl"><label>Check-in</label><input type="date" id="fci" value="${key}"></div><div class="fl"><label>Check-out</label><input type="date" id="fco" value="${next}"></div></div><div class="fg"><div class="fl"><label>N° ospiti</label><input type="number" id="fo" value="2" min="1" max="12"></div><div class="fl"><label>Tariffa/notte</label><input type="number" id="ft" value="120"></div></div><input type="hidden" id="fc" value="${cam}"><button class="bsave" onclick="savePren()">Salva</button><button class="bcan" onclick="closePopDirect()">Annulla</button></div></div>`;
+}
 function selC(c){selCan=c;['booking','diretto','airbnb','altro'].forEach(x=>{const el=document.getElementById('co-'+x);if(el)el.className='canopt'+(x===c?' s'+CL[x]:'');});}
-function savePren(){const cam=document.getElementById('fc').value,ci=document.getElementById('fci').value,co=document.getElementById('fco').value;if(!ci||!co||ci>=co){toast('Controlla le date');return;}if(pren.find(p=>p.cam===cam&&p.ci<co&&p.co>ci)){toast('Camera già occupata');return;}pren.push({id:'p'+nextId++,cam,nome:document.getElementById('fn').value,ci,co,osp:parseInt(document.getElementById('fo').value)||2,tar:parseInt(document.getElementById('ft').value)||120,can:selCan,note:document.getElementById('fno').value});closePopDirect();renderPren();toast('Prenotazione salvata!');}
-function delPren(id){const i=pren.findIndex(p=>p.id===id);if(i>-1)pren.splice(i,1);closePopDirect();renderPren();toast('Eliminata');}
+function savePren(){const cam=document.getElementById('fc').value,ci=document.getElementById('fci').value,co=document.getElementById('fco').value;if(!ci||!co||ci>=co){toast('Controlla le date');return;}if(pren().find(p=>p.cam===cam&&p.ci<co&&p.co>ci)){toast('Camera già occupata');return;}if(!prenData[casaId])prenData[casaId]=[];prenData[casaId].push({id:'p'+nextId++,cam,nome:document.getElementById('fn').value,ci,co,osp:parseInt(document.getElementById('fo').value)||2,tar:parseInt(document.getElementById('ft').value)||120,can:selCan});closePopDirect();renderPren();toast('Salvata!');}
+function delPren(id){const arr=prenData[casaId];const i=arr.findIndex(p=>p.id===id);if(i>-1)arr.splice(i,1);closePopDirect();renderPren();toast('Eliminata');}
+
 function closePop(e){if(e.target.classList.contains('pbg'))closePopDirect();}
 function closePopDirect(){document.getElementById('pop-root').innerHTML='';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-window.onload=()=>{document.getElementById('dlbl-c').textContent=fmtLbl(vDay);renderPren();renderRiep();document.querySelectorAll('.adm').forEach(t=>t.style.display='');document.querySelectorAll('.col').forEach(t=>t.style.display='none');};
+
+window.onload=()=>{
+  document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
+  curTab='pren';
+  buildUI();
+  renderAll();
+};
 </script>
 </body>
 </html>
