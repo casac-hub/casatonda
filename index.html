@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Casatonda</title>
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -266,9 +266,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 // ═══════════════════════════════════════════
 // SUPABASE CONFIG — sostituisci con i tuoi valori
 // ═══════════════════════════════════════════
-const SUPABASE_URL = 'https://qygrzzsukctoegkjpxea.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5Z3J6enN1a3V0b2Vna2pweGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2ODQwMzEsImV4cCI6MjA5MjI2MDAzMX0.Mebk8jaLo5GIUsspsYghTizN9W5I2tMscZEeTmFMbr4';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══════════════════════════════════════════
 // COSTANTI
