@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Casatonda</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -15,6 +16,12 @@
   --r-md:8px;--r-lg:12px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* LOADING */
+.loading{position:fixed;inset:0;background:rgba(255,255,255,0.9);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.loading.hidden{display:none;}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
 /* HEADER */
 .hdr{background:var(--text);color:white;padding:10px 14px;position:sticky;top:0;z-index:50;}
@@ -167,10 +174,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pcl{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text2);margin-top:-4px;}
 .topts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .topt{padding:12px;border-radius:var(--r-md);border:1px solid var(--border);cursor:pointer;text-align:center;font-size:13px;}
-.topt.s1{border:2px solid var(--t1t);background:var(--t1);color:var(--t1t);font-weight:500;}
-.topt.s2{border:2px solid var(--t2t);background:var(--t2);color:var(--t2t);font-weight:500;}
-.topt.s3{border:2px solid var(--t3t);background:var(--t3);color:var(--t3t);font-weight:500;}
-.topt.s4{border:2px solid var(--t4t);background:var(--t4);color:var(--t4t);font-weight:500;}
+.topt.st1{border:2px solid var(--t1t);background:var(--t1);color:var(--t1t);font-weight:500;}
+.topt.st2{border:2px solid var(--t2t);background:var(--t2);color:var(--t2t);font-weight:500;}
+.topt.st3{border:2px solid var(--t3t);background:var(--t3);color:var(--t3t);font-weight:500;}
+.topt.st4{border:2px solid var(--t4t);background:var(--t4);color:var(--t4t);font-weight:500;}
 .ckopts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
 .cko{padding:8px 3px;border-radius:var(--r-md);border:1px solid var(--border);cursor:pointer;text-align:center;font-size:10px;}
 .cko.ck{background:var(--t2);color:var(--t2t);border-color:var(--t2t);font-weight:500;}
@@ -189,7 +196,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .dr{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);}
 .dr:last-child{border-bottom:none;}
 .dr span:first-child{color:var(--text2);}.dr span:last-child{font-weight:500;}
-
 .bsave{width:100%;padding:13px;border-radius:var(--r-md);border:none;background:var(--text);color:white;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;}
 .bdel{width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--danger);background:transparent;color:var(--danger);font-size:13px;cursor:pointer;margin-top:8px;}
 .bcan{width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;margin-top:6px;}
@@ -197,12 +203,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bdg{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;}
 .bdg-bk{background:#E6F1FB;color:#0C447C;}.bdg-di{background:#FEF7E0;color:#7A5200;}
 .bdg-ab{background:#FCEBEB;color:#791F1F;}.bdg-al{background:#EEEDFE;color:#26215C;}
-
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;padding:12px 20px;border-radius:var(--r-md);font-size:13px;z-index:999;transition:transform 0.25s;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--text2);">Caricamento...</div>
+</div>
 
 <div class="hdr">
   <div class="hdr-top">
@@ -253,28 +263,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="toast" id="toast"></div>
 
 <script>
+// ═══════════════════════════════════════════
+// SUPABASE CONFIG — sostituisci con i tuoi valori
+// ═══════════════════════════════════════════
+const SUPABASE_URL = 'https://qygrzzsukctoegkjpxea.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5Z3J6enN1a3V0b2Vna2pweGVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2ODQwMzEsImV4cCI6MjA5MjI2MDAzMX0.Mebk8jaLo5GIUsspsYghTizN9W5I2tMscZEeTmFMbr4';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ═══════════════════════════════════════════
+// COSTANTI
+// ═══════════════════════════════════════════
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const GG=['Do','Lu','Ma','Me','Gi','Ve','Sa'];
 const GGF=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
 const CL={booking:'bk',diretto:'di',airbnb:'ab',altro:'al'};
-const TI={T1:{l:'T1 — Colazione + Lavanderia',o:'07:30–11:00',c:'tt1',bg:'#B5D4F4',tc:'#0C447C'},T2:{l:'T2 — Pulizie camere',o:'11:00–15:00',c:'tt2',bg:'#C0DD97',tc:'#27500A'},T3:{l:'T3 — Cena / Evento',o:'18:00–22:00',c:'tt3',bg:'#FAC775',tc:'#633806'},T4:{l:'T4 — Brunch domenicale',o:'09:00–13:00',c:'tt4',bg:'#F4C0D1',tc:'#72243E'}};
+const TI={
+  T1:{l:'T1 — Colazione + Lavanderia',o:'07:30–11:00',c:'tt1',bg:'#B5D4F4',tc:'#0C447C'},
+  T2:{l:'T2 — Pulizie camere',o:'11:00–15:00',c:'tt2',bg:'#C0DD97',tc:'#27500A'},
+  T3:{l:'T3 — Cena / Evento',o:'18:00–22:00',c:'tt3',bg:'#FAC775',tc:'#633806'},
+  T4:{l:'T4 — Brunch domenicale',o:'09:00–13:00',c:'tt4',bg:'#F4C0D1',tc:'#72243E'}
+};
 
-// ── CASE ──
 const CASE={
   piumogna:{
     nome:'Casa Piumogna',
     camere:[{n:'101',nm:'Celeste'},{n:'102',nm:'Suite Rossa'},{n:'201',nm:'Gialla'},{n:'202',nm:'Suite Dec.'},{n:'301',nm:'Verde'},{n:'302',nm:'White'},{n:'401',nm:'M.Monte'},{n:'402',nm:'M.Valle'}],
-    personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5','Personale 6'],
-    hasPren:true,
+    personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
-    extras:[
-      {id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},
-      {id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},
-      {id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'},
-    ],
-    hasVetri:true,
-    vetriPrezzo:20,
-    tariffaT1Base:true
+    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'}],
+    hasVetri:true,vetriPrezzo:20,tariffaT1Base:true
   },
   cvb:{
     nome:'Casa Vino e Birra',
@@ -282,168 +299,240 @@ const CASE={
     tariffeCam:{Piazzetta:30,Tiglio:30,Ticinella:30,Cascata0:30,Cascata1:35,Cascata2:35,Nala:40,Loft:45},
     supOspiti:5,
     personale:['Fernanda','Personale 2','Personale 3','Personale 4'],
-    hasPren:true,
     turniTypes:['T2'],
-    extras:[
-      {id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},
-      {id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},
-      {id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},
-      {id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},
-      {id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},
-      {id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},
-      {id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},
-    ],
-    hasVetri:true,
-    vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10}
+    extras:[{id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},{id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},{id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},{id:'culla',nome:'Culla',prezzo:10,icon:'🛏'}],
+    hasVetri:true,vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10}
   },
   liberty:{
     nome:'Casa Liberty',
     camere:[{n:'DolceVita',nm:'Dolce Vita'},{n:'VoceLuna',nm:'Voce della Luna'},{n:'Mansarda',nm:'Mansarda della Cascata'}],
-    tariffeCam:{DolceVita:45,VoceLuna:45,Mansarda:45},
-    supOspiti:5,
+    tariffeCam:{DolceVita:45,VoceLuna:45,Mansarda:45},supOspiti:5,
     personale:['Nadja','Personale 2','Personale 3','Personale 4'],
-    hasPren:true,
     turniTypes:['T2'],
-    extras:[
-      {id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},
-      {id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},
-      {id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},
-      {id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},
-    ],
+    extras:[{id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'}],
     hasVetri:false
   },
   rustico:{
     nome:'Rustico Conceprio',
     camere:[{n:'R1',nm:'Conceprio 1'}],
     personale:['Manuela','Personale 2','Personale 3'],
-    hasPren:true,
     turniTypes:['T2'],
-    extras:[
-      {id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},
-    ],
-    hasVetri:false,
-    hasLetti:true,
-    lettoPrezzzo:10
+    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'}],
+    hasVetri:false,hasLetti:true,lettoPrezzzo:10
   },
   rurale:{
     nome:'Casa Rurale',
     camere:[{n:'CR1',nm:'Casa Rurale 1'}],
     personale:['Nadja','Personale 2','Personale 3'],
-    hasPren:true,
     turniTypes:['T2'],
-    extras:[
-      {id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},
-    ],
-    hasVetri:false,
-    hasLetti:true,
-    lettoPrezzzo:10
+    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'}],
+    hasVetri:false,hasLetti:true,lettoPrezzzo:10
   }
 };
 
-let casaId='piumogna',profile='admin';
-let vMonth=new Date(2026,3,1),vDay=new Date(2026,3,11);
-const TODAY=new Date(2026,3,11),TK=fmtD(TODAY);
-let nextId=100,selCan='diretto',popTipo=null,popCamere=[];
-const camereState={},extraState={};
+// ═══════════════════════════════════════════
+// STATO APPLICAZIONE
+// ═══════════════════════════════════════════
+let casaId='piumogna', profile='admin', curTab='pren';
+let vMonth=new Date(2026,3,1), vDay=new Date(2026,3,20);
+const TODAY=new Date(2026,3,20), TK=fmtD(TODAY);
+let nextId=100, selCan='diretto', popTipo=null, popCamere=[];
 
-// Dati prenotazioni per casa
-const prenData={
-  piumogna:[
-    {id:'p1',cam:'101',ci:'2026-04-09',co:'2026-04-14',osp:2,tar:120,can:'booking',nome:'Rossi'},
-    {id:'p2',cam:'102',ci:'2026-04-11',co:'2026-04-13',osp:2,tar:120,can:'airbnb',nome:'Smith'},
-    {id:'p3',cam:'201',ci:'2026-04-08',co:'2026-04-12',osp:3,tar:140,can:'booking',nome:'Wagner'},
-    {id:'p4',cam:'202',ci:'2026-04-11',co:'2026-04-16',osp:3,tar:150,can:'airbnb',nome:'Dubois'},
-    {id:'p5',cam:'301',ci:'2026-04-14',co:'2026-04-17',osp:2,tar:120,can:'booking',nome:'Chen'},
-    {id:'p6',cam:'401',ci:'2026-04-19',co:'2026-04-24',osp:2,tar:140,can:'airbnb',nome:'Nakamura'},
-    {id:'p7',cam:'402',ci:'2026-04-12',co:'2026-04-15',osp:2,tar:120,can:'diretto',nome:'Fontana'},
-  ],
-  cvb:[
-    {id:'c1',cam:'Piazzetta',ci:'2026-04-15',co:'2026-04-19',osp:2,tar:90,can:'airbnb',nome:'Müller'},
-    {id:'c2',cam:'Nala',ci:'2026-04-12',co:'2026-04-16',osp:4,tar:120,can:'booking',nome:'Ferrari'},
-  ],
-  liberty:[],rustico:[],rurale:[]
-};
+// Cache locale dei dati dal database
+let prenCache={}, turniCache={}, statoCamereCache={}, extraCache={};
 
-const turniData={
-  piumogna:{
-    '2026-04-11':{Isa:{t:'T1'},Graziella:{t:'T2',c:['101','302']}},
-    '2026-04-12':{Serena:{t:'T1'},Isa:{t:'T2',c:['101','201','302']}},
-    '2026-04-15':{Isa:{t:'T1'},Graziella:{t:'T2',c:['201','202']}},
-    '2026-04-17':{Serena:{t:'T4'},Isa:{t:'T4'}},
-    '2026-04-19':{Serena:{t:'T1'},Julka:{t:'T1'}},
-  },
-  cvb:{
-    '2026-04-16':{Fernanda:{t:'T2',c:['Piazzetta']}},
-    '2026-04-19':{Fernanda:{t:'T2',c:['Nala']}},
-  },
-  liberty:{},rustico:{},rurale:{}
-};
-
+// ═══════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════
 function casa(){return CASE[casaId];}
-function pren(){return prenData[casaId]||[];}
-function turni(){return turniData[casaId]||{};}
 function fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseD(s){return new Date(s+'T12:00:00');}
 function addD(d,n){return new Date(d.getTime()+n*86400000);}
 function diffD(a,b){return Math.round((parseD(b)-parseD(a))/86400000);}
-function getPren(cam,key){return pren().find(p=>p.cam===cam&&p.ci<=key&&p.co>key);}
-function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 function capF(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'';}
 function isAdmin(){return profile==='admin';}
-function getPersonaKey(){
-  const m={};
-  casa().personale.forEach(p=>{ m[p.toLowerCase().replace(/\s+/g,'_')]=p; });
-  return m;
-}
+function loading(show){document.getElementById('loading').classList.toggle('hidden',!show);}
+
 function profileToPersName(){
   if(profile==='admin')return null;
-  const m=getPersonaKey();
-  return m[profile]||null;
+  return casa().personale.find(p=>p.toLowerCase().replace(/\s+/g,'_')===profile)||null;
 }
 
-function setCasa(id){
-  casaId=id;
-  profile='admin';
+function getPren(cam,key){
+  const arr=prenCache[casaId]||[];
+  return arr.find(p=>p.cam===cam&&p.ci<=key&&p.co>key);
+}
+
+function turniDelGiorno(key){return turniCache[casaId+'_'+key]||{};}
+function getStatoCamera(key,cam){return (statoCamereCache[casaId+'_'+key+'_'+cam])||false;}
+function getEx(key,persona){return extraCache[casaId+'_'+key+'_'+persona]||{items:{},vetri:[],letti:0,ore:0,min:0,note:''};}
+
+// ═══════════════════════════════════════════
+// DATABASE — CARICAMENTO DATI
+// ═══════════════════════════════════════════
+async function loadPren(){
+  const Y=vMonth.getFullYear(),M=vMonth.getMonth();
+  const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
+  const {data,error}=await sb.from('prenotazioni')
+    .select('*')
+    .eq('casa_id',casaId)
+    .gte('co',from)
+    .lte('ci',to);
+  if(!error&&data){
+    if(!prenCache[casaId])prenCache[casaId]=[];
+    // Unisci con dati già in cache di altri mesi
+    const ids=data.map(p=>p.id);
+    prenCache[casaId]=prenCache[casaId].filter(p=>!ids.includes(p.id));
+    prenCache[casaId].push(...data);
+  }
+}
+
+async function loadTurni(){
+  const Y=vMonth.getFullYear(),M=vMonth.getMonth();
+  const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
+  const {data,error}=await sb.from('turni')
+    .select('*')
+    .eq('casa_id',casaId)
+    .gte('data',from)
+    .lte('data',to);
+  if(!error&&data){
+    data.forEach(t=>{
+      const key=casaId+'_'+t.data;
+      if(!turniCache[key])turniCache[key]={};
+      turniCache[key][t.persona]={t:t.turno,c:t.camere||[],note:t.note||''};
+    });
+  }
+}
+
+async function loadStatoCamere(){
+  const key=fmtD(TODAY);
+  const {data,error}=await sb.from('stato_camere')
+    .select('*')
+    .eq('casa_id',casaId)
+    .eq('data',key);
+  if(!error&&data){
+    data.forEach(s=>{
+      statoCamereCache[casaId+'_'+key+'_'+s.camera]=s.pronta;
+    });
+  }
+}
+
+async function loadExtra(){
+  const Y=vMonth.getFullYear(),M=vMonth.getMonth();
+  const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
+  const {data,error}=await sb.from('extra')
+    .select('*')
+    .eq('casa_id',casaId)
+    .gte('data',from)
+    .lte('data',to);
+  if(!error&&data){
+    data.forEach(e=>{
+      extraCache[casaId+'_'+e.data+'_'+e.persona]={
+        items:e.items||{},vetri:e.vetri||[],letti:e.letti||0,ore:e.ore||0,min:e.min||0,note:e.note||''
+      };
+    });
+  }
+}
+
+async function loadAll(){
+  loading(true);
+  await Promise.all([loadPren(),loadTurni(),loadStatoCamere(),loadExtra()]);
+  loading(false);
+}
+
+// ═══════════════════════════════════════════
+// DATABASE — SALVATAGGIO DATI
+// ═══════════════════════════════════════════
+async function savePrenDB(p){
+  const {error}=await sb.from('prenotazioni').upsert({...p,casa_id:casaId});
+  if(error)console.error('Errore salvataggio prenotazione:',error);
+  else toast('Prenotazione salvata!');
+}
+
+async function deletePrenDB(id){
+  const {error}=await sb.from('prenotazioni').delete().eq('id',id);
+  if(error)console.error('Errore eliminazione:',error);
+  else toast('Eliminata!');
+}
+
+async function saveTurnoDB(key,persona,turno,camere,note){
+  const {error}=await sb.from('turni').upsert({
+    casa_id:casaId,data:key,persona,turno,camere,note
+  },{onConflict:'casa_id,data,persona'});
+  if(error)console.error('Errore turno:',error);
+  else{
+    if(!turniCache[casaId+'_'+key])turniCache[casaId+'_'+key]={};
+    turniCache[casaId+'_'+key][persona]={t:turno,c:camere,note};
+    toast('Turno salvato!');
+  }
+}
+
+async function deleteTurnoDB(key,persona){
+  const {error}=await sb.from('turni').delete()
+    .eq('casa_id',casaId).eq('data',key).eq('persona',persona);
+  if(error)console.error('Errore eliminazione turno:',error);
+  else{
+    if(turniCache[casaId+'_'+key])delete turniCache[casaId+'_'+key][persona];
+    toast('Turno rimosso!');
+  }
+}
+
+async function saveStatoCameraDB(key,cam,pronta,persona){
+  const {error}=await sb.from('stato_camere').upsert({
+    casa_id:casaId,data:key,camera:cam,pronta,persona,updated_at:new Date().toISOString()
+  },{onConflict:'casa_id,data,camera'});
+  if(error)console.error('Errore stato camera:',error);
+  else{
+    statoCamereCache[casaId+'_'+key+'_'+cam]=pronta;
+  }
+}
+
+async function saveExtroDB(key,persona,ex){
+  const {error}=await sb.from('extra').upsert({
+    casa_id:casaId,data:key,persona,...ex,updated_at:new Date().toISOString()
+  },{onConflict:'casa_id,data,persona'});
+  if(error)console.error('Errore extra:',error);
+  else{
+    extraCache[casaId+'_'+key+'_'+persona]=ex;
+    toast('Extra salvati!');
+  }
+}
+
+// ═══════════════════════════════════════════
+// UI — COSTRUZIONE INTERFACCIA
+// ═══════════════════════════════════════════
+function buildUI(){
+  const pb=document.getElementById('profiles-bar');
+  const people=['admin',...casa().personale.map(p=>p.toLowerCase().replace(/\s+/g,'_'))];
+  const labels=['Staff',...casa().personale];
+  pb.innerHTML=people.map((p,i)=>`<button class="pb${profile===p?' on':''}" onclick="setP('${p}')">${labels[i]}</button>`).join('');
+  const tb=document.getElementById('tabs-bar');
+  let tabs='';
+  if(isAdmin())tabs+=`<div class="tab${curTab==='pren'?' on':''}" data-t="pren" onclick="sw('pren')">Prenotazioni</div>`;
+  tabs+=`<div class="tab${curTab==='turni'?' on':''}" data-t="turni" onclick="sw('turni')">Turni</div>`;
+  if(isAdmin()){tabs+=`<div class="tab${curTab==='comp'?' on':''}" data-t="comp" onclick="sw('comp')">Compensi</div>`;tabs+=`<div class="tab${curTab==='riepilogo'?' on':''}" data-t="riepilogo" onclick="sw('riepilogo')">Riepilogo</div>`;}
+  else tabs+=`<div class="tab${curTab==='mio'?' on':''}" data-t="mio" onclick="sw('mio')">Il mio mese</div>`;
+  tb.innerHTML=tabs;
+}
+
+async function setCasa(id){
+  casaId=id;profile='admin';curTab='pren';
   buildUI();
+  await loadAll();
   renderAll();
   toast('Casa: '+casa().nome);
 }
 
-function buildUI(){
-  // Profiles
-  const pb=document.getElementById('profiles-bar');
-  const people=['admin',...casa().personale.map(p=>p.toLowerCase().replace(/\s+/g,'_'))];
-  const labels=['Staff',...casa().personale];
-  pb.innerHTML=people.map((p,i)=>`<button class="pb${profile===p?' on':''}" onclick="setP('${p}')" id="pb-${p}">${labels[i]}</button>`).join('');
-  // Tabs
-  const tb=document.getElementById('tabs-bar');
-  let tabs='';
-  if(isAdmin()){
-    tabs+=`<div class="tab${curTab==='pren'?' on':''}" data-t="pren" onclick="sw('pren')">Prenotazioni</div>`;
-  }
-  tabs+=`<div class="tab${curTab==='turni'?' on':''}" data-t="turni" onclick="sw('turni')">Turni</div>`;
-  if(isAdmin()){
-    tabs+=`<div class="tab${curTab==='comp'?' on':''}" data-t="comp" onclick="sw('comp')">Compensi</div>`;
-    tabs+=`<div class="tab${curTab==='riepilogo'?' on':''}" data-t="riepilogo" onclick="sw('riepilogo')">Riepilogo</div>`;
-  } else {
-    tabs+=`<div class="tab${curTab==='mio'?' on':''}" data-t="mio" onclick="sw('mio')">Il mio mese</div>`;
-  }
-  tb.innerHTML=tabs;
-}
-
-let curTab='pren';
-function setP(p){
+async function setP(p){
   profile=p;
-  if(!isAdmin()&&(curTab==='pren'||curTab==='comp'||curTab==='riepilogo'))curTab='turni';
+  if(!isAdmin()&&['pren','comp','riepilogo'].includes(curTab))curTab='turni';
   if(!isAdmin())curTab='turni';
   buildUI();
   renderAll();
-  toast('Profilo: '+(p==='admin'?'Staff':casa().personale.find(x=>x.toLowerCase().replace(/\s+/g,'_')===p)||p));
 }
 
 function sw(t){
-  curTab=t;
-  buildUI();
+  curTab=t;buildUI();
   document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
   document.getElementById('sec-'+t).classList.add('on');
   if(t==='pren')renderPren();
@@ -455,26 +544,36 @@ function sw(t){
 
 function renderAll(){
   document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
-  const t=curTab;
-  const el=document.getElementById('sec-'+t);
+  const el=document.getElementById('sec-'+curTab);
   if(el)el.classList.add('on');
-  if(t==='pren')renderPren();
-  else if(t==='turni')renderTurni();
-  else if(t==='comp')renderComp();
-  else if(t==='riepilogo')renderRiep();
-  else if(t==='mio')renderMio();
+  if(curTab==='pren')renderPren();
+  else if(curTab==='turni')renderTurni();
+  else if(curTab==='comp')renderComp();
+  else if(curTab==='riepilogo')renderRiep();
+  else if(curTab==='mio')renderMio();
 }
 
-function chM(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);renderPren();renderTurni();}
+async function chM(d){
+  vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);
+  loading(true);
+  await Promise.all([loadPren(),loadTurni(),loadExtra()]);
+  loading(false);
+  renderPren();renderTurni();
+}
 function chD(d){vDay=addD(vDay,d);document.getElementById('dlbl-c').textContent=fmtLbl(vDay);renderComp();}
+function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 
+// ═══════════════════════════════════════════
+// RENDER PRENOTAZIONI
+// ═══════════════════════════════════════════
 function renderPren(){
   if(!isAdmin())return;
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-p').textContent=MESI[M]+' '+Y;
   const ms=fmtD(new Date(Y,M,1)),me=fmtD(new Date(Y,M,days));
+  const arr=prenCache[casaId]||[];
   let notti=0,ent=0;
-  pren().forEach(p=>{if(p.ci<=me&&p.co>ms){const s=p.ci<ms?ms:p.ci,e=p.co>me?fmtD(addD(new Date(Y,M,days),1)):p.co;const n=diffD(s,e);notti+=n;ent+=n*p.tar;}});
+  arr.forEach(p=>{if(p.ci<=me&&p.co>ms){const s=p.ci<ms?ms:p.ci,e=p.co>me?fmtD(addD(new Date(Y,M,days),1)):p.co;const n=diffD(s,e);notti+=n;ent+=n*(p.tar||0);}});
   const occ=Math.round(notti/(days*casa().camere.length)*100);
   document.getElementById('stats-p').innerHTML=`<div class="sbox"><div class="sv">${occ}%</div><div class="sl">Occupazione</div></div><div class="sbox"><div class="sv">${notti}</div><div class="sl">Notti</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent.toLocaleString('it-CH')}</div><div class="sl">Entrate</div></div>`;
   let th='<thead><tr><th class="thc">Camera</th>';
@@ -483,7 +582,7 @@ function renderPren(){
   casa().camere.forEach(cam=>{
     th+=`<tr><td class="tdc"><div class="cn">${cam.n}</div><div class="cs">${cam.nm}</div></td>`;
     for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';
-      if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+CL[p.can];if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${isCI?p.nome+(p.osp?'('+p.osp+')':''):''}</span></div>`;}
+      if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+(CL[p.can]||'al');if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${isCI?(p.nome||'')+(p.osp?'('+p.osp+')':''):''}</span></div>`;}
       else ct=`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`;
       th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
     th+='</tr>';
@@ -491,6 +590,9 @@ function renderPren(){
   document.getElementById('cal-p').innerHTML=th+'</tbody>';
 }
 
+// ═══════════════════════════════════════════
+// RENDER TURNI
+// ═══════════════════════════════════════════
 function renderTurni(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-t').textContent=MESI[M]+' '+Y;
@@ -501,11 +603,11 @@ function renderTurni(){
   th+='</tr></thead><tbody>';
   filtP.forEach(p=>{
     th+=`<tr><td class="gtp-cell"><div class="pn">${p}</div></td>`;
-    for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tg=turni()[k]||{},tp=tg[p];
-      const ex=extraState[casaId+'_'+k]&&extraState[casaId+'_'+k][p];
+    for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tg=turniDelGiorno(k),tp=tg[p];
+      const ex=extraCache[casaId+'_'+k+'_'+p];
       const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
       let ct='<div class="gt-cell">';
-      if(tp){ct+=`<span class="tt ${tp.t==='T1'?'tt1':tp.t==='T2'?'tt2':tp.t==='T3'?'tt3':'tt4'}">${tp.t}</span>`;if(tp.c&&tp.c.length)ct+=`<div class="cm">${tp.c.slice(0,3).join(' ')}</div>`;}
+      if(tp){ct+=`<span class="tt ${tp.t==='T1'?'tt1':tp.t==='T2'?'tt2':tp.t==='T3'?'tt3':'tt4'}">${tp.t}</span>`;if(tp.c&&tp.c.length)ct+=`<div class="cm">${tp.c.slice(0,2).join(' ')}</div>`;}
       if(hasEx)ct+=`<div style="font-size:8px;color:var(--t3t);background:var(--t3);border-radius:2px;padding:1px 3px;margin-top:1px;">+</div>`;
       ct+='</div>';
       th+=`<td class="dc${it?' tod':''}" onclick="${isAdmin()?`openTurno('${k}','${p.replace(/'/g,"\\'")}',event)`:''}">${ct}</td>`;}
@@ -514,23 +616,15 @@ function renderTurni(){
   document.getElementById('grid-t').innerHTML=th+'</tbody>';
 }
 
-function getEx(key,persona){
-  const ck=casaId+'_'+key;
-  if(!extraState[ck])extraState[ck]={};
-  if(!extraState[ck][persona])extraState[ck][persona]={items:{},vetri:[],letti:0,ore:0,min:0,note:''};
-  return extraState[ck][persona];
-}
-
+// ═══════════════════════════════════════════
+// EXTRA
+// ═══════════════════════════════════════════
 function calcExTot(ex,camName){
   let t=0;
   const c=casa();
-  c.extras.forEach(e=>{ if(ex.items[e.id])t+=e.prezzo; });
-  if(c.hasVetri&&ex.vetri){
-    if(c.vetriPrezzi){ex.vetri.forEach(v=>{ t+=(c.vetriPrezzi[v]||0); });}
-    else{t+=ex.vetri.length*(c.vetriPrezzo||0);}
-  }
+  c.extras.forEach(e=>{if(ex.items[e.id])t+=e.prezzo;});
+  if(c.hasVetri&&ex.vetri){if(c.vetriPrezzi){ex.vetri.forEach(v=>{t+=(c.vetriPrezzi[v]||0);});}else{t+=ex.vetri.length*(c.vetriPrezzo||0);}}
   if(c.hasLetti)t+=ex.letti*(c.lettoPrezzzo||0);
-  // tariffa base camera per CVB/Liberty
   if(c.tariffeCam&&camName&&c.tariffeCam[camName])t+=c.tariffeCam[camName];
   return t;
 }
@@ -540,19 +634,14 @@ function buildExtra(key,persona,camName){
   const c=casa();
   const showPrices=isAdmin();
   const items=c.extras.map(e=>`<div class="extra-item${ex.items[e.id]?' sel':''}" onclick="togExItem('${key}','${persona.replace(/'/g,"\\'")}','${e.id}')"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div>${showPrices?`<div class="ei-price">Fr.${e.prezzo}</div>`:''}</div>`).join('');
-  
   let vetriHtml='';
   if(c.hasVetri){
     const vp=c.vetriPrezzi?c.camere.map(cam=>`<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}${showPrices?`<br><span style="font-size:9px">Fr.${c.vetriPrezzi[cam.n]||0}</span>`:''}</div>`).join(''):
     c.camere.map(cam=>`<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}</div>`).join('');
     vetriHtml=`<div class="extra-vetri"><div class="extra-vetri-title">🪟 Vetri${showPrices&&!c.vetriPrezzi?' — Fr.'+(c.vetriPrezzo||0)+'/camera':''}</div><div class="vetri-cam-grid">${vp}</div></div>`;
   }
-  
   let lettiHtml='';
-  if(c.hasLetti){
-    lettiHtml=`<div class="ore-extra"><label>🛏 Letti usati${showPrices?' (Fr.'+c.lettoPrezzzo+' cad.)':''}</label><div class="ore-input"><div class="ore-field"><label>N° letti</label><input type="number" min="0" value="${ex.letti}" onchange="saveLettiVal('${key}','${persona.replace(/'/g,"\\'")}',this.value)" style="width:70px;"></div></div></div>`;
-  }
-
+  if(c.hasLetti){lettiHtml=`<div class="ore-extra"><label>🛏 Letti usati${showPrices?' (Fr.'+c.lettoPrezzzo+' cad.)':''}</label><div class="ore-input"><div class="ore-field"><label>N° letti</label><input type="number" min="0" value="${ex.letti}" onchange="saveLettiVal('${key}','${persona.replace(/'/g,"\\'")}',this.value)" style="width:70px;"></div></div></div>`;}
   const tot=calcExTot(ex,camName);
   const sumRows=[];
   c.extras.forEach(e=>{if(ex.items[e.id])sumRows.push(`<div class="extra-row"><span>${e.nome}</span>${showPrices?`<span>Fr.${e.prezzo}</span>`:''}</div>`);});
@@ -560,30 +649,39 @@ function buildExtra(key,persona,camName){
   if(c.hasLetti&&ex.letti>0)sumRows.push(`<div class="extra-row"><span>Letti (${ex.letti})</span>${showPrices?`<span>Fr.${ex.letti*c.lettoPrezzzo}</span>`:''}</div>`);
   if(ex.ore>0||ex.min>0)sumRows.push(`<div class="extra-row"><span>Ore extra</span><span>${ex.ore}h ${ex.min>0?ex.min+'min':''}</span></div>`);
   if(showPrices&&c.tariffeCam&&camName&&c.tariffeCam[camName])sumRows.push(`<div class="extra-row"><span>Pulizia base</span><span>Fr.${c.tariffeCam[camName]}</span></div>`);
-
   return `<div class="extra-section">
     <div class="extra-title">Extra del giorno</div>
     ${items.length?`<div class="extra-grid">${items}</div>`:''}
-    ${vetriHtml}
-    ${lettiHtml}
+    ${vetriHtml}${lettiHtml}
     <div class="ore-extra"><label>⏱ Ore extra</label><div class="ore-input">
-      <div class="ore-field"><label>Ore</label><input type="number" min="0" value="${ex.ore}" onchange="saveOreMin('${key}','${persona.replace(/'/g,"\\'")}','ore',this.value)"></div>
-      <div class="ore-field"><label>Minuti</label><input type="number" min="0" max="59" value="${ex.min}" onchange="saveOreMin('${key}','${persona.replace(/'/g,"\\'")}','min',this.value)"></div>
-      <span style="font-size:11px;color:var(--text2);">(calcolate a fine mese)</span>
+      <div class="ore-field"><label>Ore</label><input type="number" min="0" value="${ex.ore}" onchange="updateExField('${key}','${persona.replace(/'/g,"\\'")}','ore',this.value)"></div>
+      <div class="ore-field"><label>Minuti</label><input type="number" min="0" max="59" value="${ex.min}" onchange="updateExField('${key}','${persona.replace(/'/g,"\\'")}','min',this.value)"></div>
+      <span style="font-size:11px;color:var(--text2);">(a fine mese)</span>
     </div></div>
-    <textarea class="note-extra" placeholder="Note..." rows="2" onchange="saveNote('${key}','${persona.replace(/'/g,"\\'")}',this.value)">${ex.note}</textarea>
+    <textarea class="note-extra" placeholder="Note..." rows="2" onchange="updateExField('${key}','${persona.replace(/'/g,"\\'")}','note',this.value)">${ex.note}</textarea>
     ${sumRows.length?`<div class="extra-summary"><div class="extra-summary-title">Riepilogo</div>${sumRows.join('')}${showPrices?`<div class="extra-total"><span>Totale</span><span>Fr.${tot}${ex.ore>0||ex.min>0?' + ore':''}</span></div>`:''}</div>`:''}
     <button class="bsave" onclick="saveEx('${key}','${persona.replace(/'/g,"\\'")}')">Salva extra</button>
   </div>`;
 }
 
-function togExItem(key,persona,id){const ex=getEx(key,persona);ex.items[id]=!ex.items[id];renderMio();}
-function togVetri(key,persona,cam){const ex=getEx(key,persona);if(ex.vetri.includes(cam))ex.vetri=ex.vetri.filter(c=>c!==cam);else ex.vetri.push(cam);renderMio();}
-function saveOreMin(key,persona,field,val){const ex=getEx(key,persona);ex[field]=parseInt(val)||0;renderMio();}
-function saveLettiVal(key,persona,val){const ex=getEx(key,persona);ex.letti=parseInt(val)||0;renderMio();}
-function saveNote(key,persona,val){getEx(key,persona).note=val;}
-function saveEx(key,persona){renderTurni();toast('Extra salvati!');}
+function getExLocal(key,persona){
+  const ck=casaId+'_'+key+'_'+persona;
+  if(!extraCache[ck])extraCache[ck]={items:{},vetri:[],letti:0,ore:0,min:0,note:''};
+  return extraCache[ck];
+}
+function togExItem(key,persona,id){const ex=getExLocal(key,persona);ex.items[id]=!ex.items[id];renderMio();}
+function togVetri(key,persona,cam){const ex=getExLocal(key,persona);if(ex.vetri.includes(cam))ex.vetri=ex.vetri.filter(c=>c!==cam);else ex.vetri.push(cam);renderMio();}
+function updateExField(key,persona,field,val){const ex=getExLocal(key,persona);ex[field]=field==='ore'||field==='min'||field==='letti'?parseInt(val)||0:val;if(field!=='note')renderMio();}
+function saveLettiVal(key,persona,val){updateExField(key,persona,'letti',val);}
+async function saveEx(key,persona){
+  const ex=getExLocal(key,persona);
+  await saveExtroDB(key,persona,ex);
+  renderTurni();
+}
 
+// ═══════════════════════════════════════════
+// RENDER MIO MESE
+// ═══════════════════════════════════════════
 function renderMio(){
   const persona=profileToPersName();
   const el=document.getElementById('mio-content');
@@ -591,14 +689,14 @@ function renderMio(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   const offset=(new Date(Y,M,1).getDay()||7)-1;
   let totGG=0,totT2=0;
-  for(let d=1;d<=days;d++){const k=fmtD(new Date(Y,M,d)),tp=(turni()[k]||{})[persona];if(tp){totGG++;if(tp.t==='T2')totT2++;}}
-  const tpOggi=(turni()[TK]||{})[persona],infoOggi=tpOggi?TI[tpOggi.t]:null;
+  for(let d=1;d<=days;d++){const k=fmtD(new Date(Y,M,d)),tp=turniDelGiorno(k)[persona];if(tp){totGG++;if(tp.t==='T2')totT2++;}}
+  const tpOggi=turniDelGiorno(TK)[persona],infoOggi=tpOggi?TI[tpOggi.t]:null;
   let oggiHtml='';
   if(tpOggi){
     let camSec='';
     if(tpOggi.c&&tpOggi.c.length){
-      const cards=tpOggi.c.map(n=>{const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK),sk=casaId+'_'+TK+'_'+n,ready=camereState[sk];
-        return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}"><div class="cam-num-big">${n}</div><div class="cam-name-s">${ci?ci.nm:''}</div><div class="cam-osp">${pr?pr.osp+' ospiti':''}</div><div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div><button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')"> ${ready?'✓ Camera pronta':'Segna come pronta'}</button></div>`;}).join('');
+      const cards=tpOggi.c.map(n=>{const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK),ready=getStatoCamera(TK,n);
+        return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}"><div class="cam-num-big">${n}</div><div class="cam-name-s">${ci?ci.nm:''}</div><div class="cam-osp">${pr?'👥 '+pr.osp+' ospiti':''}</div><div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div><button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')"> ${ready?'✓ Camera pronta':'Segna come pronta'}</button></div>`;}).join('');
       camSec=`<div style="margin-top:12px;"><div class="lbl">Camere da pulire oggi</div><div class="cam-status-grid">${cards}</div></div>`;
     }
     const camName=tpOggi.c&&tpOggi.c.length===1?tpOggi.c[0]:null;
@@ -607,7 +705,7 @@ function renderMio(){
       <span class="tt ${infoOggi.c}" style="display:inline-block;margin-bottom:6px;">${tpOggi.t}</span>
       <div class="mt-tit">${infoOggi.l}</div><div class="mt-ora">${infoOggi.o}</div>
       ${camSec}
-      ${tpOggi.note?`<div style="margin-top:10px;background:white;border-radius:var(--r-md);padding:10px;border-left:3px solid var(--t3t);"><div style="font-size:10px;font-weight:600;color:var(--t3t);margin-bottom:4px;">📋 NOTE OPERATIVE</div><div style="font-size:13px;">${tpOggi.note}</div></div>`:''}
+      ${tpOggi.note?`<div style="margin-top:10px;background:white;border-radius:var(--r-md);padding:10px;border-left:3px solid var(--t3t);"><div style="font-size:10px;font-weight:600;color:var(--t3t);margin-bottom:4px;">📋 NOTE</div><div style="font-size:13px;">${tpOggi.note}</div></div>`:''}
       ${buildExtra(TK,persona,camName)}
     </div>`;
   } else {
@@ -617,88 +715,133 @@ function renderMio(){
   const stats=`<div class="stats"><div class="sbox"><div class="sv">${totGG}</div><div class="sl">Giorni lavoro</div></div><div class="sbox"><div class="sv">${totT2}</div><div class="sl">Pulizie</div></div><div class="sbox"><div class="sv">${days-totGG}</div><div class="sl">Giorni liberi</div></div></div>`;
   let cal=`<div class="card" style="padding:10px;"><div class="mio-cal">${['Lu','Ma','Me','Gi','Ve','Sa','Do'].map(g=>`<div style="text-align:center;font-size:10px;color:var(--text2);font-weight:500;padding:4px 0;">${g}</div>`).join('')}`;
   for(let i=0;i<offset;i++)cal+=`<div></div>`;
-  for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=(turni()[k]||{})[persona],info=tp?TI[tp.t]:null;
-    const exk=casaId+'_'+k;const ex=extraState[exk]&&extraState[exk][persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
+  for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=turniDelGiorno(k)[persona],info=tp?TI[tp.t]:null;
+    const ex=extraCache[casaId+'_'+k+'_'+persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
     cal+=`<div class="giorno-box${it?' oggi':''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${tp&&tp.c&&tp.c.length?`<div class="gb-cam">${tp.c.length}cam</div>`:''}</div>`;}
   cal+='</div></div>';
   el.innerHTML=oggiHtml+mnav+stats+cal;
 }
 
-function toggleCam(n,persona){
-  const sk=casaId+'_'+TK+'_'+n;camereState[sk]=!camereState[sk];const isR=camereState[sk];
+async function toggleCam(n,persona){
+  const ready=!getStatoCamera(TK,n);
+  await saveStatoCameraDB(TK,n,ready,persona);
   const id='csc-'+n.replace(/\s/g,'_');const card=document.getElementById(id);
-  if(card){card.className='cam-status-card'+(isR?' pronta':'');card.querySelector('.cam-stato').textContent=isR?'✓ Pronta':'In attesa';card.querySelector('.cam-stato').style.color=isR?'var(--success)':'var(--text3)';card.querySelector('.cam-pronta-btn').className='cam-pronta-btn '+(isR?'fatta':'da-fare');card.querySelector('.cam-pronta-btn').textContent=isR?'✓ Camera pronta':'Segna come pronta';}
-  toast(isR?`${n} pronta!`:`${n} — in attesa`);
+  if(card){card.className='cam-status-card'+(ready?' pronta':'');card.querySelector('.cam-stato').textContent=ready?'✓ Pronta':'In attesa';card.querySelector('.cam-stato').style.color=ready?'var(--success)':'var(--text3)';card.querySelector('.cam-pronta-btn').className='cam-pronta-btn '+(ready?'fatta':'da-fare');card.querySelector('.cam-pronta-btn').textContent=ready?'✓ Camera pronta':'Segna come pronta';}
+  toast(ready?`${n} pronta!`:`${n} — in attesa`);
 }
 
 function chMMio(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);renderMio();}
 
+// ═══════════════════════════════════════════
+// RENDER COMPENSI
+// ═══════════════════════════════════════════
 function renderComp(){
   if(!isAdmin())return;
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
   const key=fmtD(vDay),ieri=fmtD(addD(vDay,-1));
-  const camIeri=pren().filter(p=>p.ci<=ieri&&p.co>ieri).length;
+  const arr=prenCache[casaId]||[];
+  const camIeri=arr.filter(p=>p.ci<=ieri&&p.co>ieri).length;
   const tarT1=camIeri<=3?50:camIeri<=5?60:70;
-  const tg=turni()[key]||{};let rows=[],tot=0;
+  const tg=turniDelGiorno(key);let rows=[],tot=0;
   Object.entries(tg).forEach(([p,tp])=>{
-    if(tp.t==='T1'||tp.t==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt ${tp.t==='T1'?'tt1':'tt4'}">${tp.t}</span></td><td>${camIeri} cam ieri→Fr.${tarT1}</td><td class="amt">Fr.${tarT1}</td></tr>`);tot+=tarT1;}
-    else if(tp.t==='T2'){const nc=tp.c?tp.c.length:0,comp=nc*30;rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${nc} cam×Fr.30</td><td class="amt">Fr.${comp}</td></tr>`);tot+=comp;}
-    else if(tp.t==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena/evento</td><td class="amt">—</td></tr>`);}
-    const ck=casaId+'_'+key;const ex=extraState[ck]&&extraState[ck][p];
+    if(tp.t==='T1'||tp.t==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt ${tp.t==='T1'?'tt1':'tt4'}">${tp.t}</span></td><td>${camIeri} cam→Fr.${tarT1}</td><td class="amt">Fr.${tarT1}</td></tr>`);tot+=tarT1;}
+    else if(tp.t==='T2'){const nc=tp.c?tp.c.length:0,comp=nc*30;rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${nc}×Fr.30</td><td class="amt">Fr.${comp}</td></tr>`);tot+=comp;}
+    else if(tp.t==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena</td><td class="amt">—</td></tr>`);}
+    const ex=extraCache[casaId+'_'+key+'_'+p];
     if(ex){const et=calcExTot(ex,tp.c&&tp.c.length===1?tp.c[0]:null);if(et>0){rows.push(`<tr><td>${p}</td><td><span style="background:var(--t3);color:var(--t3t);border-radius:3px;padding:2px 5px;font-size:9px;">EXTRA</span></td><td>vedi dettaglio</td><td class="amt">Fr.${et}</td></tr>`);tot+=et;}
     if(ex.ore>0||ex.min>0)rows.push(`<tr><td>${p}</td><td><span style="background:#f0f0f0;border-radius:3px;padding:2px 5px;font-size:9px;">ORE+</span></td><td>${ex.ore}h ${ex.min>0?ex.min+'m':''}</td><td class="amt">a fine mese</td></tr>`);}
   });
   document.getElementById('comp-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:20px;">Nessun turno</td></tr>';
   document.getElementById('comp-tot').textContent='Fr.'+tot;
-  const prenOggi=pren().filter(p=>p.ci<=key&&p.co>key);
-  const ent=prenOggi.reduce((s,p)=>s+p.tar,0),marg=ent-tot;
+  const prenOggi=arr.filter(p=>p.ci<=key&&p.co>key);
+  const ent=prenOggi.reduce((s,p)=>s+(p.tar||0),0),marg=ent-tot;
   document.getElementById('stats-comp').innerHTML=`<div class="sbox"><div class="sv">${prenOggi.length}</div><div class="sl">Camere occ.</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent}</div><div class="sl">Entrata</div></div><div class="sbox"><div class="sv" style="color:${marg>=0?'var(--success)':'var(--danger)'}">Fr.${marg}</div><div class="sl">Margine</div></div>`;
 }
 
 function renderRiep(){
   if(!isAdmin())return;
   document.getElementById('riepilogo-lbl').textContent=MESI[vMonth.getMonth()]+' '+vMonth.getFullYear();
-  document.getElementById('riepilogo-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Riepilogo mensile — disponibile con database</div>';
+  document.getElementById('riepilogo-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Riepilogo mensile — in arrivo</div>';
 }
 function chRiep(v){vMonth=new Date(vMonth.getFullYear(),parseInt(v),1);renderRiep();}
 
+// ═══════════════════════════════════════════
 // POPUP TURNO
+// ═══════════════════════════════════════════
 function openTurno(key,persona,e){
   e&&e.stopPropagation();if(!isAdmin())return;
-  const ex=(turni()[key]||{})[persona];
-  popTipo=ex?ex.t:null;popCamere=ex?ex.c||[]:[];
-  const dt=parseD(key),isDom=dt.getDay()===0;
+  const tp=turniDelGiorno(key)[persona];
+  popTipo=tp?tp.t:null;popCamere=tp?tp.c||[]:[];
+  const dt=parseD(key);
   const types=casa().turniTypes;
-  const tOpts=types.map(t=>`<div class="topt${popTipo===t?' s'+t.toLowerCase():''}" onclick="selTipo('${t}',this)">${t} — ${TI[t]?TI[t].l.split('—')[1].trim():t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
-  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts">${tOpts}</div><div id="cam-sec" style="${popTipo==='T2'?'':'display:none'}"><div class="lbl">Camere</div><div class="ckopts">${casa().camere.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCamP('${c.n}',this)"><div class="cn2">${c.n}</div><div style="font-size:9px">${c.nm}</div></div>`).join('')}</div><div class="lbl" style="margin-top:10px;">Note operative</div><textarea id="pop-note" placeholder="Es: prepara 2 letti in 102, culla in 201..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;">${ex&&ex.note||''}</textarea></div><button class="bsave" onclick="saveTurno('${key}','${persona.replace(/'/g,"\\'")}')">Salva</button><button class="bcl" onclick="clearTurno('${key}','${persona.replace(/'/g,"\\'")}')">Rimuovi</button></div></div>`;
+  const tOpts=types.map(t=>`<div class="topt${popTipo===t?' st'+t.toLowerCase():''}" onclick="selTipo('${t}',this)">${t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts">${tOpts}</div><div id="cam-sec" style="${popTipo==='T2'?'':'display:none'}"><div class="lbl">Camere</div><div class="ckopts">${casa().camere.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCamP('${c.n}',this)"><div class="cn2">${c.n}</div><div style="font-size:9px">${c.nm}</div></div>`).join('')}</div><div class="lbl" style="margin-top:10px;">Note operative</div><textarea id="pop-note" placeholder="Es: prepara 2 letti in 102, culla in 201..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;">${tp&&tp.note||''}</textarea></div><button class="bsave" onclick="saveTurno('${key}','${persona.replace(/'/g,"\\'")}')">Salva</button><button class="bcl" onclick="clearTurno('${key}','${persona.replace(/'/g,"\\'")}')">Rimuovi</button></div></div>`;
 }
-function selTipo(t,el){popTipo=t;document.querySelectorAll('.topt').forEach(x=>x.className='topt');el.className='topt s'+t.toLowerCase();const cs=document.getElementById('cam-sec');if(cs)cs.style.display=t==='T2'?'':'none';}
-function togCamP(n,el){if(popCamere.includes(n))popCamere=popCamere.filter(x=>x!==n);else popCamere.push(n);el.classList.toggle('ck');}
-function saveTurno(key,persona){if(!popTipo){toast('Scegli un turno');return;}if(!turniData[casaId][key])turniData[casaId][key]={};const noteEl=document.getElementById('pop-note');turniData[casaId][key][persona]={t:popTipo,c:[...popCamere],note:noteEl?noteEl.value:''};closePopDirect();renderTurni();renderMio();toast('Salvato!');}
-function clearTurno(key,persona){if(turniData[casaId][key])delete turniData[casaId][key][persona];closePopDirect();renderTurni();renderMio();toast('Rimosso');}
 
-// POPUP PRENOTAZIONE
-function openDet(id,e){
-  e&&e.stopPropagation();const p=pren().find(x=>x.id===id);if(!p)return;
-  const n=diffD(p.ci,p.co),tot=n*p.tar;
-  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${p.cam} — ${p.nome}</h3><p class="psub">${p.ci} → ${p.co}</p><div class="det"><div class="dr"><span>Camera</span><span>${p.cam}</span></div><div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:16px;font-weight:600;">${p.osp}</span></div><div class="dr"><span>Check-in</span><span>${p.ci}</span></div><div class="dr"><span>Check-out</span><span>${p.co}</span></div><div class="dr"><span>Notti</span><span>${n}</span></div><div class="dr"><span>Tariffa/notte</span><span>Fr.${p.tar}</span></div><div class="dr"><span>Totale</span><span>Fr.${tot}</span></div><div class="dr"><span>Canale</span><span><span class="bdg bdg-${CL[p.can]}">${capF(p.can)}</span></span></div></div><button class="bdel" onclick="delPren('${id}')">Elimina</button><button class="bcan" onclick="closePopDirect()">Chiudi</button></div></div>`;
+function selTipo(t,el){popTipo=t;document.querySelectorAll('.topt').forEach(x=>x.className='topt');el.className='topt st'+t.toLowerCase();const cs=document.getElementById('cam-sec');if(cs)cs.style.display=t==='T2'?'':'none';}
+function togCamP(n,el){if(popCamere.includes(n))popCamere=popCamere.filter(x=>x!==n);else popCamere.push(n);el.classList.toggle('ck');}
+
+async function saveTurno(key,persona){
+  if(!popTipo){toast('Scegli un turno');return;}
+  const noteEl=document.getElementById('pop-note');
+  const note=noteEl?noteEl.value:'';
+  await saveTurnoDB(key,persona,popTipo,popCamere,note);
+  closePopDirect();renderTurni();renderMio();
 }
+
+async function clearTurno(key,persona){
+  await deleteTurnoDB(key,persona);
+  closePopDirect();renderTurni();renderMio();
+}
+
+// ═══════════════════════════════════════════
+// POPUP PRENOTAZIONE
+// ═══════════════════════════════════════════
+function openDet(id,e){
+  e&&e.stopPropagation();
+  const arr=prenCache[casaId]||[];
+  const p=arr.find(x=>x.id===id);if(!p)return;
+  const n=diffD(p.ci,p.co),tot=n*(p.tar||0);
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${p.cam} — ${p.nome||'Ospite'}</h3><p class="psub">${p.ci} → ${p.co}</p><div class="det"><div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:16px;font-weight:600;">👥 ${p.osp}</span></div><div class="dr"><span>Check-in</span><span>${p.ci}</span></div><div class="dr"><span>Check-out</span><span>${p.co}</span></div><div class="dr"><span>Notti</span><span>${n}</span></div><div class="dr"><span>Tariffa/notte</span><span>Fr.${p.tar}</span></div><div class="dr"><span>Totale</span><span>Fr.${tot}</span></div><div class="dr"><span>Canale</span><span><span class="bdg bdg-${CL[p.can]||'al'}">${capF(p.can||'altro')}</span></span></div></div><button class="bdel" onclick="delPren('${id}')">Elimina</button><button class="bcan" onclick="closePopDirect()">Chiudi</button></div></div>`;
+}
+
 function openNew(cam,key,e){
   e&&e.stopPropagation();selCan='diretto';const next=fmtD(addD(parseD(key),1));
-  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>Nuova prenotazione</h3><p class="psub">Camera ${cam}</p><div class="lbl">Canale</div><div class="canopts"><div class="canopt" id="co-booking" onclick="selC('booking')">Booking</div><div class="canopt sdi" id="co-diretto" onclick="selC('diretto')">Interno</div><div class="canopt" id="co-airbnb" onclick="selC('airbnb')">Airbnb</div><div class="canopt" id="co-altro" onclick="selC('altro')">Altro</div></div><div class="fg f1"><div class="fl"><label>Nome ospite</label><input type="text" id="fn" placeholder="Cognome"></div></div><div class="fg"><div class="fl"><label>Check-in</label><input type="date" id="fci" value="${key}"></div><div class="fl"><label>Check-out</label><input type="date" id="fco" value="${next}"></div></div><div class="fg"><div class="fl"><label>N° ospiti</label><input type="number" id="fo" value="2" min="1" max="12"></div><div class="fl"><label>Tariffa/notte</label><input type="number" id="ft" value="120"></div></div><input type="hidden" id="fc" value="${cam}"><button class="bsave" onclick="savePren()">Salva</button><button class="bcan" onclick="closePopDirect()">Annulla</button></div></div>`;
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>Nuova prenotazione</h3><p class="psub">Camera ${cam}</p><div class="lbl">Canale</div><div class="canopts"><div class="canopt" id="co-booking" onclick="selC('booking')">Booking</div><div class="canopt sdi" id="co-diretto" onclick="selC('diretto')">Interno</div><div class="canopt" id="co-airbnb" onclick="selC('airbnb')">Airbnb</div><div class="canopt" id="co-altro" onclick="selC('altro')">Altro</div></div><div class="fg f1"><div class="fl"><label>Nome ospite</label><input type="text" id="fn" placeholder="Cognome"></div></div><div class="fg"><div class="fl"><label>Check-in</label><input type="date" id="fci" value="${key}"></div><div class="fl"><label>Check-out</label><input type="date" id="fco" value="${next}"></div></div><div class="fg"><div class="fl"><label>N° ospiti</label><input type="number" id="fo" value="2" min="1" max="12"></div><div class="fl"><label>Tariffa/notte</label><input type="number" id="ft" value="120"></div></div><div class="fg f1"><div class="fl"><label>Note</label><input type="text" id="fno" placeholder="Allergie, culla..."></div></div><input type="hidden" id="fc" value="${cam}"><button class="bsave" onclick="savePren()">Salva</button><button class="bcan" onclick="closePopDirect()">Annulla</button></div></div>`;
 }
+
 function selC(c){selCan=c;['booking','diretto','airbnb','altro'].forEach(x=>{const el=document.getElementById('co-'+x);if(el)el.className='canopt'+(x===c?' s'+CL[x]:'');});}
-function savePren(){const cam=document.getElementById('fc').value,ci=document.getElementById('fci').value,co=document.getElementById('fco').value;if(!ci||!co||ci>=co){toast('Controlla le date');return;}if(pren().find(p=>p.cam===cam&&p.ci<co&&p.co>ci)){toast('Camera già occupata');return;}if(!prenData[casaId])prenData[casaId]=[];prenData[casaId].push({id:'p'+nextId++,cam,nome:document.getElementById('fn').value,ci,co,osp:parseInt(document.getElementById('fo').value)||2,tar:parseInt(document.getElementById('ft').value)||120,can:selCan});closePopDirect();renderPren();toast('Salvata!');}
-function delPren(id){const arr=prenData[casaId];const i=arr.findIndex(p=>p.id===id);if(i>-1)arr.splice(i,1);closePopDirect();renderPren();toast('Eliminata');}
+
+async function savePren(){
+  const cam=document.getElementById('fc').value,ci=document.getElementById('fci').value,co=document.getElementById('fco').value;
+  if(!ci||!co||ci>=co){toast('Controlla le date');return;}
+  const arr=prenCache[casaId]||[];
+  if(arr.find(p=>p.cam===cam&&p.ci<co&&p.co>ci)){toast('Camera già occupata');return;}
+  const newP={id:'p'+Date.now(),cam,nome:document.getElementById('fn').value,ci,co,osp:parseInt(document.getElementById('fo').value)||2,tar:parseInt(document.getElementById('ft').value)||120,can:selCan,note:document.getElementById('fno').value};
+  if(!prenCache[casaId])prenCache[casaId]=[];
+  prenCache[casaId].push(newP);
+  closePopDirect();renderPren();
+  await savePrenDB(newP);
+}
+
+async function delPren(id){
+  const arr=prenCache[casaId]||[];
+  const i=arr.findIndex(p=>p.id===id);if(i>-1)arr.splice(i,1);
+  closePopDirect();renderPren();
+  await deletePrenDB(id);
+}
 
 function closePop(e){if(e.target.classList.contains('pbg'))closePopDirect();}
 function closePopDirect(){document.getElementById('pop-root').innerHTML='';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-window.onload=()=>{
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+window.onload=async()=>{
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
-  curTab='pren';
   buildUI();
+  await loadAll();
   renderAll();
 };
 </script>
