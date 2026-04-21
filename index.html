@@ -275,7 +275,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ═══════════════════════════════════════════
 // CYBHOTEL API
 // ═══════════════════════════════════════════
-const CYBHOTEL_BASE = 'https://cleaning.cybhotel.net/hotelkeepingapi';
+const CYBHOTEL_PROXY = '/api/cybhotel';
 const CYBHOTEL_USER = 'casatonda';
 const CYBHOTEL_PWD  = 'Mangia26Mele';
 const CYBHOTEL_HOTEL_ID = '160';
@@ -283,7 +283,7 @@ let cybToken = null;
 
 async function cybLogin(){
   try{
-    const r = await fetch(CYBHOTEL_BASE+'/login', {
+    const r = await fetch(CYBHOTEL_PROXY+'?action=login', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username:CYBHOTEL_USER, password:CYBHOTEL_PWD, hotel_ext_id:CYBHOTEL_HOTEL_ID})
@@ -298,7 +298,7 @@ async function cybGetRoomsStatus(){
   if(!cybToken)await cybLogin();
   if(!cybToken)return null;
   try{
-    const r=await fetch(CYBHOTEL_BASE+'/get_rooms_status',{
+    const r=await fetch(CYBHOTEL_PROXY+'?action=get_rooms_status',{
       headers:{'Authorization':'Bearer '+cybToken}
     });
     return await r.json();
@@ -309,7 +309,7 @@ async function cybUpdateRoomStatus(roomNumber, status){
   if(!cybToken)await cybLogin();
   if(!cybToken)return false;
   try{
-    const r=await fetch(CYBHOTEL_BASE+'/update_rooms_status',{
+    const r=await fetch(CYBHOTEL_PROXY+'?action=update_rooms_status',{
       method:'POST',
       headers:{'Authorization':'Bearer '+cybToken,'Content-Type':'application/json'},
       body:JSON.stringify({rooms:[{room_number:roomNumber, room_status:status}]})
@@ -324,7 +324,7 @@ async function cybGetRooms(){
   if(!cybToken)await cybLogin();
   if(!cybToken)return null;
   try{
-    const r=await fetch(CYBHOTEL_BASE+'/get_rooms',{
+    const r=await fetch(CYBHOTEL_PROXY+'?action=get_rooms',{
       headers:{'Authorization':'Bearer '+cybToken}
     });
     return await r.json();
