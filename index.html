@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Casatonda</title>
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -238,7 +239,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="sec" id="sec-turni">
-  <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-t"></span><button onclick="chM(1)">&#8250;</button></div></div>
+  <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-t"></span><button onclick="chM(1)">&#8250;</button></div><label id="import-btn" style="background:#f0f5ff;border:1px solid var(--info);color:var(--info);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:500;cursor:pointer;display:none;">&#128229; Importa ODS<input type="file" accept=".ods,.xlsx" style="display:none;" onchange="importaTurni(this)"></label></div>
   <div class="leg"><div class="li"><div class="ld" style="background:var(--t1)"></div>T1</div><div class="li"><div class="ld" style="background:var(--t2)"></div>T2</div><div class="li"><div class="ld" style="background:var(--t3)"></div>T3</div><div class="li"><div class="ld" style="background:var(--t4)"></div>T4</div></div>
   <div class="scroll-x"><table class="gt" id="grid-t"></table></div>
 </div>
@@ -514,6 +515,7 @@ function buildUI(){
   if(isAdmin()){tabs+=`<div class="tab${curTab==='comp'?' on':''}" data-t="comp" onclick="sw('comp')">Compensi</div>`;tabs+=`<div class="tab${curTab==='riepilogo'?' on':''}" data-t="riepilogo" onclick="sw('riepilogo')">Riepilogo</div>`;}
   else tabs+=`<div class="tab${curTab==='mio'?' on':''}" data-t="mio" onclick="sw('mio')">Il mio mese</div>`;
   tb.innerHTML=tabs;
+  const ib=document.getElementById("import-btn");if(ib)ib.style.display=isAdmin()?"":"none";
 }
 
 async function setCasa(id){
@@ -757,6 +759,74 @@ function renderComp(){
   const prenOggi=arr.filter(p=>p.ci<=key&&p.co>key);
   const ent=prenOggi.reduce((s,p)=>s+(p.tar||0),0),marg=ent-tot;
   document.getElementById('stats-comp').innerHTML=`<div class="sbox"><div class="sv">${prenOggi.length}</div><div class="sl">Camere occ.</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent}</div><div class="sl">Entrata</div></div><div class="sbox"><div class="sv" style="color:${marg>=0?'var(--success)':'var(--danger)'}">Fr.${marg}</div><div class="sl">Margine</div></div>`;
+}
+
+
+// ═══════════════════════════════════════════
+// IMPORTAZIONE TURNI DA ODS/XLSX
+// ═══════════════════════════════════════════
+async function importaTurni(input){
+  const file=input.files[0];if(!file)return;
+  toast('Lettura file...');
+  const FOGLIO_CASA={piumogna:'Piumogna',cvb:'CVB',liberty:'Liberty',rustico:'Rustico',rurale:'Rurale'};
+  const foglio=FOGLIO_CASA[casaId];
+  if(!foglio){toast('Casa non supportata');return;}
+  try{
+    const ab=await file.arrayBuffer();
+    const {read,utils}=XLSX;
+    const wb=read(ab,{type:'array'});
+    const ws=wb.Sheets[foglio];
+    if(!ws){toast('Foglio '+foglio+' non trovato');return;}
+    const rows=utils.sheet_to_json(ws,{header:1});
+    // Trova riga intestazione (contiene 'Data')
+    let hRow=-1;
+    for(let i=0;i<rows.length;i++){if(rows[i]&&rows[i][0]==='Data'){hRow=i;break;}}
+    if(hRow<0){toast('Intestazione non trovata');return;}
+    const isPiumogna=casaId==='piumogna';
+    let salvati=0,errori=0;
+    for(let i=hRow+1;i<rows.length;i++){
+      const r=rows[i];if(!r||!r[0])continue;
+      const data=String(r[0]).trim();
+      if(!data.match(/^\d{2}\/\d{2}$/))continue;
+      const dd=data.split('/');
+      const key='2026-'+dd[1].padStart(2,'0')+'-'+dd[0].padStart(2,'0');
+      const note=isPiumogna?String(r[11]||'').trim():String(r[4]||'').trim();
+      if(isPiumogna){
+        // T1, T1p2, T2, T2p2, T3, T3p2, T4, T4p2
+        const cols=[{t:'T1',pi:3},{t:'T1',pi:4},{t:'T2',pi:5},{t:'T2',pi:6},{t:'T3',pi:7},{t:'T3',pi:8},{t:'T4',pi:9},{t:'T4',pi:10}];
+        const persMap={};
+        cols.forEach(c=>{
+          const v=String(r[c.pi]||'').trim();
+          if(v&&v!=='-'&&v!=='NaN'){
+            if(!persMap[v])persMap[v]={t:c.t,count:0};
+            persMap[v].t=c.t;persMap[v].count++;
+          }
+        });
+        for(const [persona,info] of Object.entries(persMap)){
+          try{
+            await saveTurnoDB(key,persona,info.t,[],note&&note!=='NaN'?note:'');
+            salvati++;
+          }catch(e){errori++;}
+        }
+      } else {
+        // Solo T2 e T2p2
+        const p1=String(r[2]||'').trim(),p2=String(r[3]||'').trim();
+        for(const p of [p1,p2]){
+          if(p&&p!=='-'&&p!=='NaN'){
+            try{await saveTurnoDB(key,p,'T2',[],note&&note!=='NaN'?note:'');salvati++;}
+            catch(e){errori++;}
+          }
+        }
+      }
+    }
+    input.value='';
+    await loadTurni();
+    renderTurni();
+    toast(`Importati ${salvati} turni!`+(errori>0?` (${errori} errori)`:''));
+  }catch(e){
+    console.error(e);
+    toast('Errore lettura file');
+  }
 }
 
 function renderRiep(){
