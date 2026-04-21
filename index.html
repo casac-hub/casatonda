@@ -829,10 +829,101 @@ async function importaTurni(input){
   }
 }
 
-function renderRiep(){
+async function renderRiep(){
   if(!isAdmin())return;
-  document.getElementById('riepilogo-lbl').textContent=MESI[vMonth.getMonth()]+' '+vMonth.getFullYear();
-  document.getElementById('riepilogo-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Riepilogo mensile — in arrivo</div>';
+  const Y=vMonth.getFullYear(),M=vMonth.getMonth();
+  document.getElementById('riepilogo-lbl').textContent=MESI[M]+' '+Y;
+  const el=document.getElementById('riepilogo-list');
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Caricamento...</div>';
+  const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
+  const caseLista=Object.keys(CASE);
+  // Carica turni ed extra da tutte le case per il mese
+  const tuttiTurni=[],tuttiExtra=[];
+  for(const cid of caseLista){
+    const {data:t}=await sb.from('turni').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
+    if(t)t.forEach(r=>tuttiTurni.push({...r,casa_id:cid}));
+    const {data:e}=await sb.from('extra').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
+    if(e)e.forEach(r=>tuttiExtra.push({...r,casa_id:cid}));
+  }
+  // Calcola per persona
+  const perPersona={};
+  tuttiTurni.forEach(t=>{
+    if(!perPersona[t.persona])perPersona[t.persona]={turni:{},forfait:0,oreH:0,oreM:0,extraDet:[],case:{}};
+    const p=perPersona[t.persona];
+    if(!p.turni[t.turno])p.turni[t.turno]=0;p.turni[t.turno]++;
+    if(!p.case[t.casa_id])p.case[t.casa_id]={forfait:0,oreH:0,oreM:0};
+    // Calcola forfait T2
+    const c=CASE[t.casa_id];
+    if(t.turno==='T2'&&t.camere&&t.camere.length){
+      const nc=t.camere.length,comp=nc*30;
+      p.forfait+=comp;p.case[t.casa_id].forfait+=comp;
+    } else if(t.turno==='T1'||t.turno==='T4'){
+      p.forfait+=55;p.case[t.casa_id].forfait+=55;
+    }
+  });
+  tuttiExtra.forEach(e=>{
+    if(!perPersona[e.persona])perPersona[e.persona]={turni:{},forfait:0,oreH:0,oreM:0,extraDet:[],case:{}};
+    const p=perPersona[e.persona];
+    if(!p.case[e.casa_id])p.case[e.casa_id]={forfait:0,oreH:0,oreM:0};
+    const c=CASE[e.casa_id];
+    let et=0;
+    if(c){c.extras.forEach(ex=>{if(e.items&&e.items[ex.id])et+=ex.prezzo;});
+      if(c.hasVetri&&e.vetri){if(c.vetriPrezzi){e.vetri.forEach(v=>{et+=(c.vetriPrezzi[v]||0);});}else{et+=e.vetri.length*(c.vetriPrezzo||0);}}
+      if(c.hasLetti&&e.letti>0)et+=e.letti*(c.lettoPrezzzo||0);}
+    p.forfait+=et;p.case[e.casa_id].forfait+=et;
+    p.oreH+=e.ore||0;p.oreM+=e.min||0;
+    p.case[e.casa_id].oreH+=(e.ore||0);p.case[e.casa_id].oreM+=(e.min||0);
+    if(e.ore>0||e.min>0)p.extraDet.push(`${CASE[e.casa_id]?CASE[e.casa_id].nome:e.casa_id}: ${e.ore}h${e.min>0?' '+e.min+'m':''}`);
+  });
+  // Normalizza ore
+  Object.values(perPersona).forEach(p=>{
+    const totM=p.oreH*60+p.oreM;p.oreH=Math.floor(totM/60);p.oreM=totM%60;
+    Object.values(p.case).forEach(c=>{const tm=c.oreH*60+c.oreM;c.oreH=Math.floor(tm/60);c.oreM=tm%60;});
+  });
+  // Calcola per casa
+  const perCasa={};
+  tuttiTurni.forEach(t=>{
+    if(!perCasa[t.casa_id])perCasa[t.casa_id]={forfait:0,oreH:0,oreM:0,persone:{}};
+    const c=perCasa[t.casa_id];
+    const pp=perPersona[t.persona];
+    if(pp&&pp.case[t.casa_id]){
+      if(!c.persone[t.persona])c.persone[t.persona]=true;
+    }
+  });
+  Object.keys(perPersona).forEach(persona=>{
+    const pp=perPersona[persona];
+    Object.entries(pp.case).forEach(([cid,cv])=>{
+      if(!perCasa[cid])perCasa[cid]={forfait:0,oreH:0,oreM:0};
+      perCasa[cid].forfait+=cv.forfait;
+      perCasa[cid].oreH+=cv.oreH;perCasa[cid].oreM+=cv.oreM;
+    });
+  });
+  // Render
+  let html='';
+  // Sezione per persona
+  html+=`<div style="font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);">👤 Per dipendente</div>`;
+  if(Object.keys(perPersona).length===0){html+='<div style="text-align:center;padding:20px;color:var(--text2);">Nessun turno in questo mese</div>';}
+  Object.entries(perPersona).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([persona,p])=>{
+    const turniStr=Object.entries(p.turni).map(([t,n])=>`${n}×${t}`).join(', ');
+    const oreStr=p.oreH>0||p.oreM>0?`${p.oreH}h${p.oreM>0?' '+p.oreM+'m':''}`:'-';
+    const caseStr=Object.keys(p.case).map(cid=>CASE[cid]?CASE[cid].nome:cid).join(', ');
+    html+=`<div class="rp"><div class="rph"><div><div class="rpn">${persona}</div><div class="rpr">${caseStr}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--info)">Fr.${p.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div>
+    <div class="rpb"><div class="rpi"><div class="rl">Turni</div><div class="rv">${turniStr||'-'}</div></div><div class="rpi"><div class="rl">Forfait</div><div class="rv">Fr.${p.forfait}</div></div><div class="rpi"><div class="rl">Ore extra</div><div class="rv">${oreStr}</div></div></div></div>`;
+  });
+  // Sezione per casa
+  html+=`<div style="font-size:14px;font-weight:600;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border);">🏠 Per struttura</div>`;
+  let totGlobale=0,totOreH=0,totOreM=0;
+  caseLista.forEach(cid=>{
+    const c=perCasa[cid];if(!c||c.forfait===0)return;
+    totGlobale+=c.forfait;totOreH+=c.oreH;totOreM+=c.oreM;
+    const oreStr=c.oreH>0||c.oreM>0?`${c.oreH}h${c.oreM>0?' '+c.oreM+'m':''}`:'-';
+    html+=`<div class="rp"><div class="rph"><div><div class="rpn">${CASE[cid].nome}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--success)">Fr.${c.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div></div>`;
+  });
+  // Totale generale
+  const totM=totOreH*60+totOreM;totOreH=Math.floor(totM/60);totOreM=totM%60;
+  const totOreStr=totOreH>0||totOreM>0?`${totOreH}h${totOreM>0?' '+totOreM+'m':''}`:'-';
+  html+=`<div style="background:#f0f5ff;border-radius:var(--r-lg);padding:16px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:600;">Totale generale</span><div style="text-align:right"><div style="font-size:24px;font-weight:600;color:var(--info)">Fr.${totGlobale}</div><div style="font-size:11px;color:var(--text2);">${totOreStr} ore extra totali</div></div></div>`;
+  el.innerHTML=html;
 }
 function chRiep(v){vMonth=new Date(vMonth.getFullYear(),parseInt(v),1);renderRiep();}
 
