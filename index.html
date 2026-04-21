@@ -278,7 +278,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const CYBHOTEL_PROXY = '/api/cybhotel';
 const CYBHOTEL_USER = 'casatonda';
 const CYBHOTEL_PWD  = 'Mangia26Mele';
-const CYBHOTEL_HOTEL_ID = '160';
+const CYBHOTEL_HOTEL_ID = () => casa().hotelExtId || '160';
 let cybToken = null;
 
 async function cybLogin(){
@@ -286,7 +286,7 @@ async function cybLogin(){
     const r = await fetch(CYBHOTEL_PROXY+'?action=login', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username:CYBHOTEL_USER, password:CYBHOTEL_PWD, hotel_ext_id:CYBHOTEL_HOTEL_ID})
+      body:JSON.stringify({username:CYBHOTEL_USER, password:CYBHOTEL_PWD, hotel_ext_id:CYBHOTEL_HOTEL_ID()})
     });
     const d = await r.json();
     if(d.token){cybToken=d.token;console.log('CybHotel login OK');return true;}
@@ -348,6 +348,7 @@ const TI={
 const CASE={
   piumogna:{
     nome:'Casa Piumogna',
+    hotelExtId:'164',
     camere:[{n:'101',nm:'Celeste'},{n:'102',nm:'Suite Rossa'},{n:'201',nm:'Gialla'},{n:'202',nm:'Suite Dec.'},{n:'301',nm:'Verde'},{n:'302',nm:'White'},{n:'401',nm:'M.Monte'},{n:'402',nm:'M.Valle'}],
     personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
@@ -356,6 +357,7 @@ const CASE={
   },
   cvb:{
     nome:'Casa Vino e Birra',
+    hotelExtId:'160',
     camere:[{n:'Piazzetta',nm:'Studio Piazzetta'},{n:'Tiglio',nm:'Studio Il Tiglio'},{n:'Ticinella',nm:'Studio Ticinella'},{n:'Nala',nm:'Openspace La Nala'},{n:'Loft',nm:'Loft al Pozzon'},{n:'Cascata0',nm:'Cascata 0'},{n:'Cascata1',nm:'Cascata 1'},{n:'Cascata2',nm:'Cascata 2'}],
     tariffeCam:{Piazzetta:30,Tiglio:30,Ticinella:30,Cascata0:30,Cascata1:35,Cascata2:35,Nala:40,Loft:45},
     supOspiti:5,
@@ -366,6 +368,7 @@ const CASE={
   },
   liberty:{
     nome:'Casa Liberty',
+    hotelExtId:'161',
     camere:[{n:'DolceVita',nm:'Dolce Vita'},{n:'VoceLuna',nm:'Voce della Luna'},{n:'Mansarda',nm:'Mansarda della Cascata'}],
     tariffeCam:{DolceVita:45,VoceLuna:45,Mansarda:45},supOspiti:5,
     personale:['Nadja','Personale 2','Personale 3','Personale 4'],
@@ -375,6 +378,7 @@ const CASE={
   },
   rustico:{
     nome:'Rustico Conceprio',
+    hotelExtId:'162',
     camere:[{n:'R1',nm:'Conceprio 1'}],
     personale:['Manuela','Personale 2','Personale 3'],
     turniTypes:['T2'],
@@ -383,6 +387,7 @@ const CASE={
   },
   rurale:{
     nome:'Casa Rurale',
+    hotelExtId:'159',
     camere:[{n:'CR1',nm:'Casa Rurale 1'}],
     personale:['Nadja','Personale 2','Personale 3'],
     turniTypes:['T2'],
@@ -441,11 +446,37 @@ async function loadPren(){
     .lte('ci',to);
   if(!error&&data){
     if(!prenCache[casaId])prenCache[casaId]=[];
-    // Unisci con dati già in cache di altri mesi
     const ids=data.map(p=>p.id);
     prenCache[casaId]=prenCache[casaId].filter(p=>!ids.includes(p.id));
     prenCache[casaId].push(...data);
   }
+  // Carica anche da CybHotel se disponibile
+  await loadPrenFromCybHotel();
+}
+
+async function loadPrenFromCybHotel(){
+  try{
+    if(!cybToken){const ok=await cybLogin();if(!ok)return;}
+    const data=await cybGetRoomsStatus();
+    if(!data||!data.rooms)return;
+    if(!prenCache[casaId])prenCache[casaId]=[];
+    data.rooms.forEach(r=>{
+      if(!r.booking_to)return; // camera libera, nessuna prenotazione
+      const camName=String(r.room_number);
+      const id='cyb_'+casaId+'_'+camName;
+      // Non sovrascrivere prenotazioni manuali esistenti
+      const exists=prenCache[casaId].find(p=>p.id===id);
+      const oggi=fmtD(new Date());
+      if(!exists){
+        prenCache[casaId].push({
+          id,cam:camName,nome:'CybHotel',
+          ci:oggi,co:r.booking_to.split(' ')[0],
+          osp:2,tar:0,can:'booking',
+          _cyb:true,_status:r.room_status
+        });
+      }
+    });
+  }catch(e){console.log('CybHotel prenotazioni non disponibili:',e.message);}
 }
 
 async function loadTurni(){
