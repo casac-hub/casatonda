@@ -273,6 +273,65 @@ const { createClient } = window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ═══════════════════════════════════════════
+// CYBHOTEL API
+// ═══════════════════════════════════════════
+const CYBHOTEL_BASE = 'https://cleaning.cybhotel.net/hotelkeepingapi';
+const CYBHOTEL_USER = 'casatonda';
+const CYBHOTEL_PWD  = 'Mangia26Mele';
+const CYBHOTEL_HOTEL_ID = '160';
+let cybToken = null;
+
+async function cybLogin(){
+  try{
+    const r = await fetch(CYBHOTEL_BASE+'/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:CYBHOTEL_USER, password:CYBHOTEL_PWD, hotel_ext_id:CYBHOTEL_HOTEL_ID})
+    });
+    const d = await r.json();
+    if(d.token){cybToken=d.token;console.log('CybHotel login OK');return true;}
+    else{console.error('CybHotel login fallito:',d);return false;}
+  }catch(e){console.error('CybHotel login errore:',e);return false;}
+}
+
+async function cybGetRoomsStatus(){
+  if(!cybToken)await cybLogin();
+  if(!cybToken)return null;
+  try{
+    const r=await fetch(CYBHOTEL_BASE+'/get_rooms_status',{
+      headers:{'Authorization':'Bearer '+cybToken}
+    });
+    return await r.json();
+  }catch(e){console.error('cybGetRoomsStatus:',e);return null;}
+}
+
+async function cybUpdateRoomStatus(roomNumber, status){
+  if(!cybToken)await cybLogin();
+  if(!cybToken)return false;
+  try{
+    const r=await fetch(CYBHOTEL_BASE+'/update_rooms_status',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+cybToken,'Content-Type':'application/json'},
+      body:JSON.stringify({rooms:[{room_number:roomNumber, room_status:status}]})
+    });
+    const d=await r.json();
+    console.log('updateRoomStatus:',d);
+    return true;
+  }catch(e){console.error('cybUpdateRoomStatus:',e);return false;}
+}
+
+async function cybGetRooms(){
+  if(!cybToken)await cybLogin();
+  if(!cybToken)return null;
+  try{
+    const r=await fetch(CYBHOTEL_BASE+'/get_rooms',{
+      headers:{'Authorization':'Bearer '+cybToken}
+    });
+    return await r.json();
+  }catch(e){console.error('cybGetRooms:',e);return null;}
+}
+
+// ═══════════════════════════════════════════
 // COSTANTI
 // ═══════════════════════════════════════════
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -1004,6 +1063,7 @@ window.onload=async()=>{
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
   buildUI();
   await loadAll();
+  cybLogin(); // Login CybHotel in background
   renderAll();
 };
 </script>
