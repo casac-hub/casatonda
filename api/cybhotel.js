@@ -8,7 +8,8 @@ export default async function handler(req, res) {
   }
 
   const BASE = 'https://cleaning.cybhotel.net/hotelkeepingapi';
-  const { action } = req.query;
+  const ICAL_BASE = 'http://cleaning.cybhotel.net/room_calendar_a';
+  const { action, hotel_ext_id } = req.query;
 
   try {
     if (action === 'login') {
@@ -48,6 +49,13 @@ export default async function handler(req, res) {
       });
       const d = await r.json();
       return res.status(200).json(d);
+    }
+
+    if (action === 'ical') {
+      const id = hotel_ext_id || '160';
+      const r = await fetch(`${ICAL_BASE}?hotel_ext_id=${id}`);
+      const text = await r.text();
+      return res.status(200).send(text);
     }
 
     return res.status(400).json({ error: 'Action non valida' });
