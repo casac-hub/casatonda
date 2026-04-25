@@ -400,8 +400,8 @@ const CASE={
 // STATO APPLICAZIONE
 // ═══════════════════════════════════════════
 let casaId='piumogna', profile='admin', curTab='pren';
-let vMonth=new Date(2026,3,1), vDay=new Date(2026,3,20);
-const TODAY=new Date(2026,3,20), TK=fmtD(TODAY);
+const TODAY=new Date(), TK=fmtD(TODAY);
+let vMonth=new Date(TODAY.getFullYear(),TODAY.getMonth(),1), vDay=new Date(TODAY);
 let nextId=100, selCan='diretto', popTipo=null, popCamere=[];
 
 // Cache locale dei dati dal database
