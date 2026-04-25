@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/cybhotel.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
-}
