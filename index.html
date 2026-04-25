@@ -462,39 +462,40 @@ async function loadPrenFromCybHotel(){
     if(!text||!text.includes('BEGIN:VCALENDAR'))return;
     const events=text.split('BEGIN:VEVENT').slice(1);
     if(!prenCache[casaId])prenCache[casaId]=[];
+    const ICAL_MAP={
+      'LOFT AL POZZON':'Loft','STUDIO TICINELLA':'Ticinella','STUDIO IL TIGLIO':'Tiglio',
+      'OPENSPACE LA NALA':'Nala','LA NALA':'Nala','STUDIO PIAZZETTA':'Piazzetta',
+      'CASA ALLA CASCATA 1':'Cascata1','CASA ALLA CASCATA 2':'Cascata2','CASA CASCATA 0':'Cascata0',
+      'CELESTE':'101','SUITE ROSSA':'102','GIALLA':'201','SUITE DEC':'202',
+      'VERDE':'301','WHITE':'302','M.MONTE':'401','M.VALLE':'402',
+      'DOLCE VITA':'DolceVita','VOCE DELLA LUNA':'VoceLuna','VOCE LUNA':'VoceLuna',
+      'MANSARDA':'Mansarda','CONCEPRIO':'R1'
+    };
+    let trovati=0;
     events.forEach(ev=>{
-      const getVal=key=>{const m=ev.match(new RegExp(key+':([^\\r\\n]+)'));return m?m[1].trim():null;};
-      const summary=getVal('SUMMARY')||'';
+      const lines=ev.split(/\r?\n/);
+      const getVal=(key)=>{for(const l of lines){if(l.startsWith(key+':'))return l.slice(key.length+1).trim();}return null;};
+      const desc=getVal('DESCRIPTION')||'';
       const dtstart=getVal('DTSTART')||getVal('DTSTART;VALUE=DATE');
       const dtend=getVal('DTEND')||getVal('DTEND;VALUE=DATE');
-      const location=getVal('LOCATION')||'';
-      if(!dtstart||!dtend)return;
-      // Converti data ical (YYYYMMDD) a YYYY-MM-DD
-      const parseIcal=d=>{
-        const s=d.replace(/T.*/,'');
-        if(s.length===8)return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
-        return s;
-      };
+      if(!dtstart||!dtend||!desc)return;
+      const parseIcal=d=>{const s=d.replace(/T.*/,'');return s.length===8?s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8):s;};
       const ci=parseIcal(dtstart);
       const co=parseIcal(dtend);
-      // Trova camera dal LOCATION o SUMMARY
-      const camName=location||summary.replace('OCCUPY','').trim()||'?';
-      // Trova la camera corrispondente nella lista
-      const camMatch=casa().camere.find(c=>camName.toLowerCase().includes(c.n.toLowerCase())||camName.toLowerCase().includes(c.nm.toLowerCase()));
-      const cam=camMatch?camMatch.n:camName;
+      const descUp=desc.replace(/^Camera /i,'').toUpperCase().split(',')[0].trim();
+      let cam=null;
+      for(const[k,v] of Object.entries(ICAL_MAP)){if(descUp.includes(k.toUpperCase())){cam=v;break;}}
+      if(!cam){const match=casa().camere.find(c=>descUp.includes(c.nm.toUpperCase())||descUp.includes(c.n.toUpperCase()));if(match)cam=match.n;}
+      if(!cam)return;
+      trovati++;
       const id='ical_'+casaId+'_'+cam+'_'+ci;
-      const exists=prenCache[casaId].find(p=>p.id===id);
-      if(!exists&&cam){
-        prenCache[casaId].push({
-          id,cam,nome:'CybHotel',ci,co,
-          osp:2,tar:0,can:'booking',_cyb:true
-        });
+      if(!prenCache[casaId].find(p=>p.id===id)){
+        prenCache[casaId].push({id,cam,nome:'CybHotel',ci,co,osp:2,tar:0,can:'booking',_cyb:true});
       }
     });
-    console.log('iCal caricato: '+events.length+' eventi per '+casa().nome);
+    console.log('iCal: '+trovati+' prenotazioni trovate per '+casa().nome);
   }catch(e){console.log('iCal non disponibile:',e.message);}
 }
-
 async function loadTurni(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth();
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
