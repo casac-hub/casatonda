@@ -463,13 +463,21 @@ async function loadPrenFromCybHotel(){
     const events=text.split('BEGIN:VEVENT').slice(1);
     if(!prenCache[casaId])prenCache[casaId]=[];
     const ICAL_MAP={
+      // CVB
       'LOFT AL POZZON':'Loft','STUDIO TICINELLA':'Ticinella','STUDIO IL TIGLIO':'Tiglio',
       'OPENSPACE LA NALA':'Nala','LA NALA':'Nala','STUDIO PIAZZETTA':'Piazzetta',
       'CASA ALLA CASCATA 1':'Cascata1','CASA ALLA CASCATA 2':'Cascata2','CASA CASCATA 0':'Cascata0',
-      'CELESTE':'101','SUITE ROSSA':'102','GIALLA':'201','SUITE DEC':'202',
-      'VERDE':'301','WHITE':'302','M.MONTE':'401','M.VALLE':'402',
-      'DOLCE VITA':'DolceVita','VOCE DELLA LUNA':'VoceLuna','VOCE LUNA':'VoceLuna',
-      'MANSARDA':'Mansarda','CONCEPRIO':'R1'
+      // Piumogna
+      'LA CELESTE':'101','LA ROSSA':'102','LA GIALLA':'201','LA DECORATA':'202',
+      'LA VERDE':'301','LA BIANCA':'302','PIZZO PETTINE':'401','PIZZO FORNO':'402',
+      'CELESTE':'101','ROSSA':'102','GIALLA':'201','DECORATA':'202',
+      // Liberty
+      'DOLCE VITA':'DolceVita','VOCE DELLA LUNA':'VoceLuna','LA VOCE DELLA LUNA':'VoceLuna',
+      'MANSARDA DELLA CASCATA':'Mansarda',
+      // Rustico
+      'RUSTICO ORABINO':'R1','ORABINO':'R1',
+      // Casa Rurale
+      'CASA RURALE TICINESE':'CR1','RURALE TICINESE':'CR1'
     };
     let trovati=0;
     events.forEach(ev=>{
