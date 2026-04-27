@@ -457,7 +457,7 @@ async function loadPren(){
 async function loadPrenFromCybHotel(){
   try{
     const hotelId=casa().hotelExtId||'160';
-    const r=await fetch('/api/cybhotel?action=ical&hotel_ext_id='+hotelId);
+    const r=await fetch('/api/cybhotel/ical/'+hotelId);
     const text=await r.text();
     if(!text||!text.includes('BEGIN:VCALENDAR'))return;
     const events=text.split('BEGIN:VEVENT').slice(1);
