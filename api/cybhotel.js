@@ -9,7 +9,11 @@ export default async function handler(req, res) {
 
   const BASE = 'https://cleaning.cybhotel.net/hotelkeepingapi';
   const ICAL_BASE = 'http://cleaning.cybhotel.net/room_calendar_a';
-  const { action, hotel_ext_id } = req.query;
+  
+  // Support both ?action=X&hotel_ext_id=Y and path-based /api/cybhotel/action/hotel_id
+  const urlParts = req.url.split('/').filter(Boolean);
+  const action = req.query.action || urlParts[urlParts.length - 2];
+  const hotel_ext_id = req.query.hotel_ext_id || urlParts[urlParts.length - 1];
 
   try {
     if (action === 'login') {
@@ -55,6 +59,7 @@ export default async function handler(req, res) {
       const id = hotel_ext_id || '160';
       const r = await fetch(`${ICAL_BASE}?hotel_ext_id=${id}`);
       const text = await r.text();
+      res.setHeader('Content-Type', 'text/calendar');
       return res.status(200).send(text);
     }
 
