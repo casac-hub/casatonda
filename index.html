@@ -652,6 +652,7 @@ function buildUI(){
 async function setCasa(id){
   casaId=id;profile='admin';curTab='pren';
   cybToken=null; // Reset token per nuovo login con casa corretta
+  prenCache[id]=[]; // Reset cache prenotazioni per questa casa
   buildUI();
   await loadAll();
   cybLogin(); // Nuovo login per questa casa
