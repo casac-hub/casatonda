@@ -651,8 +651,10 @@ function buildUI(){
 
 async function setCasa(id){
   casaId=id;profile='admin';curTab='pren';
+  cybToken=null; // Reset token per nuovo login con casa corretta
   buildUI();
   await loadAll();
+  cybLogin(); // Nuovo login per questa casa
   renderAll();
   toast('Casa: '+casa().nome);
 }
