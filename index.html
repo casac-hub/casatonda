@@ -463,21 +463,36 @@ async function loadPrenFromCybHotel(){
     const events=text.split('BEGIN:VEVENT').slice(1);
     if(!prenCache[casaId])prenCache[casaId]=[];
     const ICAL_MAP={
-      // CVB
+      // CVB — nomi completi
       'LOFT AL POZZON':'Loft','STUDIO TICINELLA':'Ticinella','STUDIO IL TIGLIO':'Tiglio',
       'OPENSPACE LA NALA':'Nala','LA NALA':'Nala','STUDIO PIAZZETTA':'Piazzetta',
       'CASA ALLA CASCATA 1':'Cascata1','CASA ALLA CASCATA 2':'Cascata2','CASA CASCATA 0':'Cascata0',
-      // Piumogna
+      // Piumogna — nomi completi dal gestionale
+      '101 LA CELESTE':'101','101':'101',
+      '102 LA ROSSA':'102','102':'102',
+      '201 LA GIALLA':'201','201':'201',
+      '202 LA DECORATA':'202','202':'202',
+      '301 LA VERDE':'301','301':'301',
+      '302 LA BIANCA':'302','302':'302',
+      '401 MANSARDA PIZZO PETTINE':'401','401':'401',
+      '402 MANSARDA PIZZO FORNO':'402','402':'402',
       'LA CELESTE':'101','LA ROSSA':'102','LA GIALLA':'201','LA DECORATA':'202',
       'LA VERDE':'301','LA BIANCA':'302','PIZZO PETTINE':'401','PIZZO FORNO':'402',
-      'CELESTE':'101','ROSSA':'102','GIALLA':'201','DECORATA':'202',
-      // Liberty
+      // Liberty — numero stanza dal gestionale
       'DOLCE VITA':'DolceVita','VOCE DELLA LUNA':'VoceLuna','LA VOCE DELLA LUNA':'VoceLuna',
       'MANSARDA DELLA CASCATA':'Mansarda',
-      // Rustico
+      // Rustico — numero stanza 1
       'RUSTICO ORABINO':'R1','ORABINO':'R1',
-      // Casa Rurale
+      // Casa Rurale — numero stanza 1
       'CASA RURALE TICINESE':'CR1','RURALE TICINESE':'CR1'
+    };
+    // Mapping per numero stanza (usato quando DESCRIPTION è solo il numero)
+    const ROOM_NUM_MAP={
+      piumogna:{'101':'101','102':'102','201':'201','202':'202','301':'301','302':'302','401':'401','402':'402'},
+      liberty:{'1':'DolceVita','2':'VoceLuna','3':'Mansarda'},
+      rustico:{'1':'R1'},
+      rurale:{'1':'CR1'},
+      cvb:{}
     };
     let trovati=0;
     events.forEach(ev=>{
@@ -494,6 +509,7 @@ async function loadPrenFromCybHotel(){
       let cam=null;
       for(const[k,v] of Object.entries(ICAL_MAP)){if(descUp.includes(k.toUpperCase())){cam=v;break;}}
       if(!cam){const match=casa().camere.find(c=>descUp.includes(c.nm.toUpperCase())||descUp.includes(c.n.toUpperCase()));if(match)cam=match.n;}
+      if(!cam&&ROOM_NUM_MAP[casaId]&&ROOM_NUM_MAP[casaId][descUp])cam=ROOM_NUM_MAP[casaId][descUp];
       if(!cam)return;
       trovati++;
       const id='ical_'+casaId+'_'+cam+'_'+ci;
