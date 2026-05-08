@@ -405,16 +405,17 @@ function getPren(cam,key){
 
 function turniDelGiorno(key){
   const turni=turniCache[casaId+'_'+key]||{};
-  // Per ogni turno T2, aggiungi automaticamente le camere con checkout oggi
   const result={};
   Object.entries(turni).forEach(([persona,tp])=>{
     if(tp.t==='T2'){
-      // Trova camere con checkout in questo giorno
+      // Nel formato iCal, co è il giorno DOPO l'ultimo soggiorno
+      // Quindi camera da pulire il giorno key = prenotazioni con co === giorno dopo key
+      const domani=fmtD(addD(parseD(key),1));
       const arr=prenCache[casaId]||[];
       const camereCheckout=arr
-        .filter(p=>p.co===key)
+        .filter(p=>p.co===domani)
         .map(p=>p.cam)
-        .filter((v,i,a)=>a.indexOf(v)===i); // deduplicazione
+        .filter((v,i,a)=>a.indexOf(v)===i);
       result[persona]={...tp, c: camereCheckout.length>0 ? camereCheckout : (tp.c||[])};
     } else {
       result[persona]=tp;
@@ -805,9 +806,36 @@ function renderMio(){
   for(let i=0;i<offset;i++)cal+=`<div></div>`;
   for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=turniDelGiorno(k)[persona],info=tp?TI[tp.t]:null;
     const ex=extraCache[casaId+'_'+k+'_'+persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
-    cal+=`<div class="giorno-box${it?' oggi':''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${tp&&tp.c&&tp.c.length?`<div class="gb-cam">${tp.c.length}cam</div>`:''}</div>`;}
+    const isFuture=k>TK;
+    const hasCamere=tp&&tp.t==='T2'&&tp.c&&tp.c.length>0;
+    cal+=`<div class="giorno-box${it?' oggi':''}" style="${(isFuture&&hasCamere)?'cursor:pointer;':''}" onclick="${(hasCamere&&!it)?`openGiornoCamere('${k}','${persona.replace(/'/g,"\\'")}')`:''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${hasCamere?`<div class="gb-cam">${tp.c.length}cam</div>`:''}</div>`;}
   cal+='</div></div>';
   el.innerHTML=oggiHtml+mnav+stats+cal;
+}
+
+function openGiornoCamere(key,persona){
+  const tp=turniDelGiorno(key)[persona];
+  if(!tp||!tp.c||!tp.c.length)return;
+  const dt=parseD(key);
+  const cards=tp.c.map(n=>{
+    const ci=casa().camere.find(c=>c.n===n);
+    const domani=fmtD(addD(parseD(key),1));
+    const pr=prenCache[casaId]&&prenCache[casaId].find(p=>p.cam===n&&p.co===domani);
+    const ospiti=pr&&pr.osp?pr.osp:0;
+    return`<div class="cam-status-card" style="opacity:0.85;">
+      <div class="cam-num-big">${n}</div>
+      <div class="cam-name-s">${ci?ci.nm:''}</div>
+      ${ospiti?`<div class="cam-osp">👥 ${ospiti} ospiti in arrivo</div>`:'<div class="cam-osp" style="color:var(--text3);">ospiti n.d.</div>'}
+      <div class="cam-stato" style="color:var(--text3);">Programmata</div>
+    </div>`;
+  }).join('');
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox">
+    <button class="pcl" onclick="closePopDirect()">&#215;</button>
+    <h3>Camere — ${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</h3>
+    <p class="psub">${tp.c.length} camera/e in programma</p>
+    <div class="cam-status-grid">${cards}</div>
+    <button class="bcan" onclick="closePopDirect()" style="margin-top:16px;">Chiudi</button>
+  </div></div>`;
 }
 
 async function toggleCam(n,persona){
