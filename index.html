@@ -808,7 +808,8 @@ function renderMio(){
     const ex=extraCache[casaId+'_'+k+'_'+persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
     const isFuture=k>TK;
     const hasCamere=tp&&tp.t==='T2'&&tp.c&&tp.c.length>0;
-    cal+=`<div class="giorno-box${it?' oggi':''}" style="${(isFuture&&hasCamere)?'cursor:pointer;':''}" onclick="${(hasCamere&&!it)?`openGiornoCamere('${k}','${persona.replace(/'/g,"\\'")}')`:''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${hasCamere?`<div class="gb-cam">${tp.c.length}cam</div>`:''}</div>`;}
+    const camLabel=hasCamere?tp.c.slice(0,3).join(' '):'';
+    cal+=`<div class="giorno-box${it?' oggi':''}" style="${(hasCamere&&!it)?'cursor:pointer;':''}" onclick="${(hasCamere&&!it)?`openGiornoCamere('${k}','${persona.replace(/'/g,"\\'")}')`:''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${hasCamere?`<div class="gb-cam">${camLabel}</div>`:''}</div>`;}
   cal+='</div></div>';
   el.innerHTML=oggiHtml+mnav+stats+cal;
 }
