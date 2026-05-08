@@ -403,8 +403,27 @@ function getPren(cam,key){
   return arr.find(p=>p.cam===cam&&p.ci<=key&&p.co>key);
 }
 
-function turniDelGiorno(key){return turniCache[casaId+'_'+key]||{};}
-function getStatoCamera(key,cam){return (statoCamereCache[casaId+'_'+key+'_'+cam])||false;}
+function turniDelGiorno(key){
+  const turni=turniCache[casaId+'_'+key]||{};
+  // Per ogni turno T2, aggiungi automaticamente le camere con checkout oggi
+  const result={};
+  Object.entries(turni).forEach(([persona,tp])=>{
+    if(tp.t==='T2'){
+      // Trova camere con checkout in questo giorno
+      const arr=prenCache[casaId]||[];
+      const camereCheckout=arr
+        .filter(p=>p.co===key)
+        .map(p=>p.cam)
+        .filter((v,i,a)=>a.indexOf(v)===i); // deduplicazione
+      result[persona]={...tp, c: camereCheckout.length>0 ? camereCheckout : (tp.c||[])};
+    } else {
+      result[persona]=tp;
+    }
+  });
+  return result;
+}
+function getStatoCamera(key,cam){return statoCamereCache[casaId+'_'+key+'_'+cam]||{pronta:false,persona:null};}
+function isCameraFattaDaAltri(key,cam,persona){const s=getStatoCamera(key,cam);return s.pronta&&s.persona&&s.persona!==persona;}
 function getEx(key,persona){return extraCache[casaId+'_'+key+'_'+persona]||{items:{},vetri:[],letti:0,ore:0,min:0,note:''};}
 
 async function loadPren(){
@@ -492,7 +511,7 @@ async function loadStatoCamere(){
   const key=fmtD(TODAY);
   const {data,error}=await sb.from('stato_camere').select('*').eq('casa_id',casaId).eq('data',key);
   if(!error&&data){
-    data.forEach(s=>{statoCamereCache[casaId+'_'+key+'_'+s.camera]=s.pronta;});
+    data.forEach(s=>{statoCamereCache[casaId+'_'+key+'_'+s.camera]={pronta:s.pronta,persona:s.persona||null};});
   }
 }
 
@@ -553,7 +572,7 @@ async function saveStatoCameraDB(key,cam,pronta,persona){
     casa_id:casaId,data:key,camera:cam,pronta,persona,updated_at:new Date().toISOString()
   },{onConflict:'casa_id,data,camera'});
   if(error)console.error('Errore stato camera:',error);
-  else{statoCamereCache[casaId+'_'+key+'_'+cam]=pronta;}
+  else{statoCamereCache[casaId+'_'+key+'_'+cam]={pronta,persona};}
 }
 
 async function saveExtroDB(key,persona,ex){
@@ -745,16 +764,25 @@ function renderMio(){
     let camSec='';
     if(tpOggi.c&&tpOggi.c.length){
       const cards=tpOggi.c.map(n=>{
-        const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK),ready=getStatoCamera(TK,n);
+        const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK);
+        const stato=getStatoCamera(TK,n);
+        const ready=stato.pronta;
+        const fattaDaMe=ready&&stato.persona===persona;
+        const fattaDaAltri=ready&&stato.persona&&stato.persona!==persona;
         const ospiti=pr&&pr.osp?pr.osp:0;
         return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}">
           <div class="cam-num-big">${n}</div>
           <div class="cam-name-s">${ci?ci.nm:''}</div>
           ${ospiti?`<div class="cam-osp">👥 ${ospiti} ospiti in arrivo</div>`:''}
-          <div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div>
-          <button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')">
-            ${ready?'✓ Camera pronta':'Segna come pronta'}
-          </button>
+          <div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">
+            ${fattaDaAltri?`✓ Fatta da ${stato.persona}`:ready?'✓ Pronta':'In attesa'}
+          </div>
+          ${fattaDaAltri
+            ? `<button class="cam-pronta-btn fatta" disabled style="opacity:0.5;cursor:not-allowed;">✓ Già segnata</button>`
+            : `<button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')">
+                ${ready?'✓ Camera pronta':'Segna come pronta'}
+              </button>`
+          }
         </div>`;
       }).join('');
       camSec=`<div style="margin-top:12px;"><div class="lbl">Camere da pulire oggi</div><div class="cam-status-grid">${cards}</div></div>`;
@@ -783,10 +811,19 @@ function renderMio(){
 }
 
 async function toggleCam(n,persona){
-  const ready=!getStatoCamera(TK,n);
+  const stato=getStatoCamera(TK,n);
+  if(stato.pronta&&stato.persona&&stato.persona!==persona){toast('Camera già segnata da '+stato.persona);return;}
+  const ready=!stato.pronta;
   await saveStatoCameraDB(TK,n,ready,persona);
-  const id='csc-'+n.replace(/\s/g,'_');const card=document.getElementById(id);
-  if(card){card.className='cam-status-card'+(ready?' pronta':'');card.querySelector('.cam-stato').textContent=ready?'✓ Pronta':'In attesa';card.querySelector('.cam-stato').style.color=ready?'var(--success)':'var(--text3)';card.querySelector('.cam-pronta-btn').className='cam-pronta-btn '+(ready?'fatta':'da-fare');card.querySelector('.cam-pronta-btn').textContent=ready?'✓ Camera pronta':'Segna come pronta';}
+  const id='csc-'+n.replace(/\s/g,'_');
+  const card=document.getElementById(id);
+  if(card){
+    card.className='cam-status-card'+(ready?' pronta':'');
+    card.querySelector('.cam-stato').textContent=ready?'✓ Pronta':'In attesa';
+    card.querySelector('.cam-stato').style.color=ready?'var(--success)':'var(--text3)';
+    card.querySelector('.cam-pronta-btn').className='cam-pronta-btn '+(ready?'fatta':'da-fare');
+    card.querySelector('.cam-pronta-btn').textContent=ready?'✓ Camera pronta':'Segna come pronta';
+  }
   toast(ready?`${n} pronta!`:`${n} — in attesa`);
 }
 
