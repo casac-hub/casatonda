@@ -264,17 +264,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// SUPABASE CONFIG — sostituisci con i tuoi valori
-// ═══════════════════════════════════════════
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ═══════════════════════════════════════════
-// CYBHOTEL API
-// ═══════════════════════════════════════════
 const CYBHOTEL_PROXY = '/api/cybhotel';
 const CYBHOTEL_USER = 'casatonda';
 const CYBHOTEL_PWD  = 'Mangia26Mele';
@@ -289,20 +283,18 @@ async function cybLogin(){
       body:JSON.stringify({username:CYBHOTEL_USER, password:CYBHOTEL_PWD, hotel_ext_id:CYBHOTEL_HOTEL_ID()})
     });
     const d = await r.json();
-    if(d.token){cybToken=d.token;console.log('CybHotel login OK');return true;}
-    else{console.error('CybHotel login fallito:',d);return false;}
-  }catch(e){console.error('CybHotel login errore:',e);return false;}
+    if(d.token){cybToken=d.token;return true;}
+    else{return false;}
+  }catch(e){return false;}
 }
 
 async function cybGetRoomsStatus(){
   if(!cybToken)await cybLogin();
   if(!cybToken)return null;
   try{
-    const r=await fetch(CYBHOTEL_PROXY+'?action=get_rooms_status',{
-      headers:{'Authorization':'Bearer '+cybToken}
-    });
+    const r=await fetch(CYBHOTEL_PROXY+'?action=get_rooms_status',{headers:{'Authorization':'Bearer '+cybToken}});
     return await r.json();
-  }catch(e){console.error('cybGetRoomsStatus:',e);return null;}
+  }catch(e){return null;}
 }
 
 async function cybUpdateRoomStatus(roomNumber, status){
@@ -314,26 +306,20 @@ async function cybUpdateRoomStatus(roomNumber, status){
       headers:{'Authorization':'Bearer '+cybToken,'Content-Type':'application/json'},
       body:JSON.stringify({rooms:[{room_number:roomNumber, room_status:status}]})
     });
-    const d=await r.json();
-    console.log('updateRoomStatus:',d);
+    await r.json();
     return true;
-  }catch(e){console.error('cybUpdateRoomStatus:',e);return false;}
+  }catch(e){return false;}
 }
 
 async function cybGetRooms(){
   if(!cybToken)await cybLogin();
   if(!cybToken)return null;
   try{
-    const r=await fetch(CYBHOTEL_PROXY+'?action=get_rooms',{
-      headers:{'Authorization':'Bearer '+cybToken}
-    });
+    const r=await fetch(CYBHOTEL_PROXY+'?action=get_rooms',{headers:{'Authorization':'Bearer '+cybToken}});
     return await r.json();
-  }catch(e){console.error('cybGetRooms:',e);return null;}
+  }catch(e){return null;}
 }
 
-// ═══════════════════════════════════════════
-// COSTANTI
-// ═══════════════════════════════════════════
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const GG=['Do','Lu','Ma','Me','Gi','Ve','Sa'];
 const GGF=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
@@ -347,8 +333,7 @@ const TI={
 
 const CASE={
   piumogna:{
-    nome:'Casa Piumogna',
-    hotelExtId:'164',
+    nome:'Casa Piumogna',hotelExtId:'164',
     camere:[{n:'101',nm:'Celeste'},{n:'102',nm:'Suite Rossa'},{n:'201',nm:'Gialla'},{n:'202',nm:'Suite Dec.'},{n:'301',nm:'Verde'},{n:'302',nm:'White'},{n:'401',nm:'M.Monte'},{n:'402',nm:'M.Valle'}],
     personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
@@ -356,8 +341,7 @@ const CASE={
     hasVetri:true,vetriPrezzo:20,tariffaT1Base:true
   },
   cvb:{
-    nome:'Casa Vino e Birra',
-    hotelExtId:'160',
+    nome:'Casa Vino e Birra',hotelExtId:'160',
     camere:[{n:'Piazzetta',nm:'Studio Piazzetta'},{n:'Tiglio',nm:'Studio Il Tiglio'},{n:'Ticinella',nm:'Studio Ticinella'},{n:'Nala',nm:'Openspace La Nala'},{n:'Loft',nm:'Loft al Pozzon'},{n:'Cascata0',nm:'Cascata 0'},{n:'Cascata1',nm:'Cascata 1'},{n:'Cascata2',nm:'Cascata 2'}],
     tariffeCam:{Piazzetta:30,Tiglio:30,Ticinella:30,Cascata0:30,Cascata1:35,Cascata2:35,Nala:40,Loft:45},
     supOspiti:5,
@@ -367,8 +351,7 @@ const CASE={
     hasVetri:true,vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10}
   },
   liberty:{
-    nome:'Casa Liberty',
-    hotelExtId:'161',
+    nome:'Casa Liberty',hotelExtId:'161',
     camere:[{n:'DolceVita',nm:'Dolce Vita'},{n:'VoceLuna',nm:'Voce della Luna'},{n:'Mansarda',nm:'Mansarda della Cascata'}],
     tariffeCam:{DolceVita:45,VoceLuna:45,Mansarda:45},supOspiti:5,
     personale:['Nadja','Personale 2','Personale 3','Personale 4'],
@@ -377,8 +360,7 @@ const CASE={
     hasVetri:false
   },
   rustico:{
-    nome:'Rustico Conceprio',
-    hotelExtId:'162',
+    nome:'Rustico Conceprio',hotelExtId:'162',
     camere:[{n:'R1',nm:'Conceprio 1'}],
     personale:['Manuela','Personale 2','Personale 3'],
     turniTypes:['T2'],
@@ -386,8 +368,7 @@ const CASE={
     hasVetri:false,hasLetti:true,lettoPrezzzo:10
   },
   rurale:{
-    nome:'Casa Rurale',
-    hotelExtId:'159',
+    nome:'Casa Rurale',hotelExtId:'159',
     camere:[{n:'CR1',nm:'Casa Rurale 1'}],
     personale:['Nadja','Personale 2','Personale 3'],
     turniTypes:['T2'],
@@ -396,20 +377,13 @@ const CASE={
   }
 };
 
-// ═══════════════════════════════════════════
-// STATO APPLICAZIONE
-// ═══════════════════════════════════════════
 let casaId='piumogna', profile='admin', curTab='pren';
 const TODAY=new Date(), TK=fmtD(TODAY);
 let vMonth=new Date(TODAY.getFullYear(),TODAY.getMonth(),1), vDay=new Date(TODAY);
 let nextId=100, selCan='diretto', popTipo=null, popCamere=[];
 
-// Cache locale dei dati dal database
 let prenCache={}, turniCache={}, statoCamereCache={}, extraCache={};
 
-// ═══════════════════════════════════════════
-// UTILITY
-// ═══════════════════════════════════════════
 function casa(){return CASE[casaId];}
 function fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseD(s){return new Date(s+'T12:00:00');}
@@ -433,24 +407,16 @@ function turniDelGiorno(key){return turniCache[casaId+'_'+key]||{};}
 function getStatoCamera(key,cam){return (statoCamereCache[casaId+'_'+key+'_'+cam])||false;}
 function getEx(key,persona){return extraCache[casaId+'_'+key+'_'+persona]||{items:{},vetri:[],letti:0,ore:0,min:0,note:''};}
 
-// ═══════════════════════════════════════════
-// DATABASE — CARICAMENTO DATI
-// ═══════════════════════════════════════════
 async function loadPren(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth();
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
-  const {data,error}=await sb.from('prenotazioni')
-    .select('*')
-    .eq('casa_id',casaId)
-    .gte('co',from)
-    .lte('ci',to);
+  const {data,error}=await sb.from('prenotazioni').select('*').eq('casa_id',casaId).gte('co',from).lte('ci',to);
   if(!error&&data){
     if(!prenCache[casaId])prenCache[casaId]=[];
     const ids=data.map(p=>p.id);
     prenCache[casaId]=prenCache[casaId].filter(p=>!ids.includes(p.id));
     prenCache[casaId].push(...data);
   }
-  // Carica anche da CybHotel se disponibile
   await loadPrenFromCybHotel();
 }
 
@@ -463,36 +429,24 @@ async function loadPrenFromCybHotel(){
     const events=text.split('BEGIN:VEVENT').slice(1);
     if(!prenCache[casaId])prenCache[casaId]=[];
     const ICAL_MAP={
-      // CVB — nomi completi
       'LOFT AL POZZON':'Loft','STUDIO TICINELLA':'Ticinella','STUDIO IL TIGLIO':'Tiglio',
       'OPENSPACE LA NALA':'Nala','LA NALA':'Nala','STUDIO PIAZZETTA':'Piazzetta',
       'CASA ALLA CASCATA 1':'Cascata1','CASA ALLA CASCATA 2':'Cascata2','CASA CASCATA 0':'Cascata0',
-      // Piumogna — nomi completi dal gestionale
-      '101 LA CELESTE':'101','101':'101',
-      '102 LA ROSSA':'102','102':'102',
-      '201 LA GIALLA':'201','201':'201',
-      '202 LA DECORATA':'202','202':'202',
-      '301 LA VERDE':'301','301':'301',
-      '302 LA BIANCA':'302','302':'302',
-      '401 MANSARDA PIZZO PETTINE':'401','401':'401',
-      '402 MANSARDA PIZZO FORNO':'402','402':'402',
+      '101 LA CELESTE':'101','101':'101','102 LA ROSSA':'102','102':'102',
+      '201 LA GIALLA':'201','201':'201','202 LA DECORATA':'202','202':'202',
+      '301 LA VERDE':'301','301':'301','302 LA BIANCA':'302','302':'302',
+      '401 MANSARDA PIZZO PETTINE':'401','401':'401','402 MANSARDA PIZZO FORNO':'402','402':'402',
       'LA CELESTE':'101','LA ROSSA':'102','LA GIALLA':'201','LA DECORATA':'202',
       'LA VERDE':'301','LA BIANCA':'302','PIZZO PETTINE':'401','PIZZO FORNO':'402',
-      // Liberty — numero stanza dal gestionale
       'DOLCE VITA':'DolceVita','VOCE DELLA LUNA':'VoceLuna','LA VOCE DELLA LUNA':'VoceLuna',
       'MANSARDA DELLA CASCATA':'Mansarda',
-      // Rustico — numero stanza 1
       'RUSTICO ORABINO':'R1','ORABINO':'R1',
-      // Casa Rurale — numero stanza 1
       'CASA RURALE TICINESE':'CR1','RURALE TICINESE':'CR1'
     };
-    // Mapping per numero stanza (usato quando DESCRIPTION è solo il numero)
     const ROOM_NUM_MAP={
       piumogna:{'101':'101','102':'102','201':'201','202':'202','301':'301','302':'302','401':'401','402':'402'},
       liberty:{'1':'DolceVita','2':'VoceLuna','3':'Mansarda'},
-      rustico:{'1':'R1'},
-      rurale:{'1':'CR1'},
-      cvb:{}
+      rustico:{'1':'R1'},rurale:{'1':'CR1'},cvb:{}
     };
     let trovati=0;
     events.forEach(ev=>{
@@ -503,8 +457,7 @@ async function loadPrenFromCybHotel(){
       const dtend=getVal('DTEND')||getVal('DTEND;VALUE=DATE');
       if(!dtstart||!dtend||!desc)return;
       const parseIcal=d=>{const s=d.replace(/T.*/,'');return s.length===8?s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8):s;};
-      const ci=parseIcal(dtstart);
-      const co=parseIcal(dtend);
+      const ci=parseIcal(dtstart),co=parseIcal(dtend);
       const descUp=desc.replace(/^Camera /i,'').toUpperCase().split(',')[0].trim();
       let cam=null;
       for(const[k,v] of Object.entries(ICAL_MAP)){if(descUp.includes(k.toUpperCase())){cam=v;break;}}
@@ -513,21 +466,19 @@ async function loadPrenFromCybHotel(){
       if(!cam)return;
       trovati++;
       const id='ical_'+casaId+'_'+cam+'_'+ci;
+      // Solo aggiunge se non esiste già una versione salvata in Supabase
       if(!prenCache[casaId].find(p=>p.id===id)){
-        prenCache[casaId].push({id,cam,nome:'CybHotel',ci,co,osp:2,tar:0,can:'booking',_cyb:true});
+        prenCache[casaId].push({id,cam,nome:'CybHotel',ci,co,osp:0,tar:0,totale:0,can:'booking',note:'',_cyb:true});
       }
     });
-    console.log('iCal: '+trovati+' prenotazioni trovate per '+casa().nome);
+    console.log('iCal: '+trovati+' prenotazioni per '+casa().nome);
   }catch(e){console.log('iCal non disponibile:',e.message);}
 }
+
 async function loadTurni(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth();
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
-  const {data,error}=await sb.from('turni')
-    .select('*')
-    .eq('casa_id',casaId)
-    .gte('data',from)
-    .lte('data',to);
+  const {data,error}=await sb.from('turni').select('*').eq('casa_id',casaId).gte('data',from).lte('data',to);
   if(!error&&data){
     data.forEach(t=>{
       const key=casaId+'_'+t.data;
@@ -539,25 +490,16 @@ async function loadTurni(){
 
 async function loadStatoCamere(){
   const key=fmtD(TODAY);
-  const {data,error}=await sb.from('stato_camere')
-    .select('*')
-    .eq('casa_id',casaId)
-    .eq('data',key);
+  const {data,error}=await sb.from('stato_camere').select('*').eq('casa_id',casaId).eq('data',key);
   if(!error&&data){
-    data.forEach(s=>{
-      statoCamereCache[casaId+'_'+key+'_'+s.camera]=s.pronta;
-    });
+    data.forEach(s=>{statoCamereCache[casaId+'_'+key+'_'+s.camera]=s.pronta;});
   }
 }
 
 async function loadExtra(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth();
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
-  const {data,error}=await sb.from('extra')
-    .select('*')
-    .eq('casa_id',casaId)
-    .gte('data',from)
-    .lte('data',to);
+  const {data,error}=await sb.from('extra').select('*').eq('casa_id',casaId).gte('data',from).lte('data',to);
   if(!error&&data){
     data.forEach(e=>{
       extraCache[casaId+'_'+e.data+'_'+e.persona]={
@@ -573,9 +515,6 @@ async function loadAll(){
   loading(false);
 }
 
-// ═══════════════════════════════════════════
-// DATABASE — SALVATAGGIO DATI
-// ═══════════════════════════════════════════
 async function savePrenDB(p){
   const {error}=await sb.from('prenotazioni').upsert({...p,casa_id:casaId});
   if(error)console.error('Errore salvataggio prenotazione:',error);
@@ -601,8 +540,7 @@ async function saveTurnoDB(key,persona,turno,camere,note){
 }
 
 async function deleteTurnoDB(key,persona){
-  const {error}=await sb.from('turni').delete()
-    .eq('casa_id',casaId).eq('data',key).eq('persona',persona);
+  const {error}=await sb.from('turni').delete().eq('casa_id',casaId).eq('data',key).eq('persona',persona);
   if(error)console.error('Errore eliminazione turno:',error);
   else{
     if(turniCache[casaId+'_'+key])delete turniCache[casaId+'_'+key][persona];
@@ -615,9 +553,7 @@ async function saveStatoCameraDB(key,cam,pronta,persona){
     casa_id:casaId,data:key,camera:cam,pronta,persona,updated_at:new Date().toISOString()
   },{onConflict:'casa_id,data,camera'});
   if(error)console.error('Errore stato camera:',error);
-  else{
-    statoCamereCache[casaId+'_'+key+'_'+cam]=pronta;
-  }
+  else{statoCamereCache[casaId+'_'+key+'_'+cam]=pronta;}
 }
 
 async function saveExtroDB(key,persona,ex){
@@ -625,15 +561,9 @@ async function saveExtroDB(key,persona,ex){
     casa_id:casaId,data:key,persona,...ex,updated_at:new Date().toISOString()
   },{onConflict:'casa_id,data,persona'});
   if(error)console.error('Errore extra:',error);
-  else{
-    extraCache[casaId+'_'+key+'_'+persona]=ex;
-    toast('Extra salvati!');
-  }
+  else{extraCache[casaId+'_'+key+'_'+persona]=ex;toast('Extra salvati!');}
 }
 
-// ═══════════════════════════════════════════
-// UI — COSTRUZIONE INTERFACCIA
-// ═══════════════════════════════════════════
 function buildUI(){
   const pb=document.getElementById('profiles-bar');
   const people=['admin',...casa().personale.map(p=>p.toLowerCase().replace(/\s+/g,'_'))];
@@ -651,12 +581,8 @@ function buildUI(){
 
 async function setCasa(id){
   casaId=id;profile='admin';curTab='pren';
-  cybToken=null; // Reset token per nuovo login con casa corretta
-  prenCache[id]=[]; // Reset cache prenotazioni per questa casa
-  buildUI();
-  await loadAll();
-  cybLogin(); // Nuovo login per questa casa
-  renderAll();
+  cybToken=null;prenCache[id]=[];
+  buildUI();await loadAll();cybLogin();renderAll();
   toast('Casa: '+casa().nome);
 }
 
@@ -664,8 +590,7 @@ async function setP(p){
   profile=p;
   if(!isAdmin()&&['pren','comp','riepilogo'].includes(curTab))curTab='turni';
   if(!isAdmin())curTab='turni';
-  buildUI();
-  renderAll();
+  buildUI();renderAll();
 }
 
 function sw(t){
@@ -700,9 +625,6 @@ async function chM(d){
 function chD(d){vDay=addD(vDay,d);document.getElementById('dlbl-c').textContent=fmtLbl(vDay);renderComp();}
 function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 
-// ═══════════════════════════════════════════
-// RENDER PRENOTAZIONI
-// ═══════════════════════════════════════════
 function renderPren(){
   if(!isAdmin())return;
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
@@ -719,7 +641,9 @@ function renderPren(){
   casa().camere.forEach(cam=>{
     th+=`<tr><td class="tdc"><div class="cn">${cam.n}</div><div class="cs">${cam.nm}</div></td>`;
     for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';
-      if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+(CL[p.can]||'al');if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${isCI?(p.nome||'')+(p.osp?'('+p.osp+')':''):''}</span></div>`;}
+      if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+(CL[p.can]||'al');if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';
+      const label=isCI?(p._cyb&&!p.nome||p.nome==='CybHotel'?'':p.nome||'')+(p.osp?'('+p.osp+')':''):'';
+      ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${label}</span></div>`;}
       else ct=`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`;
       th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
     th+='</tr>';
@@ -727,9 +651,6 @@ function renderPren(){
   document.getElementById('cal-p').innerHTML=th+'</tbody>';
 }
 
-// ═══════════════════════════════════════════
-// RENDER TURNI
-// ═══════════════════════════════════════════
 function renderTurni(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-t').textContent=MESI[M]+' '+Y;
@@ -753,12 +674,8 @@ function renderTurni(){
   document.getElementById('grid-t').innerHTML=th+'</tbody>';
 }
 
-// ═══════════════════════════════════════════
-// EXTRA
-// ═══════════════════════════════════════════
 function calcExTot(ex,camName){
-  let t=0;
-  const c=casa();
+  let t=0;const c=casa();
   c.extras.forEach(e=>{if(ex.items[e.id])t+=e.prezzo;});
   if(c.hasVetri&&ex.vetri){if(c.vetriPrezzi){ex.vetri.forEach(v=>{t+=(c.vetriPrezzi[v]||0);});}else{t+=ex.vetri.length*(c.vetriPrezzo||0);}}
   if(c.hasLetti)t+=ex.letti*(c.lettoPrezzzo||0);
@@ -767,9 +684,7 @@ function calcExTot(ex,camName){
 }
 
 function buildExtra(key,persona,camName){
-  const ex=getEx(key,persona);
-  const c=casa();
-  const showPrices=isAdmin();
+  const ex=getEx(key,persona);const c=casa();const showPrices=isAdmin();
   const items=c.extras.map(e=>`<div class="extra-item${ex.items[e.id]?' sel':''}" onclick="togExItem('${key}','${persona.replace(/'/g,"\\'")}','${e.id}')"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div>${showPrices?`<div class="ei-price">Fr.${e.prezzo}</div>`:''}</div>`).join('');
   let vetriHtml='';
   if(c.hasVetri){
@@ -816,9 +731,6 @@ async function saveEx(key,persona){
   renderTurni();
 }
 
-// ═══════════════════════════════════════════
-// RENDER MIO MESE
-// ═══════════════════════════════════════════
 function renderMio(){
   const persona=profileToPersName();
   const el=document.getElementById('mio-content');
@@ -832,8 +744,19 @@ function renderMio(){
   if(tpOggi){
     let camSec='';
     if(tpOggi.c&&tpOggi.c.length){
-      const cards=tpOggi.c.map(n=>{const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK),ready=getStatoCamera(TK,n);
-        return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}"><div class="cam-num-big">${n}</div><div class="cam-name-s">${ci?ci.nm:''}</div><div class="cam-osp">${pr?'👥 '+pr.osp+' ospiti':''}</div><div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div><button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')"> ${ready?'✓ Camera pronta':'Segna come pronta'}</button></div>`;}).join('');
+      const cards=tpOggi.c.map(n=>{
+        const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK),ready=getStatoCamera(TK,n);
+        const ospiti=pr&&pr.osp?pr.osp:0;
+        return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}">
+          <div class="cam-num-big">${n}</div>
+          <div class="cam-name-s">${ci?ci.nm:''}</div>
+          ${ospiti?`<div class="cam-osp">👥 ${ospiti} ospiti in arrivo</div>`:''}
+          <div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">${ready?'✓ Pronta':'In attesa'}</div>
+          <button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}')">
+            ${ready?'✓ Camera pronta':'Segna come pronta'}
+          </button>
+        </div>`;
+      }).join('');
       camSec=`<div style="margin-top:12px;"><div class="lbl">Camere da pulire oggi</div><div class="cam-status-grid">${cards}</div></div>`;
     }
     const camName=tpOggi.c&&tpOggi.c.length===1?tpOggi.c[0]:null;
@@ -869,9 +792,6 @@ async function toggleCam(n,persona){
 
 function chMMio(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);renderMio();}
 
-// ═══════════════════════════════════════════
-// RENDER COMPENSI
-// ═══════════════════════════════════════════
 function renderComp(){
   if(!isAdmin())return;
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
@@ -895,10 +815,6 @@ function renderComp(){
   document.getElementById('stats-comp').innerHTML=`<div class="sbox"><div class="sv">${prenOggi.length}</div><div class="sl">Camere occ.</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent}</div><div class="sl">Entrata</div></div><div class="sbox"><div class="sv" style="color:${marg>=0?'var(--success)':'var(--danger)'}">Fr.${marg}</div><div class="sl">Margine</div></div>`;
 }
 
-
-// ═══════════════════════════════════════════
-// IMPORTAZIONE TURNI DA ODS/XLSX
-// ═══════════════════════════════════════════
 async function importaTurni(input){
   const file=input.files[0];if(!file)return;
   toast('Lettura file...');
@@ -912,7 +828,6 @@ async function importaTurni(input){
     const ws=wb.Sheets[foglio];
     if(!ws){toast('Foglio '+foglio+' non trovato');return;}
     const rows=utils.sheet_to_json(ws,{header:1});
-    // Trova riga intestazione (contiene 'Data')
     let hRow=-1;
     for(let i=0;i<rows.length;i++){if(rows[i]&&rows[i][0]==='Data'){hRow=i;break;}}
     if(hRow<0){toast('Intestazione non trovata');return;}
@@ -926,7 +841,6 @@ async function importaTurni(input){
       const key='2026-'+dd[1].padStart(2,'0')+'-'+dd[0].padStart(2,'0');
       const note=isPiumogna?String(r[11]||'').trim():String(r[4]||'').trim();
       if(isPiumogna){
-        // T1, T1p2, T2, T2p2, T3, T3p2, T4, T4p2
         const cols=[{t:'T1',pi:3},{t:'T1',pi:4},{t:'T2',pi:5},{t:'T2',pi:6},{t:'T3',pi:7},{t:'T3',pi:8},{t:'T4',pi:9},{t:'T4',pi:10}];
         const persMap={};
         cols.forEach(c=>{
@@ -937,13 +851,10 @@ async function importaTurni(input){
           }
         });
         for(const [persona,info] of Object.entries(persMap)){
-          try{
-            await saveTurnoDB(key,persona,info.t,[],note&&note!=='NaN'?note:'');
-            salvati++;
-          }catch(e){errori++;}
+          try{await saveTurnoDB(key,persona,info.t,[],note&&note!=='NaN'?note:'');salvati++;}
+          catch(e){errori++;}
         }
       } else {
-        // Solo T2 e T2p2
         const p1=String(r[2]||'').trim(),p2=String(r[3]||'').trim();
         for(const p of [p1,p2]){
           if(p&&p!=='-'&&p!=='NaN'){
@@ -958,8 +869,7 @@ async function importaTurni(input){
     renderTurni();
     toast(`Importati ${salvati} turni!`+(errori>0?` (${errori} errori)`:''));
   }catch(e){
-    console.error(e);
-    toast('Errore lettura file');
+    console.error(e);toast('Errore lettura file');
   }
 }
 
@@ -971,7 +881,6 @@ async function renderRiep(){
   el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Caricamento...</div>';
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
   const caseLista=Object.keys(CASE);
-  // Carica turni ed extra da tutte le case per il mese
   const tuttiTurni=[],tuttiExtra=[];
   for(const cid of caseLista){
     const {data:t}=await sb.from('turni').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
@@ -979,28 +888,20 @@ async function renderRiep(){
     const {data:e}=await sb.from('extra').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
     if(e)e.forEach(r=>tuttiExtra.push({...r,casa_id:cid}));
   }
-  // Calcola per persona
   const perPersona={};
   tuttiTurni.forEach(t=>{
     if(!perPersona[t.persona])perPersona[t.persona]={turni:{},forfait:0,oreH:0,oreM:0,extraDet:[],case:{}};
     const p=perPersona[t.persona];
     if(!p.turni[t.turno])p.turni[t.turno]=0;p.turni[t.turno]++;
     if(!p.case[t.casa_id])p.case[t.casa_id]={forfait:0,oreH:0,oreM:0};
-    // Calcola forfait T2
-    const c=CASE[t.casa_id];
-    if(t.turno==='T2'&&t.camere&&t.camere.length){
-      const nc=t.camere.length,comp=nc*30;
-      p.forfait+=comp;p.case[t.casa_id].forfait+=comp;
-    } else if(t.turno==='T1'||t.turno==='T4'){
-      p.forfait+=55;p.case[t.casa_id].forfait+=55;
-    }
+    if(t.turno==='T2'&&t.camere&&t.camere.length){const nc=t.camere.length,comp=nc*30;p.forfait+=comp;p.case[t.casa_id].forfait+=comp;}
+    else if(t.turno==='T1'||t.turno==='T4'){p.forfait+=55;p.case[t.casa_id].forfait+=55;}
   });
   tuttiExtra.forEach(e=>{
     if(!perPersona[e.persona])perPersona[e.persona]={turni:{},forfait:0,oreH:0,oreM:0,extraDet:[],case:{}};
     const p=perPersona[e.persona];
     if(!p.case[e.casa_id])p.case[e.casa_id]={forfait:0,oreH:0,oreM:0};
-    const c=CASE[e.casa_id];
-    let et=0;
+    const c=CASE[e.casa_id];let et=0;
     if(c){c.extras.forEach(ex=>{if(e.items&&e.items[ex.id])et+=ex.prezzo;});
       if(c.hasVetri&&e.vetri){if(c.vetriPrezzi){e.vetri.forEach(v=>{et+=(c.vetriPrezzi[v]||0);});}else{et+=e.vetri.length*(c.vetriPrezzo||0);}}
       if(c.hasLetti&&e.letti>0)et+=e.letti*(c.lettoPrezzzo||0);}
@@ -1009,32 +910,19 @@ async function renderRiep(){
     p.case[e.casa_id].oreH+=(e.ore||0);p.case[e.casa_id].oreM+=(e.min||0);
     if(e.ore>0||e.min>0)p.extraDet.push(`${CASE[e.casa_id]?CASE[e.casa_id].nome:e.casa_id}: ${e.ore}h${e.min>0?' '+e.min+'m':''}`);
   });
-  // Normalizza ore
   Object.values(perPersona).forEach(p=>{
     const totM=p.oreH*60+p.oreM;p.oreH=Math.floor(totM/60);p.oreM=totM%60;
     Object.values(p.case).forEach(c=>{const tm=c.oreH*60+c.oreM;c.oreH=Math.floor(tm/60);c.oreM=tm%60;});
   });
-  // Calcola per casa
   const perCasa={};
-  tuttiTurni.forEach(t=>{
-    if(!perCasa[t.casa_id])perCasa[t.casa_id]={forfait:0,oreH:0,oreM:0,persone:{}};
-    const c=perCasa[t.casa_id];
-    const pp=perPersona[t.persona];
-    if(pp&&pp.case[t.casa_id]){
-      if(!c.persone[t.persona])c.persone[t.persona]=true;
-    }
-  });
   Object.keys(perPersona).forEach(persona=>{
     const pp=perPersona[persona];
     Object.entries(pp.case).forEach(([cid,cv])=>{
       if(!perCasa[cid])perCasa[cid]={forfait:0,oreH:0,oreM:0};
-      perCasa[cid].forfait+=cv.forfait;
-      perCasa[cid].oreH+=cv.oreH;perCasa[cid].oreM+=cv.oreM;
+      perCasa[cid].forfait+=cv.forfait;perCasa[cid].oreH+=cv.oreH;perCasa[cid].oreM+=cv.oreM;
     });
   });
-  // Render
   let html='';
-  // Sezione per persona
   html+=`<div style="font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);">👤 Per dipendente</div>`;
   if(Object.keys(perPersona).length===0){html+='<div style="text-align:center;padding:20px;color:var(--text2);">Nessun turno in questo mese</div>';}
   Object.entries(perPersona).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([persona,p])=>{
@@ -1044,7 +932,6 @@ async function renderRiep(){
     html+=`<div class="rp"><div class="rph"><div><div class="rpn">${persona}</div><div class="rpr">${caseStr}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--info)">Fr.${p.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div>
     <div class="rpb"><div class="rpi"><div class="rl">Turni</div><div class="rv">${turniStr||'-'}</div></div><div class="rpi"><div class="rl">Forfait</div><div class="rv">Fr.${p.forfait}</div></div><div class="rpi"><div class="rl">Ore extra</div><div class="rv">${oreStr}</div></div></div></div>`;
   });
-  // Sezione per casa
   html+=`<div style="font-size:14px;font-weight:600;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border);">🏠 Per struttura</div>`;
   let totGlobale=0,totOreH=0,totOreM=0;
   caseLista.forEach(cid=>{
@@ -1053,7 +940,6 @@ async function renderRiep(){
     const oreStr=c.oreH>0||c.oreM>0?`${c.oreH}h${c.oreM>0?' '+c.oreM+'m':''}`:'-';
     html+=`<div class="rp"><div class="rph"><div><div class="rpn">${CASE[cid].nome}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--success)">Fr.${c.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div></div>`;
   });
-  // Totale generale
   const totM=totOreH*60+totOreM;totOreH=Math.floor(totM/60);totOreM=totM%60;
   const totOreStr=totOreH>0||totOreM>0?`${totOreH}h${totOreM>0?' '+totOreM+'m':''}`:'-';
   html+=`<div style="background:#f0f5ff;border-radius:var(--r-lg);padding:16px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:600;">Totale generale</span><div style="text-align:right"><div style="font-size:24px;font-weight:600;color:var(--info)">Fr.${totGlobale}</div><div style="font-size:11px;color:var(--text2);">${totOreStr} ore extra totali</div></div></div>`;
@@ -1091,14 +977,102 @@ async function clearTurno(key,persona){
 }
 
 // ═══════════════════════════════════════════
-// POPUP PRENOTAZIONE
+// POPUP PRENOTAZIONE — NUOVO con editing iCal
 // ═══════════════════════════════════════════
 function openDet(id,e){
   e&&e.stopPropagation();
   const arr=prenCache[casaId]||[];
   const p=arr.find(x=>x.id===id);if(!p)return;
-  const n=diffD(p.ci,p.co),tot=n*(p.tar||0);
-  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${p.cam} — ${p.nome||'Ospite'}</h3><p class="psub">${p.ci} → ${p.co}</p><div class="det"><div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:16px;font-weight:600;">👥 ${p.osp}</span></div><div class="dr"><span>Check-in</span><span>${p.ci}</span></div><div class="dr"><span>Check-out</span><span>${p.co}</span></div><div class="dr"><span>Notti</span><span>${n}</span></div><div class="dr"><span>Tariffa/notte</span><span>Fr.${p.tar}</span></div><div class="dr"><span>Totale</span><span>Fr.${tot}</span></div><div class="dr"><span>Canale</span><span><span class="bdg bdg-${CL[p.can]||'al'}">${capF(p.can||'altro')}</span></span></div></div><button class="bdel" onclick="delPren('${id}')">Elimina</button><button class="bcan" onclick="closePopDirect()">Chiudi</button></div></div>`;
+  const n=diffD(p.ci,p.co);
+  const isCyb=p._cyb||false;
+
+  if(isCyb){
+    const totAuto=p.tar?p.tar*n:0;
+    const totDisplay=p.totale?`Totale: Fr.${p.totale}`:(p.tar?`${n} notti × Fr.${p.tar} = Fr.${totAuto}`:'Inserisci tariffa o totale');
+    selCan=p.can||'booking';
+    document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox">
+      <button class="pcl" onclick="closePopDirect()">&#215;</button>
+      <h3>${p.cam}</h3>
+      <p class="psub" id="psub-notti">${p.ci} → ${p.co} · ${n} notti</p>
+      <div class="lbl">Canale</div>
+      <div class="canopts">
+        <div class="canopt${selCan==='booking'?' sbk':''}" id="co-booking" onclick="selC('booking')">Booking</div>
+        <div class="canopt${selCan==='diretto'?' sdi':''}" id="co-diretto" onclick="selC('diretto')">Interno</div>
+        <div class="canopt${selCan==='airbnb'?' sab':''}" id="co-airbnb" onclick="selC('airbnb')">Airbnb</div>
+        <div class="canopt${selCan==='altro'?' sal':''}" id="co-altro" onclick="selC('altro')">Altro</div>
+      </div>
+      <div class="fg f1"><div class="fl"><label>Nome ospite</label><input type="text" id="fn" placeholder="Cognome" value="${p.nome&&p.nome!=='CybHotel'?p.nome:''}"></div></div>
+      <div class="fg">
+        <div class="fl"><label>N° ospiti</label><input type="number" id="fo" value="${p.osp||''}" min="1" max="20" placeholder="—"></div>
+        <div class="fl"><label>Check-in</label><input type="text" value="${p.ci}" disabled style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;font-size:13px;background:#f5f5f5;color:var(--text2);"></div>
+      </div>
+      <div class="fg">
+        <div class="fl"><label>Tariffa/notte</label><input type="number" id="ft" value="${p.tar||''}" placeholder="—" oninput="calcTotPrev(${n})"></div>
+        <div class="fl"><label>Totale (se misto)</label><input type="number" id="ftot" value="${p.totale||''}" placeholder="—" oninput="clearTarPrev()"></div>
+      </div>
+      <div style="background:#f0f5ff;border-radius:var(--r-md);padding:10px;margin-bottom:10px;font-size:13px;" id="tot-preview">${totDisplay}</div>
+      <div class="fg f1"><div class="fl"><label>Note</label><input type="text" id="fno" placeholder="Allergie, richieste..." value="${p.note||''}"></div></div>
+      <button class="bsave" onclick="saveCybPren('${id}',${n})">Salva</button>
+      <button class="bcan" onclick="closePopDirect()">Chiudi</button>
+    </div></div>`;
+  } else {
+    const tot=p.totale||(n*(p.tar||0));
+    document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox">
+      <button class="pcl" onclick="closePopDirect()">&#215;</button>
+      <h3>${p.cam} — ${p.nome||'Ospite'}</h3>
+      <p class="psub">${p.ci} → ${p.co}</p>
+      <div class="det">
+        <div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:16px;font-weight:600;">👥 ${p.osp||'—'}</span></div>
+        <div class="dr"><span>Check-in</span><span>${p.ci}</span></div>
+        <div class="dr"><span>Check-out</span><span>${p.co}</span></div>
+        <div class="dr"><span>Notti</span><span>${n}</span></div>
+        <div class="dr"><span>Tariffa/notte</span><span>${p.tar?'Fr.'+p.tar:'—'}</span></div>
+        <div class="dr"><span>Totale</span><span>${tot?'Fr.'+tot:'—'}</span></div>
+        <div class="dr"><span>Canale</span><span><span class="bdg bdg-${CL[p.can]||'al'}">${capF(p.can||'altro')}</span></span></div>
+      </div>
+      <button class="bdel" onclick="delPren('${id}')">Elimina</button>
+      <button class="bcan" onclick="closePopDirect()">Chiudi</button>
+    </div></div>`;
+  }
+}
+
+function calcTotPrev(n){
+  const tar=parseFloat(document.getElementById('ft').value)||0;
+  const el=document.getElementById('tot-preview');
+  if(el)el.textContent=tar?`${n} notti × Fr.${tar} = Fr.${tar*n}`:'Inserisci tariffa o totale';
+  if(tar&&document.getElementById('ftot'))document.getElementById('ftot').value='';
+}
+
+function clearTarPrev(){
+  const tot=document.getElementById('ftot')?document.getElementById('ftot').value:'';
+  if(tot){
+    if(document.getElementById('ft'))document.getElementById('ft').value='';
+    const el=document.getElementById('tot-preview');if(el)el.textContent=`Totale: Fr.${tot}`;
+  }
+}
+
+async function saveCybPren(id,n){
+  const arr=prenCache[casaId]||[];
+  const p=arr.find(x=>x.id===id);if(!p)return;
+  const tar=parseFloat(document.getElementById('ft').value)||0;
+  const totManuale=parseFloat(document.getElementById('ftot').value)||0;
+  const ospVal=parseInt(document.getElementById('fo').value)||0;
+  p.nome=document.getElementById('fn').value||'CybHotel';
+  p.osp=ospVal;
+  p.can=selCan;
+  p.tar=tar;
+  p.totale=totManuale||(tar?tar*n:0);
+  p.note=document.getElementById('fno').value||'';
+  p._cyb=true; // mantieni flag cyb ma salva i dati in Supabase
+  const {error}=await sb.from('prenotazioni').upsert({
+    id:id,casa_id:casaId,cam:p.cam,nome:p.nome,ci:p.ci,co:p.co,
+    osp:p.osp,tar:p.tar,totale:p.totale,can:p.can,note:p.note
+  });
+  if(error)console.error('Errore salvataggio:',error);
+  else toast('Prenotazione aggiornata!');
+  closePopDirect();
+  renderPren();
+  renderMio();
 }
 
 function openNew(cam,key,e){
@@ -1112,7 +1086,7 @@ async function savePren(){
   const cam=document.getElementById('fc').value,ci=document.getElementById('fci').value,co=document.getElementById('fco').value;
   if(!ci||!co||ci>=co){toast('Controlla le date');return;}
   const arr=prenCache[casaId]||[];
-  if(arr.find(p=>p.cam===cam&&p.ci<co&&p.co>ci)){toast('Camera già occupata');return;}
+  if(arr.find(p=>p.cam===cam&&p.ci<co&&p.co>ci&&!p._cyb)){toast('Camera già occupata');return;}
   const newP={id:'p'+Date.now(),cam,nome:document.getElementById('fn').value,ci,co,osp:parseInt(document.getElementById('fo').value)||2,tar:parseInt(document.getElementById('ft').value)||120,can:selCan,note:document.getElementById('fno').value};
   if(!prenCache[casaId])prenCache[casaId]=[];
   prenCache[casaId].push(newP);
@@ -1131,14 +1105,11 @@ function closePop(e){if(e.target.classList.contains('pbg'))closePopDirect();}
 function closePopDirect(){document.getElementById('pop-root').innerHTML='';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-// ═══════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════
 window.onload=async()=>{
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
   buildUI();
   await loadAll();
-  cybLogin(); // Login CybHotel in background
+  cybLogin();
   renderAll();
 };
 </script>
