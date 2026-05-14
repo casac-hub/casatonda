@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -211,6 +210,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 
+<div id="login-root" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);"></div>
+
+<div id="app-root" style="display:none;">
+
 <div class="loading" id="loading">
   <div class="spinner"></div>
   <div style="font-size:13px;color:var(--text2);">Caricamento...</div>
@@ -263,6 +266,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div id="pop-root"></div>
 <div class="toast" id="toast"></div>
+
+</div><!-- end app-root -->
 
 <script>
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
@@ -1172,12 +1177,137 @@ function closePop(e){if(e.target.classList.contains('pbg'))closePopDirect();}
 function closePopDirect(){document.getElementById('pop-root').innerHTML='';}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-window.onload=async()=>{
-  document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
+// ═══════════════════════════════════════════
+// PIN LOGIN
+// ═══════════════════════════════════════════
+const PINS={
+  '7429':{profile:'admin',casa:null},
+  '3815':{profile:'fernanda',casa:'cvb'},
+  '6274':{profile:'isa',casa:'piumogna'},
+  '9031':{profile:'graziella',casa:'piumogna'},
+  '4563':{profile:'julka',casa:'piumogna'},
+  '2748':{profile:'nadja',casa:null,case:['liberty','rurale']},
+  '8392':{profile:'manuela',casa:'rustico'},
+  '5167':{profile:'serena',casa:'piumogna'}
+};
+
+let pinBuffer='';
+
+function showLogin(){
+  document.getElementById('app-root').style.display='none';
+  document.getElementById('login-root').style.display='flex';
+  pinBuffer='';
+  buildLoginScreen();
+}
+
+function showApp(){
+  document.getElementById('login-root').style.display='none';
+  document.getElementById('app-root').style.display='block';
+}
+
+function updateDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('dot-'+i);
+    if(d)d.style.background=i<pinBuffer.length?'var(--text)':'var(--border)';
+  }
+}
+
+function pinPress(n){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=String(n);
+  updateDots();
+  if(pinBuffer.length===4)setTimeout(checkPin,100);
+}
+
+function pinDel(){
+  pinBuffer=pinBuffer.slice(0,-1);
+  updateDots();
+}
+
+async function checkPin(){
+  const entry=PINS[pinBuffer];
+  if(!entry){
+    const box=document.getElementById('pin-box');
+    if(box){
+      box.style.transition='transform 0.1s';
+      box.style.transform='translateX(10px)';
+      setTimeout(()=>{box.style.transform='translateX(-10px)';},100);
+      setTimeout(()=>{box.style.transform='translateX(0)';},200);
+    }
+    pinBuffer='';
+    setTimeout(updateDots,250);
+    return;
+  }
+  if(entry.casa===null&&entry.case){
+    showCasaSelector(entry);
+  } else {
+    await loginWith(entry.profile,entry.casa||'piumogna');
+  }
+}
+
+function showCasaSelector(entry){
+  const root=document.getElementById('login-root');
+  const opts=entry.case.map(cid=>`
+    <button onclick="loginWith('${entry.profile}','${cid}')" style="
+      width:100%;padding:16px;margin-bottom:10px;border-radius:var(--r-lg);
+      border:2px solid var(--border);background:white;font-size:15px;font-weight:500;
+      cursor:pointer;font-family:inherit;">
+      ${CASE[cid].nome}
+    </button>`).join('');
+  root.innerHTML=`
+    <div style="text-align:center;padding:40px 24px;max-width:320px;width:100%;">
+      <div style="font-size:22px;font-weight:500;margin-bottom:8px;">Casa<span style="opacity:0.4;">tonda</span></div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:32px;">Scegli la struttura</div>
+      ${opts}
+    </div>`;
+}
+
+async function loginWith(prof,cid){
+  casaId=cid;
+  profile=prof==='admin'?'admin':prof;
+  curTab=prof==='admin'?'pren':'turni';
+  showApp();
+  const sel=document.getElementById('casa-sel');
+  if(sel)sel.value=cid;
   buildUI();
   await loadAll();
   cybLogin();
   renderAll();
+}
+
+function buildLoginScreen(){
+  const root=document.getElementById('login-root');
+  root.innerHTML=`
+    <div style="text-align:center;padding:40px 24px;max-width:320px;width:100%;">
+      <div style="font-size:26px;font-weight:500;margin-bottom:6px;">Casa<span style="opacity:0.4;">tonda</span></div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:40px;">Inserisci il tuo PIN</div>
+      <div id="pin-box" style="display:flex;justify-content:center;gap:16px;margin-bottom:40px;">
+        <div id="dot-0" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background 0.15s;"></div>
+        <div id="dot-1" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background 0.15s;"></div>
+        <div id="dot-2" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background 0.15s;"></div>
+        <div id="dot-3" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background 0.15s;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:240px;margin:0 auto;">
+        ${[1,2,3,4,5,6,7,8,9].map(n=>`
+          <button onclick="pinPress(${n})" style="
+            padding:18px;border-radius:var(--r-lg);border:1px solid var(--border);
+            background:white;font-size:22px;font-weight:400;cursor:pointer;
+            font-family:inherit;">${n}</button>`).join('')}
+        <div></div>
+        <button onclick="pinPress(0)" style="
+          padding:18px;border-radius:var(--r-lg);border:1px solid var(--border);
+          background:white;font-size:22px;font-weight:400;cursor:pointer;
+          font-family:inherit;">0</button>
+        <button onclick="pinDel()" style="
+          padding:18px;border-radius:var(--r-lg);border:1px solid var(--border);
+          background:white;font-size:22px;cursor:pointer;font-family:inherit;">⌫</button>
+      </div>
+    </div>`;
+}
+
+window.onload=async()=>{
+  document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
+  showLogin();
 };
 </script>
 </body>
