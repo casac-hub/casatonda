@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Casatonda</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Casatonda">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
@@ -222,13 +228,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="hdr">
   <div class="hdr-top">
     <div class="hdr-logo">Casa<span>tonda</span></div>
-    <select class="casa-sel" id="casa-sel" onchange="setCasa(this.value)">
-      <option value="piumogna">🏠 Casa Piumogna</option>
-      <option value="cvb">🍷 Casa Vino e Birra</option>
-      <option value="liberty">🌸 Casa Liberty</option>
-      <option value="rustico">🌿 Rustico Conceprio</option>
-      <option value="rurale">🌾 Casa Rurale</option>
-    </select>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select class="casa-sel" id="casa-sel" onchange="setCasa(this.value)">
+        <option value="piumogna">🏠 Casa Piumogna</option>
+        <option value="cvb">🍷 Casa Vino e Birra</option>
+        <option value="liberty">🌸 Casa Liberty</option>
+        <option value="rustico">🌿 Rustico Conceprio</option>
+        <option value="rurale">🌾 Casa Rurale</option>
+      </select>
+      <button onclick="showLogin()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;">⏻</button>
+    </div>
   </div>
   <div class="profiles" id="profiles-bar"></div>
 </div>
