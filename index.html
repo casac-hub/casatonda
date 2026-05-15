@@ -601,9 +601,20 @@ async function saveExtroDB(key,persona,ex){
 
 function buildUI(){
   const pb=document.getElementById('profiles-bar');
-  const people=['admin',...casa().personale.map(p=>p.toLowerCase().replace(/\s+/g,'_'))];
-  const labels=['Staff',...casa().personale];
-  pb.innerHTML=people.map((p,i)=>`<button class="pb${profile===p?' on':''}" onclick="setP('${p}')">${labels[i]}</button>`).join('');
+  // Solo admin vede i bottoni profilo e il selettore casa
+  if(isAdmin()){
+    const people=['admin',...casa().personale.map(p=>p.toLowerCase().replace(/\s+/g,'_'))];
+    const labels=['Staff',...casa().personale];
+    pb.innerHTML=people.map((p,i)=>`<button class="pb${profile===p?' on':''}" onclick="setP('${p}')">${labels[i]}</button>`).join('');
+    const sel=document.getElementById('casa-sel');
+    if(sel)sel.style.display='';
+  } else {
+    // Personale — mostra solo il nome e la casa, niente di cliccabile
+    const persName=profileToPersName()||'';
+    pb.innerHTML=`<span style="color:rgba(255,255,255,0.75);font-size:12px;padding:6px 14px;">${persName} — ${casa().nome}</span>`;
+    const sel=document.getElementById('casa-sel');
+    if(sel)sel.style.display='none';
+  }
   const tb=document.getElementById('tabs-bar');
   let tabs='';
   if(isAdmin())tabs+=`<div class="tab${curTab==='pren'?' on':''}" data-t="pren" onclick="sw('pren')">Prenotazioni</div>`;
