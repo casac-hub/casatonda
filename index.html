@@ -617,7 +617,8 @@ function buildUI(){
   }
   const tb=document.getElementById('tabs-bar');
   let tabs='';
-  if(isAdmin())tabs+=`<div class="tab${curTab==='pren'?' on':''}" data-t="pren" onclick="sw('pren')">Prenotazioni</div>`;
+  // Prenotazioni visibile a tutti (staff e personale)
+  tabs+=`<div class="tab${curTab==='pren'?' on':''}" data-t="pren" onclick="sw('pren')">Prenotazioni</div>`;
   tabs+=`<div class="tab${curTab==='turni'?' on':''}" data-t="turni" onclick="sw('turni')">Turni</div>`;
   if(isAdmin()){tabs+=`<div class="tab${curTab==='comp'?' on':''}" data-t="comp" onclick="sw('comp')">Compensi</div>`;tabs+=`<div class="tab${curTab==='riepilogo'?' on':''}" data-t="riepilogo" onclick="sw('riepilogo')">Riepilogo</div>`;}
   else tabs+=`<div class="tab${curTab==='mio'?' on':''}" data-t="mio" onclick="sw('mio')">Il mio mese</div>`;
@@ -672,25 +673,41 @@ function chD(d){vDay=addD(vDay,d);document.getElementById('dlbl-c').textContent=
 function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 
 function renderPren(){
-  if(!isAdmin())return;
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-p').textContent=MESI[M]+' '+Y;
   const ms=fmtD(new Date(Y,M,1)),me=fmtD(new Date(Y,M,days));
   const arr=prenCache[casaId]||[];
-  let notti=0,ent=0;
-  arr.forEach(p=>{if(p.ci<=me&&p.co>ms){const s=p.ci<ms?ms:p.ci,e=p.co>me?fmtD(addD(new Date(Y,M,days),1)):p.co;const n=diffD(s,e);notti+=n;ent+=n*(p.tar||0);}});
-  const occ=Math.round(notti/(days*casa().camere.length)*100);
-  document.getElementById('stats-p').innerHTML=`<div class="sbox"><div class="sv">${occ}%</div><div class="sl">Occupazione</div></div><div class="sbox"><div class="sv">${notti}</div><div class="sl">Notti</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent.toLocaleString('it-CH')}</div><div class="sl">Entrate</div></div>`;
+  // Stats — solo per admin
+  if(isAdmin()){
+    let notti=0,ent=0;
+    arr.forEach(p=>{if(p.ci<=me&&p.co>ms){const s=p.ci<ms?ms:p.ci,e=p.co>me?fmtD(addD(new Date(Y,M,days),1)):p.co;const n=diffD(s,e);notti+=n;ent+=n*(p.tar||0);}});
+    const occ=Math.round(notti/(days*casa().camere.length)*100);
+    document.getElementById('stats-p').innerHTML=`<div class="sbox"><div class="sv">${occ}%</div><div class="sl">Occupazione</div></div><div class="sbox"><div class="sv">${notti}</div><div class="sl">Notti</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent.toLocaleString('it-CH')}</div><div class="sl">Entrate</div></div>`;
+  } else {
+    document.getElementById('stats-p').innerHTML='';
+  }
   let th='<thead><tr><th class="thc">Camera</th>';
   for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),dw=dt.getDay();th+=`<th class="thd${dw===0||dw===6?' we':''}${k===TK?' tod':''}"><span class="thd-n">${d}</span><span class="thd-g">${GG[dw]}</span></th>`;}
   th+='</tr></thead><tbody>';
   casa().camere.forEach(cam=>{
     th+=`<tr><td class="tdc"><div class="cn">${cam.n}</div><div class="cs">${cam.nm}</div></td>`;
     for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';
-      if(p){const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;let bc='bb b-'+(CL[p.can]||'al');if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';
-      const label=isCI?(p._cyb&&!p.nome||p.nome==='CybHotel'?'':p.nome||'')+(p.osp?'('+p.osp+')':''):'';
-      ct=`<div class="${bc}" onclick="openDet('${p.id}',event)"><span class="bl">${label}</span></div>`;}
-      else ct=`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`;
+      if(p){
+        const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;
+        let bc='bb b-'+(CL[p.can]||'al');
+        if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';
+        let label='';
+        if(isAdmin()){
+          label=isCI?(p._cyb&&(!p.nome||p.nome==='CybHotel')?'':p.nome||'')+(p.osp?'('+p.osp+')':''):'';
+        } else {
+          // Personale: mostra solo ospiti al check-in e nota se presente
+          label=isCI?(p.osp?'👥'+p.osp:'')+(p.note?' 📋':''):'';
+        }
+        const onclick=isAdmin()?`openDet('${p.id}',event)`:`openDetStaff('${p.id}',event)`;
+        ct=`<div class="${bc}" onclick="${onclick}"><span class="bl">${label}</span></div>`;
+      } else {
+        ct=isAdmin()?`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`:`<div class="fc"></div>`;
+      }
       th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
     th+='</tr>';
   });
@@ -1071,6 +1088,25 @@ async function clearTurno(key,persona){
 // ═══════════════════════════════════════════
 // POPUP PRENOTAZIONE — NUOVO con editing iCal
 // ═══════════════════════════════════════════
+function openDetStaff(id,e){
+  e&&e.stopPropagation();
+  const arr=prenCache[casaId]||[];
+  const p=arr.find(x=>x.id===id);if(!p)return;
+  const n=diffD(p.ci,p.co);
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox">
+    <button class="pcl" onclick="closePopDirect()">&#215;</button>
+    <h3>${p.cam}</h3>
+    <p class="psub">${p.ci} → ${p.co} · ${n} notti</p>
+    <div class="det">
+      <div class="dr"><span>Ospiti</span><span style="color:var(--info);font-size:18px;font-weight:600;">👥 ${p.osp||'—'}</span></div>
+      <div class="dr"><span>Check-in</span><span>${p.ci}</span></div>
+      <div class="dr"><span>Check-out</span><span>${p.co}</span></div>
+      ${p.note?`<div class="dr" style="flex-direction:column;align-items:flex-start;gap:4px;"><span>📋 Note</span><span style="font-weight:400;color:var(--text);margin-top:4px;">${p.note}</span></div>`:''}
+    </div>
+    <button class="bcan" onclick="closePopDirect()">Chiudi</button>
+  </div></div>`;
+}
+
 function openDet(id,e){
   e&&e.stopPropagation();
   const arr=prenCache[casaId]||[];
@@ -1285,7 +1321,7 @@ function showCasaSelector(entry){
 async function loginWith(prof,cid){
   casaId=cid;
   profile=prof==='admin'?'admin':prof;
-  curTab=prof==='admin'?'pren':'turni';
+  curTab='pren';
   showApp();
   const sel=document.getElementById('casa-sel');
   if(sel)sel.value=cid;
