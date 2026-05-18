@@ -522,7 +522,7 @@ async function loadPrenFromCybHotel(){
       const id='ical_'+casaId+'_'+cam+'_'+ci;
       // Solo aggiunge se non esiste già una versione salvata in Supabase
       if(!prenCache[casaId].find(p=>p.id===id)){
-        prenCache[casaId].push({id,cam,nome:'CybHotel',ci,co,osp:0,tar:0,totale:0,can:'booking',note:'',_cyb:true});
+        prenCache[casaId].push({id,cam,nome:'CybHotel',ci,co,osp:2,tar:0,totale:0,can:'booking',note:'',_cyb:true});
       }
     });
     console.log('iCal: '+trovati+' prenotazioni per '+casa().nome);
@@ -872,21 +872,20 @@ function renderMio(){
         const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK);
         const stato=getStatoCamera(TK,n);
         const ready=stato.pronta;
-        const fattaDaMe=ready&&stato.persona===persona;
         const fattaDaAltri=ready&&stato.persona&&stato.persona!==persona;
         const bucatoFatto=stato.bucato_fatto;
         const bucatoDaAltri=bucatoFatto&&stato.bucato_persona&&stato.bucato_persona!==persona;
-        const ospiti=pr&&pr.osp?pr.osp:0;
+        const ospiti=pr&&pr.osp?pr.osp:2; // default 2 persone
         return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}">
           <div class="cam-num-big">${n}</div>
           <div class="cam-name-s">${ci?ci.nm:''}</div>
-          ${ospiti?`<div class="cam-osp">👥 ${ospiti} ospiti in arrivo</div>`:''}
+          <div class="cam-osp">👥 ${ospiti} ospiti</div>
           <div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">
-            ${fattaDaAltri?`✓ Pulizia: ${stato.persona}`:ready?'✓ Pulizia pronta':'Pulizia in attesa'}
+            ${fattaDaAltri?`✓ Pulizia: ${stato.persona}`:ready?'✓ Pulizia completata':'Pulizia in attesa'}
           </div>
           ${fattaDaAltri
-            ? `<button class="cam-pronta-btn fatta" disabled style="opacity:0.5;cursor:not-allowed;">✓ Già pulita da ${stato.persona}</button>`
-            : `<button class="cam-pronta-btn ${ready?'fatta':'da-fare'}" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}','${TK}')">
+            ? `<button style="width:100%;padding:11px;border-radius:var(--r-md);border:1px solid var(--success);background:#f0faf0;color:var(--success);font-size:13px;font-weight:600;cursor:not-allowed;opacity:0.6;margin-top:6px;">✓ Già pulita da ${stato.persona}</button>`
+            : `<button style="width:100%;padding:11px;border-radius:var(--r-md);border:1px solid ${ready?'var(--success)':'var(--border)'};background:${ready?'#f0faf0':'white'};color:${ready?'var(--success)':'var(--text2)'};font-size:13px;font-weight:600;cursor:pointer;margin-top:6px;" onclick="toggleCam('${n.replace(/'/g,"\\'")}','${persona.replace(/'/g,"\\'")}','${TK}')">
                 ${ready?'✓ Pulizia completata':'Segna pulizia completata'}
               </button>`
           }
@@ -939,7 +938,7 @@ function openGiornoCamere(key,persona){
     const ci=casa().camere.find(c=>c.n===n);
     const domani=fmtD(addD(parseD(key),1));
     const pr=prenCache[casaId]&&prenCache[casaId].find(p=>p.cam===n&&p.co===domani);
-    const ospiti=pr&&pr.osp?pr.osp:0;
+    const ospiti=pr&&pr.osp?pr.osp:2;
     return`<div class="cam-status-card" style="opacity:0.85;">
       <div class="cam-num-big">${n}</div>
       <div class="cam-name-s">${ci?ci.nm:''}</div>
