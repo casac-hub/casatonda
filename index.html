@@ -1344,14 +1344,28 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // PIN LOGIN
 // ═══════════════════════════════════════════
 const PINS={
+  // Staff admin
   '7429':{profile:'admin',casa:null},
-  '3815':{profile:'fernanda',casa:'cvb'},
+  // Casa Piumogna
+  '5167':{profile:'serena',casa:'piumogna'},
   '6274':{profile:'isa',casa:'piumogna'},
   '9031':{profile:'graziella',casa:'piumogna'},
   '4563':{profile:'julka',casa:'piumogna'},
+  '3847':{profile:'personale_4',casa:'piumogna'},
+  '2691':{profile:'personale_5',casa:'piumogna'},
+  // Casa Vino e Birra
+  '3815':{profile:'fernanda',casa:'cvb'},
+  '7382':{profile:'personale_2',casa:'cvb'},
+  '5926':{profile:'personale_3',casa:'cvb'},
+  '4817':{profile:'personale_4',casa:'cvb'},
+  // Casa Liberty / Casa Rurale
   '2748':{profile:'nadja',casa:null,case:['liberty','rurale']},
+  '8153':{profile:'personale_2',casa:'liberty'},
+  '6429':{profile:'personale_3',casa:'liberty'},
+  // Rustico Conceprio
   '8392':{profile:'manuela',casa:'rustico'},
-  '5167':{profile:'serena',casa:'piumogna'}
+  '1574':{profile:'personale_2',casa:'rustico'},
+  '3068':{profile:'personale_3',casa:'rustico'}
 };
 
 let pinBuffer='';
