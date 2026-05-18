@@ -538,6 +538,10 @@ async function loadTurni(){
       const key=casaId+'_'+t.data;
       if(!turniCache[key])turniCache[key]={};
       turniCache[key][t.persona]={t:t.turno,c:t.camere||[],note:t.note||''};
+      // Carica stato completato per T1/T4
+      if(t.completato){
+        turniCache[casaId+'_'+t.data+'_'+t.persona+'_completato']=t.completato;
+      }
     });
   }
 }
@@ -867,7 +871,7 @@ function renderMio(){
   let oggiHtml='';
   if(tpOggi){
     let camSec='';
-    if(tpOggi.c&&tpOggi.c.length){
+    if(tpOggi.t==='T2'&&tpOggi.c&&tpOggi.c.length){
       const cards=tpOggi.c.map(n=>{
         const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK);
         const stato=getStatoCamera(TK,n);
@@ -875,7 +879,7 @@ function renderMio(){
         const fattaDaAltri=ready&&stato.persona&&stato.persona!==persona;
         const bucatoFatto=stato.bucato_fatto;
         const bucatoDaAltri=bucatoFatto&&stato.bucato_persona&&stato.bucato_persona!==persona;
-        const ospiti=pr&&pr.osp?pr.osp:2; // default 2 persone
+        const ospiti=pr&&pr.osp?pr.osp:2;
         return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}">
           <div class="cam-num-big">${n}</div>
           <div class="cam-name-s">${ci?ci.nm:''}</div>
@@ -904,12 +908,25 @@ function renderMio(){
       }).join('');
       camSec=`<div style="margin-top:12px;"><div class="lbl">Camere da pulire oggi</div><div class="cam-status-grid">${cards}</div></div>`;
     }
+    // Bottone completato per T1 e T4
+    let completatoSec='';
+    if(tpOggi.t==='T1'||tpOggi.t==='T4'){
+      const ck=casaId+'_'+TK+'_'+persona;
+      const completato=turniCache[ck+'_completato']||false;
+      const label=tpOggi.t==='T1'?'colazione':'brunch';
+      completatoSec=`<div style="margin-top:12px;">
+        <button style="width:100%;padding:13px;border-radius:var(--r-md);border:1px solid ${completato?'var(--success)':'var(--border)'};background:${completato?'#f0faf0':'white'};color:${completato?'var(--success)':'var(--text2)'};font-size:13px;font-weight:600;cursor:pointer;" onclick="toggleCompletato('${TK}','${persona.replace(/'/g,"\\'")}','${tpOggi.t}')">
+          ${completato?`✓ ${capF(label)} completata`:`Segna ${label} completata`}
+        </button>
+      </div>`;
+    }
     const camName=tpOggi.c&&tpOggi.c.length===1?tpOggi.c[0]:null;
     oggiHtml=`<div class="mt-card" style="border-left-color:${infoOggi.tc};background:${infoOggi.bg}30;">
       <div style="font-size:10px;font-weight:600;color:${infoOggi.tc};margin-bottom:6px;">OGGI — ${fmtLbl(TODAY)}</div>
       <span class="tt ${infoOggi.c}" style="display:inline-block;margin-bottom:6px;">${tpOggi.t}</span>
       <div class="mt-tit">${infoOggi.l}</div><div class="mt-ora">${infoOggi.o}</div>
       ${camSec}
+      ${completatoSec}
       ${tpOggi.note?`<div style="margin-top:10px;background:white;border-radius:var(--r-md);padding:10px;border-left:3px solid var(--t3t);"><div style="font-size:10px;font-weight:600;color:var(--t3t);margin-bottom:4px;">📋 NOTE</div><div style="font-size:13px;">${tpOggi.note}</div></div>`:''}
       ${buildExtra(TK,persona,camName)}
     </div>`;
@@ -922,7 +939,6 @@ function renderMio(){
   for(let i=0;i<offset;i++)cal+=`<div></div>`;
   for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=turniDelGiorno(k)[persona],info=tp?TI[tp.t]:null;
     const ex=extraCache[casaId+'_'+k+'_'+persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
-    const isFuture=k>TK;
     const hasCamere=tp&&tp.t==='T2'&&tp.c&&tp.c.length>0;
     const camLabel=hasCamere?tp.c.map(n=>n.length>4?n.slice(0,4):n).join(' '):'';
     cal+=`<div class="giorno-box${it?' oggi':''}" style="${(hasCamere&&!it)?'cursor:pointer;':''}" onclick="${(hasCamere&&!it)?`openGiornoCamere('${k}','${persona.replace(/'/g,"\\'")}')`:''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${hasCamere?`<div class="gb-cam" style="font-size:6px;line-height:1.3;">${camLabel}</div>`:''}</div>`;}
@@ -963,6 +979,21 @@ async function toggleCam(n,persona,key){
   await saveStatoCameraDB(key,n,ready,persona);
   renderMio();
   toast(ready?`${n} — pulizia completata!`:`${n} — pulizia annullata`);
+}
+
+async function toggleCompletato(key,persona,tipo){
+  const ck=casaId+'_'+key+'_'+persona;
+  const completato=!(turniCache[ck+'_completato']||false);
+  turniCache[ck+'_completato']=completato;
+  // Salva in turni con campo completato
+  const {error}=await sb.from('turni').upsert({
+    casa_id:casaId,data:key,persona,turno:tipo,completato,
+    camere:turniCache[casaId+'_'+key]?.[persona]?.c||[],
+    note:turniCache[casaId+'_'+key]?.[persona]?.note||''
+  },{onConflict:'casa_id,data,persona'});
+  if(error)console.error('Errore completato:',error);
+  else toast(completato?'✓ Completato!':'Annullato');
+  renderMio();
 }
 
 async function toggleBucato(n,persona,key){
