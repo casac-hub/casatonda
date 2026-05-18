@@ -544,6 +544,10 @@ async function loadTurni(){
 
 async function loadStatoCamere(){
   const key=fmtD(TODAY);
+  // Reset cache per oggi prima di ricaricare
+  Object.keys(statoCamereCache).forEach(k=>{
+    if(k.startsWith(casaId+'_'+key+'_'))delete statoCamereCache[k];
+  });
   const {data,error}=await sb.from('stato_camere').select('*').eq('casa_id',casaId).eq('data',key);
   if(!error&&data){
     data.forEach(s=>{
