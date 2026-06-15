@@ -356,7 +356,7 @@ const CASE={
     bucatoBasePersone:2,
     personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
-    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'}],
     hasVetri:true,vetriPrezzo:20,tariffaT1Base:true,
     defaultPulizia:20,defaultBucato:10
   },
@@ -371,7 +371,7 @@ const CASE={
     supOspiti:5,
     personale:['Fernanda','Personale 2','Personale 3','Personale 4'],
     turniTypes:['T2'],
-    extras:[{id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},{id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},{id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},{id:'culla',nome:'Culla',prezzo:10,icon:'🛏'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},{id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},{id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'spazzatura',nome:'Spazzatura',prezzo:5,icon:'🗑️'}],
     hasVetri:true,vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10},
     defaultPulizia:20,defaultBucato:10
   },
@@ -384,7 +384,7 @@ const CASE={
     supOspiti:5,
     personale:['Nadja','Personale 2','Personale 3','Personale 4'],
     turniTypes:['T2'],
-    extras:[{id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:10,icon:'🛏'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'}],
     hasVetri:false,defaultPulizia:35,defaultBucato:10
   },
   rustico:{
@@ -394,7 +394,7 @@ const CASE={
     bucatoPerPersona:10, // Fr.10 a persona da 0
     personale:['Manuela','Personale 2','Personale 3'],
     turniTypes:['T2'],
-    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'}],
+    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'}],
     hasVetri:false,hasLetti:true,lettoPrezzzo:10,hasOre:true,
     defaultPulizia:0,defaultBucato:0
   },
@@ -405,7 +405,7 @@ const CASE={
     bucatoPerPersona:10, // Fr.10 a persona da 0
     personale:['Nadja','Personale 2','Personale 3'],
     turniTypes:['T2'],
-    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'}],
+    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'}],
     hasVetri:false,hasLetti:true,lettoPrezzzo:10,hasOre:true,
     defaultPulizia:0,defaultBucato:0
   }
@@ -914,10 +914,20 @@ function renderMio(){
       const ck=casaId+'_'+TK+'_'+persona;
       const completato=turniCache[ck+'_completato']||false;
       const label=tpOggi.t==='T1'?'colazione':'brunch';
+      const exT1T4=getEx(TK,persona);
       completatoSec=`<div style="margin-top:12px;">
         <button style="width:100%;padding:13px;border-radius:var(--r-md);border:1px solid ${completato?'var(--success)':'var(--border)'};background:${completato?'#f0faf0':'white'};color:${completato?'var(--success)':'var(--text2)'};font-size:13px;font-weight:600;cursor:pointer;" onclick="toggleCompletato('${TK}','${persona.replace(/'/g,"\\'")}','${tpOggi.t}')">
           ${completato?`✓ ${capF(label)} completata`:`Segna ${label} completata`}
         </button>
+        <div class="ore-extra" style="margin-top:10px;">
+          <label>⏱ Ore extra</label>
+          <div class="ore-input">
+            <div class="ore-field"><label>Ore</label><input type="number" min="0" value="${exT1T4.ore}" onchange="updateExField('${TK}','${persona.replace(/'/g,"\\'")}','ore',this.value)"></div>
+            <div class="ore-field"><label>Minuti</label><input type="number" min="0" max="59" value="${exT1T4.min}" onchange="updateExField('${TK}','${persona.replace(/'/g,"\\'")}','min',this.value)"></div>
+            <span style="font-size:11px;color:var(--text2);">(a fine mese)</span>
+          </div>
+          <button class="bsave" style="margin-top:8px;" onclick="saveEx('${TK}','${persona.replace(/'/g,"\\'")}')">Salva ore</button>
+        </div>
       </div>`;
     }
     const camName=tpOggi.c&&tpOggi.c.length===1?tpOggi.c[0]:null;
@@ -1097,57 +1107,99 @@ async function renderRiep(){
   el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);">Caricamento...</div>';
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
   const caseLista=Object.keys(CASE);
-  const tuttiTurni=[],tuttiExtra=[];
+
+  // Carica dati da tutte le case
+  const tuttiStato=[],tuttiTurni=[],tuttiExtra=[];
   for(const cid of caseLista){
+    const {data:s}=await sb.from('stato_camere').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
+    if(s)s.forEach(r=>tuttiStato.push({...r,casa_id:cid}));
     const {data:t}=await sb.from('turni').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
     if(t)t.forEach(r=>tuttiTurni.push({...r,casa_id:cid}));
     const {data:e}=await sb.from('extra').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
     if(e)e.forEach(r=>tuttiExtra.push({...r,casa_id:cid}));
   }
+
   const perPersona={};
-  tuttiTurni.forEach(t=>{
-    if(!perPersona[t.persona])perPersona[t.persona]={turni:{},forfait:0,oreH:0,oreM:0,extraDet:[],case:{}};
-    const p=perPersona[t.persona];
-    if(!p.turni[t.turno])p.turni[t.turno]=0;p.turni[t.turno]++;
-    if(!p.case[t.casa_id])p.case[t.casa_id]={forfait:0,oreH:0,oreM:0};
-    if(t.turno==='T2'&&t.camere&&t.camere.length){const nc=t.camere.length,comp=nc*30;p.forfait+=comp;p.case[t.casa_id].forfait+=comp;}
-    else if(t.turno==='T1'||t.turno==='T4'){p.forfait+=55;p.case[t.casa_id].forfait+=55;}
+  function initP(p){if(!perPersona[p])perPersona[p]={pulizia:0,bucato:0,t1t4:0,extra:0,forfait:0,oreH:0,oreM:0,case:{}};}
+  function initC(p,cid){if(!perPersona[p].case[cid])perPersona[p].case[cid]={pulizia:0,bucato:0,t1t4:0,oreH:0,oreM:0};}
+
+  // Pulizie e bucato da stato_camere (lavoro effettivo)
+  tuttiStato.forEach(s=>{
+    const c=CASE[s.casa_id];if(!c)return;
+    if(s.pronta&&s.persona){
+      initP(s.persona);initC(s.persona,s.casa_id);
+      const tarP=c.tariffePulizia&&c.tariffePulizia[s.camera]!=null?c.tariffePulizia[s.camera]:(c.defaultPulizia||0);
+      perPersona[s.persona].pulizia+=tarP;
+      perPersona[s.persona].forfait+=tarP;
+      perPersona[s.persona].case[s.casa_id].pulizia+=tarP;
+    }
+    if(s.bucato_fatto&&s.bucato_persona){
+      const p=s.bucato_persona;
+      initP(p);initC(p,s.casa_id);
+      let tarB=c.tariffeBucato&&c.tariffeBucato[s.camera]!=null?c.tariffeBucato[s.camera]:(c.defaultBucato||0);
+      if(c.bucatoPerPersona)tarB=c.bucatoPerPersona*2; // rustico/rurale default 2 ospiti
+      perPersona[p].bucato+=tarB;
+      perPersona[p].forfait+=tarB;
+      perPersona[p].case[s.casa_id].bucato+=tarB;
+    }
   });
+
+  // T1/T4 completati
+  tuttiTurni.forEach(t=>{
+    if((t.turno==='T1'||t.turno==='T4')&&t.completato){
+      initP(t.persona);initC(t.persona,t.casa_id);
+      perPersona[t.persona].t1t4+=50;
+      perPersona[t.persona].forfait+=50;
+      perPersona[t.persona].case[t.casa_id].t1t4+=50;
+    }
+  });
+
+  // Extra
   tuttiExtra.forEach(e=>{
-    if(!perPersona[e.persona])perPersona[e.persona]={turni:{},forfait:0,oreH:0,oreM:0,extraDet:[],case:{}};
+    initP(e.persona);
     const p=perPersona[e.persona];
-    if(!p.case[e.casa_id])p.case[e.casa_id]={forfait:0,oreH:0,oreM:0};
+    if(!p.case[e.casa_id])p.case[e.casa_id]={pulizia:0,bucato:0,t1t4:0,oreH:0,oreM:0};
     const c=CASE[e.casa_id];let et=0;
-    if(c){c.extras.forEach(ex=>{if(e.items&&e.items[ex.id])et+=ex.prezzo;});
+    if(c){
+      c.extras.forEach(ex=>{if(e.items&&e.items[ex.id])et+=ex.prezzo;});
       if(c.hasVetri&&e.vetri){if(c.vetriPrezzi){e.vetri.forEach(v=>{et+=(c.vetriPrezzi[v]||0);});}else{et+=e.vetri.length*(c.vetriPrezzo||0);}}
-      if(c.hasLetti&&e.letti>0)et+=e.letti*(c.lettoPrezzzo||0);}
-    p.forfait+=et;p.case[e.casa_id].forfait+=et;
+      if(c.hasLetti&&e.letti>0)et+=e.letti*(c.lettoPrezzzo||0);
+    }
+    p.extra+=et;p.forfait+=et;
     p.oreH+=e.ore||0;p.oreM+=e.min||0;
     p.case[e.casa_id].oreH+=(e.ore||0);p.case[e.casa_id].oreM+=(e.min||0);
-    if(e.ore>0||e.min>0)p.extraDet.push(`${CASE[e.casa_id]?CASE[e.casa_id].nome:e.casa_id}: ${e.ore}h${e.min>0?' '+e.min+'m':''}`);
   });
+
+  // Normalizza ore
   Object.values(perPersona).forEach(p=>{
     const totM=p.oreH*60+p.oreM;p.oreH=Math.floor(totM/60);p.oreM=totM%60;
     Object.values(p.case).forEach(c=>{const tm=c.oreH*60+c.oreM;c.oreH=Math.floor(tm/60);c.oreM=tm%60;});
   });
+
+  // Per casa
   const perCasa={};
   Object.keys(perPersona).forEach(persona=>{
-    const pp=perPersona[persona];
-    Object.entries(pp.case).forEach(([cid,cv])=>{
+    Object.entries(perPersona[persona].case).forEach(([cid,cv])=>{
       if(!perCasa[cid])perCasa[cid]={forfait:0,oreH:0,oreM:0};
-      perCasa[cid].forfait+=cv.forfait;perCasa[cid].oreH+=cv.oreH;perCasa[cid].oreM+=cv.oreM;
+      perCasa[cid].forfait+=cv.pulizia+cv.bucato+cv.t1t4;
+      perCasa[cid].oreH+=cv.oreH;perCasa[cid].oreM+=cv.oreM;
     });
   });
+
   let html='';
   html+=`<div style="font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);">👤 Per dipendente</div>`;
-  if(Object.keys(perPersona).length===0){html+='<div style="text-align:center;padding:20px;color:var(--text2);">Nessun turno in questo mese</div>';}
+  if(Object.keys(perPersona).length===0){html+='<div style="text-align:center;padding:20px;color:var(--text2);">Nessun dato per questo mese</div>';}
   Object.entries(perPersona).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([persona,p])=>{
-    const turniStr=Object.entries(p.turni).map(([t,n])=>`${n}×${t}`).join(', ');
     const oreStr=p.oreH>0||p.oreM>0?`${p.oreH}h${p.oreM>0?' '+p.oreM+'m':''}`:'-';
     const caseStr=Object.keys(p.case).map(cid=>CASE[cid]?CASE[cid].nome:cid).join(', ');
     html+=`<div class="rp"><div class="rph"><div><div class="rpn">${persona}</div><div class="rpr">${caseStr}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--info)">Fr.${p.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div>
-    <div class="rpb"><div class="rpi"><div class="rl">Turni</div><div class="rv">${turniStr||'-'}</div></div><div class="rpi"><div class="rl">Forfait</div><div class="rv">Fr.${p.forfait}</div></div><div class="rpi"><div class="rl">Ore extra</div><div class="rv">${oreStr}</div></div></div></div>`;
+    <div class="rpb">
+      <div class="rpi"><div class="rl">Pulizie</div><div class="rv">Fr.${p.pulizia}</div></div>
+      <div class="rpi"><div class="rl">Bucato</div><div class="rv">Fr.${p.bucato}</div></div>
+      <div class="rpi"><div class="rl">T1/T4 + Extra</div><div class="rv">Fr.${p.t1t4+p.extra}</div></div>
+    </div></div>`;
   });
+
   html+=`<div style="font-size:14px;font-weight:600;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border);">🏠 Per struttura</div>`;
   let totGlobale=0,totOreH=0,totOreM=0;
   caseLista.forEach(cid=>{
@@ -1156,11 +1208,12 @@ async function renderRiep(){
     const oreStr=c.oreH>0||c.oreM>0?`${c.oreH}h${c.oreM>0?' '+c.oreM+'m':''}`:'-';
     html+=`<div class="rp"><div class="rph"><div><div class="rpn">${CASE[cid].nome}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--success)">Fr.${c.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div></div>`;
   });
-  const totM=totOreH*60+totOreM;totOreH=Math.floor(totM/60);totOreM=totM%60;
+  const totM2=totOreH*60+totOreM;totOreH=Math.floor(totM2/60);totOreM=totM2%60;
   const totOreStr=totOreH>0||totOreM>0?`${totOreH}h${totOreM>0?' '+totOreM+'m':''}`:'-';
   html+=`<div style="background:#f0f5ff;border-radius:var(--r-lg);padding:16px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:600;">Totale generale</span><div style="text-align:right"><div style="font-size:24px;font-weight:600;color:var(--info)">Fr.${totGlobale}</div><div style="font-size:11px;color:var(--text2);">${totOreStr} ore extra totali</div></div></div>`;
   el.innerHTML=html;
 }
+
 function chRiep(v){vMonth=new Date(vMonth.getFullYear(),parseInt(v),1);renderRiep();}
 
 // ═══════════════════════════════════════════
