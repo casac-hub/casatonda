@@ -1108,109 +1108,167 @@ async function renderRiep(){
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
   const caseLista=Object.keys(CASE);
 
-  // Carica dati da tutte le case
-  const tuttiStato=[],tuttiTurni=[],tuttiExtra=[];
+  const tuttiStato=[],tuttiExtra=[],tuttiTurni=[];
   for(const cid of caseLista){
-    const {data:s}=await sb.from('stato_camere').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
+    const {data:s}=await sb.from('stato_camere').select('*').eq('casa_id',cid).gte('data',from).lte('data',to).order('data',{ascending:true});
     if(s)s.forEach(r=>tuttiStato.push({...r,casa_id:cid}));
-    const {data:t}=await sb.from('turni').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
-    if(t)t.forEach(r=>tuttiTurni.push({...r,casa_id:cid}));
     const {data:e}=await sb.from('extra').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
     if(e)e.forEach(r=>tuttiExtra.push({...r,casa_id:cid}));
+    const {data:t}=await sb.from('turni').select('*').eq('casa_id',cid).gte('data',from).lte('data',to);
+    if(t)t.forEach(r=>tuttiTurni.push({...r,casa_id:cid}));
   }
 
   const perPersona={};
-  function initP(p){if(!perPersona[p])perPersona[p]={pulizia:0,bucato:0,t1t4:0,extra:0,forfait:0,oreH:0,oreM:0,case:{}};}
-  function initC(p,cid){if(!perPersona[p].case[cid])perPersona[p].case[cid]={pulizia:0,bucato:0,t1t4:0,oreH:0,oreM:0};}
+  function initP(p){if(!perPersona[p])perPersona[p]={case:{},totPulizia:0,totBucato:0,totT1T4:0,totExtra:0,oreH:0,oreM:0};}
+  function initC(p,cid){if(!perPersona[p].case[cid])perPersona[p].case[cid]={nome:CASE[cid]?CASE[cid].nome:cid,giorni:{}};}
+  function initG(p,cid,data){if(!perPersona[p].case[cid].giorni[data])perPersona[p].case[cid].giorni[data]={camere:[],extra:[],oreH:0,oreM:0};}
 
-  // Pulizie e bucato da stato_camere (lavoro effettivo)
   tuttiStato.forEach(s=>{
     const c=CASE[s.casa_id];if(!c)return;
     if(s.pronta&&s.persona){
-      initP(s.persona);initC(s.persona,s.casa_id);
+      initP(s.persona);initC(s.persona,s.casa_id);initG(s.persona,s.casa_id,s.data);
       const tarP=c.tariffePulizia&&c.tariffePulizia[s.camera]!=null?c.tariffePulizia[s.camera]:(c.defaultPulizia||0);
-      perPersona[s.persona].pulizia+=tarP;
-      perPersona[s.persona].forfait+=tarP;
-      perPersona[s.persona].case[s.casa_id].pulizia+=tarP;
+      const g=perPersona[s.persona].case[s.casa_id].giorni[s.data];
+      const entry=g.camere.find(x=>x.cam===s.camera);
+      if(entry)entry.pulizia=tarP;else g.camere.push({cam:s.camera,pulizia:tarP,bucato:0});
+      perPersona[s.persona].totPulizia+=tarP;
     }
     if(s.bucato_fatto&&s.bucato_persona){
       const p=s.bucato_persona;
-      initP(p);initC(p,s.casa_id);
+      initP(p);initC(p,s.casa_id);initG(p,s.casa_id,s.data);
       let tarB=c.tariffeBucato&&c.tariffeBucato[s.camera]!=null?c.tariffeBucato[s.camera]:(c.defaultBucato||0);
-      if(c.bucatoPerPersona)tarB=c.bucatoPerPersona*2; // rustico/rurale default 2 ospiti
-      perPersona[p].bucato+=tarB;
-      perPersona[p].forfait+=tarB;
-      perPersona[p].case[s.casa_id].bucato+=tarB;
+      if(c.bucatoPerPersona)tarB=c.bucatoPerPersona*2;
+      const g=perPersona[p].case[s.casa_id].giorni[s.data];
+      const entry=g.camere.find(x=>x.cam===s.camera);
+      if(entry)entry.bucato=tarB;else g.camere.push({cam:s.camera,pulizia:0,bucato:tarB});
+      perPersona[p].totBucato+=tarB;
     }
   });
 
-  // T1/T4 completati
   tuttiTurni.forEach(t=>{
     if((t.turno==='T1'||t.turno==='T4')&&t.completato){
-      initP(t.persona);initC(t.persona,t.casa_id);
-      perPersona[t.persona].t1t4+=50;
-      perPersona[t.persona].forfait+=50;
-      perPersona[t.persona].case[t.casa_id].t1t4+=50;
+      initP(t.persona);initC(t.persona,t.casa_id);initG(t.persona,t.casa_id,t.data);
+      perPersona[t.persona].case[t.casa_id].giorni[t.data].extra.push({nome:t.turno==='T1'?'Colazione T1':'Brunch T4',importo:50});
+      perPersona[t.persona].totT1T4+=50;
     }
   });
 
-  // Extra
   tuttiExtra.forEach(e=>{
-    initP(e.persona);
-    const p=perPersona[e.persona];
-    if(!p.case[e.casa_id])p.case[e.casa_id]={pulizia:0,bucato:0,t1t4:0,oreH:0,oreM:0};
-    const c=CASE[e.casa_id];let et=0;
-    if(c){
-      c.extras.forEach(ex=>{if(e.items&&e.items[ex.id])et+=ex.prezzo;});
-      if(c.hasVetri&&e.vetri){if(c.vetriPrezzi){e.vetri.forEach(v=>{et+=(c.vetriPrezzi[v]||0);});}else{et+=e.vetri.length*(c.vetriPrezzo||0);}}
-      if(c.hasLetti&&e.letti>0)et+=e.letti*(c.lettoPrezzzo||0);
+    const c=CASE[e.casa_id];if(!c)return;
+    initP(e.persona);initC(e.persona,e.casa_id);initG(e.persona,e.casa_id,e.data);
+    const g=perPersona[e.persona].case[e.casa_id].giorni[e.data];
+    let et=0;
+    c.extras.forEach(ex=>{if(e.items&&e.items[ex.id]){g.extra.push({nome:ex.nome,importo:ex.prezzo});et+=ex.prezzo;}});
+    if(c.hasVetri&&e.vetri&&e.vetri.length>0){
+      const vt=c.vetriPrezzi?e.vetri.reduce((s,v)=>s+(c.vetriPrezzi[v]||0),0):e.vetri.length*(c.vetriPrezzo||0);
+      if(vt>0){g.extra.push({nome:'Vetri ('+e.vetri.join(', ')+')',importo:vt});et+=vt;}
     }
-    p.extra+=et;p.forfait+=et;
-    p.oreH+=e.ore||0;p.oreM+=e.min||0;
-    p.case[e.casa_id].oreH+=(e.ore||0);p.case[e.casa_id].oreM+=(e.min||0);
-  });
-
-  // Normalizza ore
-  Object.values(perPersona).forEach(p=>{
-    const totM=p.oreH*60+p.oreM;p.oreH=Math.floor(totM/60);p.oreM=totM%60;
-    Object.values(p.case).forEach(c=>{const tm=c.oreH*60+c.oreM;c.oreH=Math.floor(tm/60);c.oreM=tm%60;});
-  });
-
-  // Per casa
-  const perCasa={};
-  Object.keys(perPersona).forEach(persona=>{
-    Object.entries(perPersona[persona].case).forEach(([cid,cv])=>{
-      if(!perCasa[cid])perCasa[cid]={forfait:0,oreH:0,oreM:0};
-      perCasa[cid].forfait+=cv.pulizia+cv.bucato+cv.t1t4;
-      perCasa[cid].oreH+=cv.oreH;perCasa[cid].oreM+=cv.oreM;
-    });
+    if(c.hasLetti&&e.letti>0){const lt=e.letti*(c.lettoPrezzzo||0);g.extra.push({nome:'Letti ('+e.letti+')',importo:lt});et+=lt;}
+    perPersona[e.persona].totExtra+=et;
+    if(e.ore>0||e.min>0){g.oreH+=e.ore||0;g.oreM+=e.min||0;perPersona[e.persona].oreH+=e.ore||0;perPersona[e.persona].oreM+=e.min||0;}
   });
 
   let html='';
-  html+=`<div style="font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);">👤 Per dipendente</div>`;
-  if(Object.keys(perPersona).length===0){html+='<div style="text-align:center;padding:20px;color:var(--text2);">Nessun dato per questo mese</div>';}
-  Object.entries(perPersona).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([persona,p])=>{
-    const oreStr=p.oreH>0||p.oreM>0?`${p.oreH}h${p.oreM>0?' '+p.oreM+'m':''}`:'-';
-    const caseStr=Object.keys(p.case).map(cid=>CASE[cid]?CASE[cid].nome:cid).join(', ');
-    html+=`<div class="rp"><div class="rph"><div><div class="rpn">${persona}</div><div class="rpr">${caseStr}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--info)">Fr.${p.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div>
-    <div class="rpb">
-      <div class="rpi"><div class="rl">Pulizie</div><div class="rv">Fr.${p.pulizia}</div></div>
-      <div class="rpi"><div class="rl">Bucato</div><div class="rv">Fr.${p.bucato}</div></div>
-      <div class="rpi"><div class="rl">T1/T4 + Extra</div><div class="rv">Fr.${p.t1t4+p.extra}</div></div>
-    </div></div>`;
+  const bdStyle='1px solid var(--border)';
+
+  Object.entries(perPersona).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([persona,pp])=>{
+    const totForfait=pp.totPulizia+pp.totBucato+pp.totT1T4+pp.totExtra;
+    const totM=pp.oreH*60+pp.oreM;const oreH=Math.floor(totM/60);const oreM=totM%60;
+    const oreStr=oreH>0||oreM>0?`${oreH}h${oreM>0?' '+oreM+'m':''}`:null;
+
+    let caseHtml='';
+    Object.entries(pp.case).forEach(([cid,cc])=>{
+      let rows='';let caseTot=0;
+      Object.entries(cc.giorni).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([data,g])=>{
+        const dt=parseD(data);
+        const dataFmt=dt.getDate()+' '+MESI[dt.getMonth()].slice(0,3);
+        let giornoTot=0;
+        g.camere.forEach(cam=>{
+          const rigaTot=cam.pulizia+cam.bucato;giornoTot+=rigaTot;caseTot+=rigaTot;
+          rows+=`<tr>
+            <td style="padding:5px 8px;font-size:11px;color:var(--text2);border-bottom:${bdStyle};">${dataFmt}</td>
+            <td style="padding:5px 8px;font-size:12px;font-weight:500;border-bottom:${bdStyle};">${cam.cam}</td>
+            <td style="padding:5px 8px;font-size:11px;text-align:right;border-bottom:${bdStyle};">${cam.pulizia>0?'Fr.'+cam.pulizia:'-'}</td>
+            <td style="padding:5px 8px;font-size:11px;text-align:right;border-bottom:${bdStyle};">${cam.bucato>0?'Fr.'+cam.bucato:'-'}</td>
+            <td style="padding:5px 8px;font-size:11px;text-align:right;border-bottom:${bdStyle};">-</td>
+            <td style="padding:5px 8px;font-size:12px;font-weight:600;text-align:right;color:var(--info);border-bottom:${bdStyle};">Fr.${rigaTot}</td>
+          </tr>`;
+        });
+        g.extra.forEach(ex=>{
+          giornoTot+=ex.importo;caseTot+=ex.importo;
+          rows+=`<tr style="background:#fffbf0;">
+            <td style="padding:5px 8px;font-size:11px;color:var(--text2);border-bottom:${bdStyle};">${dataFmt}</td>
+            <td style="padding:5px 8px;font-size:11px;color:var(--t3t);border-bottom:${bdStyle};">✦ ${ex.nome}</td>
+            <td style="padding:5px 8px;border-bottom:${bdStyle};">-</td>
+            <td style="padding:5px 8px;border-bottom:${bdStyle};">-</td>
+            <td style="padding:5px 8px;font-size:11px;text-align:right;color:var(--t3t);border-bottom:${bdStyle};">Fr.${ex.importo}</td>
+            <td style="padding:5px 8px;font-size:12px;font-weight:600;text-align:right;color:var(--info);border-bottom:${bdStyle};">Fr.${ex.importo}</td>
+          </tr>`;
+        });
+        if(g.oreH>0||g.oreM>0){
+          const oreGStr=`${g.oreH}h${g.oreM>0?' '+g.oreM+'m':''}`;
+          rows+=`<tr style="background:#f0f5ff;">
+            <td style="padding:5px 8px;font-size:11px;color:var(--text2);border-bottom:${bdStyle};">${dataFmt}</td>
+            <td style="padding:5px 8px;font-size:11px;color:var(--info);border-bottom:${bdStyle};">⏱ Ore extra</td>
+            <td colspan="3" style="padding:5px 8px;font-size:11px;text-align:center;color:var(--info);border-bottom:${bdStyle};">${oreGStr}</td>
+            <td style="padding:5px 8px;font-size:11px;text-align:right;color:var(--info);border-bottom:${bdStyle};">a fine mese</td>
+          </tr>`;
+        }
+        // Subtotale giorno (solo se ci sono più voci)
+        if(g.camere.length+g.extra.length>1){
+          rows+=`<tr style="background:#f8f8f8;">
+            <td colspan="5" style="padding:5px 8px;font-size:11px;font-style:italic;color:var(--text2);border-bottom:2px solid var(--border);">Totale ${dataFmt}</td>
+            <td style="padding:5px 8px;font-size:12px;font-weight:600;text-align:right;color:var(--success);border-bottom:2px solid var(--border);">Fr.${giornoTot}</td>
+          </tr>`;
+        }
+      });
+
+      caseHtml+=`<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">📍 ${cc.nome}</div>
+        <div style="overflow-x:auto;border-radius:var(--r-md);border:${bdStyle};">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr style="background:#f8f8f8;">
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--text2);border-bottom:${bdStyle};">Data</th>
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--text2);border-bottom:${bdStyle};">Camera / Voce</th>
+              <th style="padding:6px 8px;text-align:right;font-size:10px;color:var(--text2);border-bottom:${bdStyle};">Pulizia</th>
+              <th style="padding:6px 8px;text-align:right;font-size:10px;color:var(--text2);border-bottom:${bdStyle};">Bucato</th>
+              <th style="padding:6px 8px;text-align:right;font-size:10px;color:var(--text2);border-bottom:${bdStyle};">Extra</th>
+              <th style="padding:6px 8px;text-align:right;font-size:10px;color:var(--text2);border-bottom:${bdStyle};">Totale</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr style="background:#e8f0ff;">
+              <td colspan="5" style="padding:8px;font-size:13px;font-weight:600;border-top:2px solid var(--info);">Totale ${cc.nome}</td>
+              <td style="padding:8px;font-size:15px;font-weight:700;text-align:right;color:var(--info);border-top:2px solid var(--info);">Fr.${caseTot}</td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>`;
+    });
+
+    html+=`<div class="rp" style="margin-bottom:24px;">
+      <div class="rph" style="margin-bottom:12px;">
+        <div><div class="rpn">${persona}</div><div class="rpr">${Object.values(pp.case).map(c=>c.nome).join(', ')}</div></div>
+        <div style="text-align:right"><div class="rpt" style="color:var(--info);">Fr.${totForfait}</div>${oreStr?`<div style="font-size:11px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div>`:''}</div>
+      </div>
+      ${caseHtml}
+      <div style="background:#1a1a1a;border-radius:var(--r-md);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="color:white;font-size:13px;font-weight:600;">${persona}</div>
+          <div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:3px;">Pulizie Fr.${pp.totPulizia} · Bucato Fr.${pp.totBucato} · T1/T4 Fr.${pp.totT1T4} · Extra Fr.${pp.totExtra}${oreStr?' · '+oreStr+' ore':''}</div>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:white;">Fr.${totForfait}</div>
+      </div>
+    </div>`;
   });
 
-  html+=`<div style="font-size:14px;font-weight:600;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--border);">🏠 Per struttura</div>`;
-  let totGlobale=0,totOreH=0,totOreM=0;
-  caseLista.forEach(cid=>{
-    const c=perCasa[cid];if(!c||c.forfait===0)return;
-    totGlobale+=c.forfait;totOreH+=c.oreH;totOreM+=c.oreM;
-    const oreStr=c.oreH>0||c.oreM>0?`${c.oreH}h${c.oreM>0?' '+c.oreM+'m':''}`:'-';
-    html+=`<div class="rp"><div class="rph"><div><div class="rpn">${CASE[cid].nome}</div></div><div style="text-align:right"><div class="rpt" style="color:var(--success)">Fr.${c.forfait}</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">${oreStr} ore extra</div></div></div></div>`;
-  });
-  const totM2=totOreH*60+totOreM;totOreH=Math.floor(totM2/60);totOreM=totM2%60;
-  const totOreStr=totOreH>0||totOreM>0?`${totOreH}h${totOreM>0?' '+totOreM+'m':''}`:'-';
-  html+=`<div style="background:#f0f5ff;border-radius:var(--r-lg);padding:16px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:14px;font-weight:600;">Totale generale</span><div style="text-align:right"><div style="font-size:24px;font-weight:600;color:var(--info)">Fr.${totGlobale}</div><div style="font-size:11px;color:var(--text2);">${totOreStr} ore extra totali</div></div></div>`;
+  if(html==='')html='<div style="text-align:center;padding:30px;color:var(--text2);">Nessun dato per questo mese.<br><span style="font-size:12px;">I dati appaiono quando le ragazze segnano pulizie e bucato nell\'app.</span></div>';
+
+  const totGen=Object.values(perPersona).reduce((s,p)=>s+p.totPulizia+p.totBucato+p.totT1T4+p.totExtra,0);
+  html+=`<div style="background:#185FA5;border-radius:var(--r-lg);padding:16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+    <span style="font-size:14px;font-weight:600;color:white;">Totale costi personale — ${MESI[M]} ${Y}</span>
+    <div style="font-size:28px;font-weight:700;color:white;">Fr.${totGen}</div>
+  </div>`;
+
   el.innerHTML=html;
 }
 
