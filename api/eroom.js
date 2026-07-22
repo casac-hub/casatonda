@@ -11,7 +11,7 @@ async function getToken() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify({
-      username: process.env.EROOM_USERNAME,
+      email: process.env.EROOM_USERNAME,
       password: process.env.EROOM_PASSWORD
     })
   });
