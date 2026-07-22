@@ -7,13 +7,17 @@ async function getToken() {
   if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
     return cachedToken;
   }
+  // Prova con username (che corrisponde all'email)
+  const body = {
+    username: process.env.EROOM_USERNAME,
+    email: process.env.EROOM_USERNAME,
+    password: process.env.EROOM_PASSWORD
+  };
+  console.log('Trying login with:', JSON.stringify({username: body.username, email: body.email}));
   const r = await fetch(`${BASE_URL}/adminapi/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify({
-      email: process.env.EROOM_USERNAME,
-      password: process.env.EROOM_PASSWORD
-    })
+    body: JSON.stringify(body)
   });
   const text = await r.text();
   console.log('Login response status:', r.status);
