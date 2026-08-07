@@ -10,13 +10,13 @@ async function getToken() {
   // Reset token prima di ogni nuovo login
   cachedToken = null;
   tokenExpiry = null;
-  
+
   const body = {
-    username: process.env.EROOM_USERNAME,
-    password: process.env.EROOM_PASSWORD
+    username: (process.env.EROOM_USERNAME || '').trim(),
+    password: (process.env.EROOM_PASSWORD || '').trim()
   };
   console.log('Login attempt with username:', body.username);
-  
+
   const r = await fetch(`${BASE_URL}/adminapi/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -24,15 +24,39 @@ async function getToken() {
   });
   const text = await r.text();
   console.log('Login status:', r.status);
-  console.log('Login response:', text.slice(0, 200));
-  
+
   let d;
   try { d = JSON.parse(text); } catch(e) { throw new Error('Risposta non JSON: ' + text.slice(0,100)); }
   if (!d.token) throw new Error('Token mancante. Risposta: ' + JSON.stringify(d));
-  
+
   cachedToken = d.token;
   tokenExpiry = Date.now() + (d.expires_in || 3600) * 1000 - 60000;
   return cachedToken;
+}
+
+// Scarica tutte le pagine di un endpoint paginato e unisce i risultati
+async function fetchAllPages(baseUrl, headers) {
+  let page = 1;
+  let lastPage = 1;
+  const allData = [];
+
+  do {
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    const r = await fetch(`${baseUrl}${sep}page=${page}`, { headers });
+    const d = await r.json();
+
+    if (d && Array.isArray(d.data)) {
+      allData.push(...d.data);
+      lastPage = (d.meta && d.meta.last_page) ? d.meta.last_page : 1;
+    } else {
+      // Risposta non paginata: restituisci così com'è
+      return d;
+    }
+    page++;
+  } while (page <= lastPage && page <= 50); // limite di sicurezza: max 50 pagine
+
+  console.log(`Paginazione: ${allData.length} risultati su ${lastPage} pagine`);
+  return { data: allData };
 }
 
 export default async function handler(req, res) {
@@ -59,13 +83,11 @@ export default async function handler(req, res) {
       if (date_type) url += `&date_type=${date_type}`;
       if (include_cancelled) url += `&include_cancelled=${include_cancelled}`;
       if (room_id) url += `&room_id=${room_id}`;
-      const r = await fetch(url, { headers });
-      result = await r.json();
+      result = await fetchAllPages(url, headers);
     } else if (action === 'get_unavailability') {
       let url = `${BASE_URL}/adminapi/get_unavailability?from=${from}&to=${to}`;
       if (room_id) url += `&room_id=${room_id}`;
-      const r = await fetch(url, { headers });
-      result = await r.json();
+      result = await fetchAllPages(url, headers);
     } else if (action === 'get_rooms') {
       const r = await fetch(`${BASE_URL}/adminapi/get_rooms`, { headers });
       result = await r.json();
