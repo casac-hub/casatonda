@@ -494,12 +494,11 @@ function turniDelGiorno(key){
   const result={};
   Object.entries(turni).forEach(([persona,tp])=>{
     if(tp.t==='T2'){
-      // Nel formato iCal, co è il giorno DOPO l'ultimo soggiorno
-      // Quindi camera da pulire il giorno key = prenotazioni con co === giorno dopo key
-      const domani=fmtD(addD(parseD(key),1));
+      // co è il giorno di check-out: la camera si pulisce quel giorno stesso,
+      // dopo la partenza dell'ospite
       const arr=prenCache[casaId]||[];
       const camereCheckout=arr
-        .filter(p=>p.co===domani)
+        .filter(p=>p.co===key)
         .map(p=>p.cam)
         .filter((v,i,a)=>a.indexOf(v)===i);
       result[persona]={...tp, c: camereCheckout.length>0 ? camereCheckout : (tp.c||[])};
@@ -847,10 +846,17 @@ function renderPren(){
   casa().camere.forEach(cam=>{
     th+=`<tr><td class="tdc"><div class="cn">${cam.n}</div><div class="cs">${cam.nm}</div></td>`;
     for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';
+      // Prenotazione in partenza oggi (check-out): mezza casella a sinistra, come CybHotel
+      const pOut=arr.find(x=>x.cam===cam.n&&x.co===k);
+      let outHtml='';
+      if(pOut){
+        const onclickO=isAdmin()?`openDet('${pOut.id}',event)`:`openDetStaff('${pOut.id}',event)`;
+        outHtml=`<div class="bb co b-${CL[pOut.can]||'al'}" onclick="${onclickO}"><span class="bl"></span></div>`;
+      }
       if(p){
-        const isCI=p.ci===k,isCO=fmtD(addD(parseD(p.co),-1))===k;
+        const isCI=p.ci===k;
         let bc='bb b-'+(CL[p.can]||'al');
-        if(isCI&&isCO)bc+=' solo';else if(isCI)bc+=' ci';else if(isCO)bc+=' co';
+        if(isCI)bc+=' ci';
         let label='';
         if(isAdmin()){
           label=isCI?(p._cyb&&(!p.nome||p.nome==='CybHotel')?'':p.nome||'')+(p.osp?'('+p.osp+')':''):'';
@@ -859,14 +865,14 @@ function renderPren(){
           label=isCI?(p.osp?'👥'+p.osp:'')+(p.note?' 📋':''):'';
         }
         const onclick=isAdmin()?`openDet('${p.id}',event)`:`openDetStaff('${p.id}',event)`;
-        ct=`<div class="${bc}" onclick="${onclick}"><span class="bl">${label}</span></div>`;
+        ct=outHtml+`<div class="${bc}" onclick="${onclick}"><span class="bl">${label}</span></div>`;
       } else {
         const ind=getIndisp(cam.n,k);
         if(ind){
           const motivo=(ind.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,'');
-          ct=`<div class="ind" title="${motivo}" onclick="toast('🚫 ${motivo}');event.stopPropagation();"></div>`;
+          ct=`<div class="ind" title="${motivo}" onclick="toast('🚫 ${motivo}');event.stopPropagation();"></div>`+outHtml;
         } else {
-          ct=isAdmin()?`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`:`<div class="fc"></div>`;
+          ct=(isAdmin()?`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`:`<div class="fc"></div>`)+outHtml;
         }
       }
       th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
@@ -1058,8 +1064,7 @@ function openGiornoCamere(key,persona){
   const dt=parseD(key);
   const cards=tp.c.map(n=>{
     const ci=casa().camere.find(c=>c.n===n);
-    const domani=fmtD(addD(parseD(key),1));
-    const pr=prenCache[casaId]&&prenCache[casaId].find(p=>p.cam===n&&p.co===domani);
+    const pr=prenCache[casaId]&&prenCache[casaId].find(p=>p.cam===n&&p.co===key);
     const ospiti=pr&&pr.osp?pr.osp:2;
     return`<div class="cam-status-card" style="opacity:0.85;">
       <div class="cam-num-big">${n}</div>
