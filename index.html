@@ -356,7 +356,7 @@ const CASE={
     tariffeBucato:{}, // default Fr.10 per tutte
     bucatoSupOspiti:5, // Fr.5 per persona oltre 2
     bucatoBasePersone:2,
-    personale:['Serena','Isa','Graziella','Julka','Personale 4','Personale 5'],
+    personale:['Clara','Serena','Isa','Julka','Marlen','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
     extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'}],
     hasVetri:true,vetriPrezzo:20,tariffaT1Base:true,
@@ -371,7 +371,7 @@ const CASE={
     bucatoSupCamere:['Nala','Loft','Cascata1','Cascata2'],
     bucatoBasePersone:2,
     supOspiti:5,
-    personale:['Fernanda','Personale 2','Personale 3','Personale 4'],
+    personale:['Fernanda','Marlen','Personale 2','Personale 3','Personale 4'],
     turniTypes:['T2'],
     extras:[{id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},{id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},{id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'spazzatura',nome:'Spazzatura',prezzo:5,icon:'🗑️'}],
     hasVetri:true,vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10},
@@ -384,7 +384,7 @@ const CASE={
     tariffeBucato:{DolceVita:10,VoceLuna:10,Mansarda:10},
     bucatoBasePersone:2,
     supOspiti:5,
-    personale:['Nadja','Personale 2','Personale 3','Personale 4'],
+    personale:['Isa','Marlen','Personale 2','Personale 3','Personale 4'],
     turniTypes:['T2'],
     extras:[{id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'}],
     hasVetri:false,defaultPulizia:35,defaultBucato:10
@@ -405,7 +405,7 @@ const CASE={
     camere:[{n:'CR1',nm:'Casa Rurale 1'}],
     tariffePulizia:{},tariffeBucato:{},
     bucatoPerPersona:10, // Fr.10 a persona da 0
-    personale:['Nadja','Personale 2','Personale 3'],
+    personale:['Isa','Personale 2','Personale 3'],
     turniTypes:['T2'],
     extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'}],
     hasVetri:false,hasLetti:true,lettoPrezzzo:10,hasOre:true,
@@ -1553,20 +1553,23 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 const PINS={
   // Staff admin
   '7429':{profile:'admin',casa:null},
+  // Clara — accesso personale ai propri turni (Piumogna)
+  '9145':{profile:'clara',casa:'piumogna'},
   // Casa Piumogna
   '5167':{profile:'serena',casa:'piumogna'},
-  '6274':{profile:'isa',casa:'piumogna'},
-  '9031':{profile:'graziella',casa:'piumogna'},
   '4563':{profile:'julka',casa:'piumogna'},
   '3847':{profile:'personale_4',casa:'piumogna'},
   '2691':{profile:'personale_5',casa:'piumogna'},
+  // Isa — Piumogna / Liberty / Rurale
+  '6274':{profile:'isa',casa:null,case:['piumogna','liberty','rurale']},
+  // Marlen — Piumogna / CVB / Liberty
+  '5283':{profile:'marlen',casa:null,case:['piumogna','cvb','liberty']},
   // Casa Vino e Birra
   '3815':{profile:'fernanda',casa:'cvb'},
   '7382':{profile:'personale_2',casa:'cvb'},
   '5926':{profile:'personale_3',casa:'cvb'},
   '4817':{profile:'personale_4',casa:'cvb'},
-  // Casa Liberty / Casa Rurale
-  '2748':{profile:'nadja',casa:null,case:['liberty','rurale']},
+  // Casa Liberty
   '8153':{profile:'personale_2',casa:'liberty'},
   '6429':{profile:'personale_3',casa:'liberty'},
   // Rustico Conceprio
