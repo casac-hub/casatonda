@@ -1,4 +1,4 @@
-const BASE_URL = 'https://admin.eroomnetwork.com';
+const BASE_URL = 'https://cybhotel.net';
 
 let cachedToken = null;
 let tokenExpiry = null;
