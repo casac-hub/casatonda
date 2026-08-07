@@ -7,24 +7,29 @@ async function getToken() {
   if (cachedToken && tokenExpiry && Date.now() < tokenExpiry) {
     return cachedToken;
   }
-  // Prova con username (che corrisponde all'email)
+  // Reset token prima di ogni nuovo login
+  cachedToken = null;
+  tokenExpiry = null;
+  
   const body = {
     username: process.env.EROOM_USERNAME,
-    email: process.env.EROOM_USERNAME,
     password: process.env.EROOM_PASSWORD
   };
-  console.log('Trying login with:', JSON.stringify({username: body.username, email: body.email}));
+  console.log('Login attempt with username:', body.username);
+  
   const r = await fetch(`${BASE_URL}/adminapi/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify(body)
   });
   const text = await r.text();
-  console.log('Login response status:', r.status);
-  console.log('Login response body:', text);
+  console.log('Login status:', r.status);
+  console.log('Login response:', text.slice(0, 200));
+  
   let d;
-  try { d = JSON.parse(text); } catch(e) { throw new Error('Risposta non JSON: ' + text); }
+  try { d = JSON.parse(text); } catch(e) { throw new Error('Risposta non JSON: ' + text.slice(0,100)); }
   if (!d.token) throw new Error('Token mancante. Risposta: ' + JSON.stringify(d));
+  
   cachedToken = d.token;
   tokenExpiry = Date.now() + (d.expires_in || 3600) * 1000 - 60000;
   return cachedToken;
