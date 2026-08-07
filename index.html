@@ -486,27 +486,37 @@ async function loadPrenFromCybHotel(){
     if(!d.data||!Array.isArray(d.data))return;
     if(!prenCache[casaId])prenCache[casaId]=[];
 
-    // Mappa room_number API → ID camera interno
-    const ROOM_MAP={
-      // CVB
-      'STUDIO PIAZZETTA, PT':'Piazzetta','STUDIO PIAZZETTA':'Piazzetta',
-      'STUDIO TICINELLA, 1P':'Ticinella','STUDIO TICINELLA':'Ticinella',
-      'STUDIO IL TIGLIO, 1P':'Tiglio','STUDIO IL TIGLIO':'Tiglio',
-      'OPENSPACE LA NALA, 2P':'Nala','OPENSPACE LA NALA':'Nala',
-      'LOFT AL POZZON, 3P':'Loft','LOFT AL POZZON':'Loft',
-      'CASA ALLA CASCATA 1, 1P':'Cascata1','CASA ALLA CASCATA 1':'Cascata1',
-      'CASA ALLA CASCATA 2, 2P':'Cascata2','CASA ALLA CASCATA 2':'Cascata2',
-      'CASA CASCASTA 0, PT':'Cascata0','CASA CASCATA 0, PT':'Cascata0','CASA CASCATA 0':'Cascata0',
-      // Piumogna
-      '101 LA CELESTE':'101','101':'101','102 LA ROSSA':'102','102':'102',
-      '201 LA GIALLA':'201','201':'201','202 LA DECORATA':'202','202':'202',
-      '301 LA VERDE':'301','301':'301','302 LA BIANCA':'302','302':'302',
-      '401 MANSARDA PIZZO PETTINE':'401','401':'401','402 MANSARDA PIZZO FORNO':'402','402':'402',
-      // Liberty
-      'DOLCE VITA':'DolceVita','VOCE DELLA LUNA':'VoceLuna','MANSARDA DELLA CASCATA':'Mansarda',
-      // Rustico/Rurale
-      'RUSTICO ORABINO':'R1','CASA RURALE TICINESE':'CR1'
+    // Mappa room_number API → ID camera interno (una mappa per casa)
+    const ROOM_MAPS={
+      cvb:{
+        'STUDIO PIAZZETTA, PT':'Piazzetta','STUDIO PIAZZETTA':'Piazzetta',
+        'STUDIO TICINELLA, 1P':'Ticinella','STUDIO TICINELLA':'Ticinella',
+        'STUDIO IL TIGLIO, 1P':'Tiglio','STUDIO IL TIGLIO':'Tiglio',
+        'OPENSPACE LA NALA, 2P':'Nala','OPENSPACE LA NALA':'Nala',
+        'LOFT AL POZZON, 3P':'Loft','LOFT AL POZZON':'Loft',
+        'CASA ALLA CASCATA 1, 1P':'Cascata1','CASA ALLA CASCATA 1':'Cascata1',
+        'CASA ALLA CASCATA 2, 2P':'Cascata2','CASA ALLA CASCATA 2':'Cascata2',
+        'CASA CASCASTA 0, PT':'Cascata0','CASA CASCATA 0, PT':'Cascata0','CASA CASCATA 0':'Cascata0'
+      },
+      piumogna:{
+        '101 LA CELESTE':'101','101':'101','102 LA ROSSA':'102','102':'102',
+        '201 LA GIALLA':'201','201':'201','202 LA DECORATA':'202','202':'202',
+        '301 LA VERDE':'301','301':'301','302 LA BIANCA':'302','302':'302',
+        '401 MANSARDA PIZZO PETTINE':'401','401':'401','402 MANSARDA PIZZO FORNO':'402','402':'402'
+      },
+      liberty:{
+        '1':'DolceVita','DOLCE VITA':'DolceVita',
+        '2':'VoceLuna','LA VOCE DELLA LUNA':'VoceLuna','VOCE DELLA LUNA':'VoceLuna',
+        '3':'Mansarda','MANSARDA DELLA CASCATA':'Mansarda'
+      },
+      rustico:{
+        '1':'R1','RUSTICO ORABINO':'R1','RUSTICO CONCEPRIO & SAUNA':'R1','RUSTICO CONCEPRIO':'R1'
+      },
+      rurale:{
+        '1':'CR1','CASA RURALE TICINESE':'CR1'
+      }
     };
+    const ROOM_MAP=ROOM_MAPS[casaId]||{};
 
     // Mappa canale API → canale interno
     const CAN_MAP={'Admin':'diretto','Booking.com':'booking','Booking Engine':'booking','Airbnb':'airbnb'};
