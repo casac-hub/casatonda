@@ -87,6 +87,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bl{font-size:9px;font-weight:500;white-space:nowrap;padding:0 3px;overflow:hidden;text-overflow:ellipsis;}
 .fc{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);}
 .fc:hover::after{content:'+';}
+.ind{width:100%;height:100%;cursor:pointer;background:repeating-linear-gradient(45deg,#ececec,#ececec 5px,#d6d6d6 5px,#d6d6d6 10px);}
+.ind:hover{opacity:0.8;}
 
 /* TURNI GRID */
 .gt{border-collapse:separate;border-spacing:0;font-size:11px;min-width:max-content;width:100%;}
@@ -416,7 +418,57 @@ const TODAY=new Date(), TK=fmtD(TODAY);
 let vMonth=new Date(TODAY.getFullYear(),TODAY.getMonth(),1), vDay=new Date(TODAY);
 let nextId=100, selCan='diretto', popTipo=null, popCamere=[];
 
-let prenCache={}, turniCache={}, statoCamereCache={}, extraCache={};
+let prenCache={}, turniCache={}, statoCamereCache={}, extraCache={}, indispCache={};
+
+// Mappa room_number API → ID camera interno (una mappa per casa)
+const ROOM_MAPS={
+  cvb:{
+    'STUDIO PIAZZETTA, PT':'Piazzetta','STUDIO PIAZZETTA':'Piazzetta',
+    'STUDIO TICINELLA, 1P':'Ticinella','STUDIO TICINELLA':'Ticinella',
+    'STUDIO IL TIGLIO, 1P':'Tiglio','STUDIO IL TIGLIO':'Tiglio',
+    'OPENSPACE LA NALA, 2P':'Nala','OPENSPACE LA NALA':'Nala',
+    'LOFT AL POZZON, 3P':'Loft','LOFT AL POZZON':'Loft',
+    'CASA ALLA CASCATA 1, 1P':'Cascata1','CASA ALLA CASCATA 1':'Cascata1',
+    'CASA ALLA CASCATA 2, 2P':'Cascata2','CASA ALLA CASCATA 2':'Cascata2',
+    'CASA CASCASTA 0, PT':'Cascata0','CASA CASCATA 0, PT':'Cascata0','CASA CASCATA 0':'Cascata0'
+  },
+  piumogna:{
+    '101 LA CELESTE':'101','101':'101','102 LA ROSSA':'102','102':'102',
+    '201 LA GIALLA':'201','201':'201','202 LA DECORATA':'202','202':'202',
+    '301 LA VERDE':'301','301':'301','302 LA BIANCA':'302','302':'302',
+    '401 MANSARDA PIZZO PETTINE':'401','401':'401','402 MANSARDA PIZZO FORNO':'402','402':'402'
+  },
+  liberty:{
+    '1':'DolceVita','DOLCE VITA':'DolceVita',
+    '2':'VoceLuna','LA VOCE DELLA LUNA':'VoceLuna','VOCE DELLA LUNA':'VoceLuna',
+    '3':'Mansarda','MANSARDA DELLA CASCATA':'Mansarda'
+  },
+  rustico:{
+    '1':'R1','RUSTICO ORABINO':'R1','RUSTICO CONCEPRIO & SAUNA':'R1','RUSTICO CONCEPRIO':'R1'
+  },
+  rurale:{
+    '1':'CR1','CASA RURALE TICINESE':'CR1'
+  }
+};
+
+// Trova l'ID camera interno a partire dal room_number dell'API
+function mapRoomToCam(roomNum){
+  if(!roomNum)return null;
+  const ROOM_MAP=ROOM_MAPS[casaId]||{};
+  let cam=ROOM_MAP[roomNum]||null;
+  if(!cam){
+    // Prova match parziale
+    const roomUp=roomNum.toUpperCase();
+    for(const[k,v] of Object.entries(ROOM_MAP)){
+      if(roomUp.includes(k.toUpperCase())||k.toUpperCase().includes(roomUp)){cam=v;break;}
+    }
+  }
+  if(!cam){
+    // Prova match con camere della casa
+    cam=casa().camere.find(c=>roomNum.toUpperCase().includes(c.n.toUpperCase())||roomNum.toUpperCase().includes(c.nm.toUpperCase()))?.n||null;
+  }
+  return cam;
+}
 
 function casa(){return CASE[casaId];}
 function fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -472,6 +524,7 @@ async function loadPren(){
     prenCache[casaId].push(...data);
   }
   await loadPrenFromCybHotel();
+  await loadIndispFromCybHotel();
 }
 
 async function loadPrenFromCybHotel(){
@@ -486,38 +539,6 @@ async function loadPrenFromCybHotel(){
     if(!d.data||!Array.isArray(d.data))return;
     if(!prenCache[casaId])prenCache[casaId]=[];
 
-    // Mappa room_number API → ID camera interno (una mappa per casa)
-    const ROOM_MAPS={
-      cvb:{
-        'STUDIO PIAZZETTA, PT':'Piazzetta','STUDIO PIAZZETTA':'Piazzetta',
-        'STUDIO TICINELLA, 1P':'Ticinella','STUDIO TICINELLA':'Ticinella',
-        'STUDIO IL TIGLIO, 1P':'Tiglio','STUDIO IL TIGLIO':'Tiglio',
-        'OPENSPACE LA NALA, 2P':'Nala','OPENSPACE LA NALA':'Nala',
-        'LOFT AL POZZON, 3P':'Loft','LOFT AL POZZON':'Loft',
-        'CASA ALLA CASCATA 1, 1P':'Cascata1','CASA ALLA CASCATA 1':'Cascata1',
-        'CASA ALLA CASCATA 2, 2P':'Cascata2','CASA ALLA CASCATA 2':'Cascata2',
-        'CASA CASCASTA 0, PT':'Cascata0','CASA CASCATA 0, PT':'Cascata0','CASA CASCATA 0':'Cascata0'
-      },
-      piumogna:{
-        '101 LA CELESTE':'101','101':'101','102 LA ROSSA':'102','102':'102',
-        '201 LA GIALLA':'201','201':'201','202 LA DECORATA':'202','202':'202',
-        '301 LA VERDE':'301','301':'301','302 LA BIANCA':'302','302':'302',
-        '401 MANSARDA PIZZO PETTINE':'401','401':'401','402 MANSARDA PIZZO FORNO':'402','402':'402'
-      },
-      liberty:{
-        '1':'DolceVita','DOLCE VITA':'DolceVita',
-        '2':'VoceLuna','LA VOCE DELLA LUNA':'VoceLuna','VOCE DELLA LUNA':'VoceLuna',
-        '3':'Mansarda','MANSARDA DELLA CASCATA':'Mansarda'
-      },
-      rustico:{
-        '1':'R1','RUSTICO ORABINO':'R1','RUSTICO CONCEPRIO & SAUNA':'R1','RUSTICO CONCEPRIO':'R1'
-      },
-      rurale:{
-        '1':'CR1','CASA RURALE TICINESE':'CR1'
-      }
-    };
-    const ROOM_MAP=ROOM_MAPS[casaId]||{};
-
     // Mappa canale API → canale interno
     const CAN_MAP={'Admin':'diretto','Booking.com':'booking','Booking Engine':'booking','Airbnb':'airbnb'};
 
@@ -530,19 +551,7 @@ async function loadPrenFromCybHotel(){
 
       p.bookedRooms.forEach(br=>{
         const roomNum=br.room&&br.room.number?br.room.number:'';
-        // Cerca corrispondenza nella mappa
-        let cam=ROOM_MAP[roomNum]||null;
-        if(!cam){
-          // Prova match parziale
-          const roomUp=roomNum.toUpperCase();
-          for(const[k,v] of Object.entries(ROOM_MAP)){
-            if(roomUp.includes(k.toUpperCase())||k.toUpperCase().includes(roomUp)){cam=v;break;}
-          }
-        }
-        if(!cam){
-          // Prova match con camere della casa
-          cam=casa().camere.find(c=>roomNum.toUpperCase().includes(c.n.toUpperCase())||roomNum.toUpperCase().includes(c.nm.toUpperCase()))?.n||null;
-        }
+        const cam=mapRoomToCam(roomNum);
         if(!cam)return;
 
         trovati++;
@@ -573,6 +582,41 @@ async function loadPrenFromCybHotel(){
     });
     console.log('eroomAPI: '+trovati+' prenotazioni per '+casa().nome);
   }catch(e){console.log('Eroom API non disponibile:',e.message);}
+}
+
+// Carica i blocchi di indisponibilità (chiusure, pulizie, affitti annuali...) da CybHotel
+async function loadIndispFromCybHotel(){
+  try{
+    const hotelId=casa().hotelExtId||'160';
+    const Y=vMonth.getFullYear(),M=vMonth.getMonth();
+    const from=fmtD(new Date(Y,M-1,1));
+    const to=fmtD(new Date(Y,M+2,0));
+    const r=await fetch(`/api/eroom?action=get_unavailability&hotel_id=${hotelId}&from=${from}&to=${to}`);
+    const d=await r.json();
+    if(!d.data||!Array.isArray(d.data))return;
+    if(!indispCache[casaId])indispCache[casaId]=[];
+    let trovati=0;
+    d.data.forEach(b=>{
+      const roomNum=b.room&&b.room.number?b.room.number:'';
+      const cam=mapRoomToCam(roomNum);
+      if(!cam||!b.from||!b.to)return;
+      // Le date arrivano in UTC (es. 22:00 del giorno prima = mezzanotte locale):
+      // new Date le converte automaticamente nel fuso locale
+      const ci=fmtD(new Date(b.from));
+      const co=fmtD(new Date(b.to));
+      const id='ind_'+casaId+'_'+cam+'_'+ci+'_'+co;
+      if(!indispCache[casaId].find(x=>x.id===id)){
+        indispCache[casaId].push({id,cam,ci,co,reason:b.reason||''});
+        trovati++;
+      }
+    });
+    if(trovati>0)console.log('eroomAPI: '+trovati+' blocchi indisponibilità per '+casa().nome);
+  }catch(e){console.log('Indisponibilità non disponibili:',e.message);}
+}
+
+function getIndisp(cam,key){
+  const arr=indispCache[casaId]||[];
+  return arr.find(b=>b.cam===cam&&b.ci<=key&&b.co>key);
 }
 
 async function loadTurni(){
@@ -817,7 +861,13 @@ function renderPren(){
         const onclick=isAdmin()?`openDet('${p.id}',event)`:`openDetStaff('${p.id}',event)`;
         ct=`<div class="${bc}" onclick="${onclick}"><span class="bl">${label}</span></div>`;
       } else {
-        ct=isAdmin()?`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`:`<div class="fc"></div>`;
+        const ind=getIndisp(cam.n,k);
+        if(ind){
+          const motivo=(ind.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,'');
+          ct=`<div class="ind" title="${motivo}" onclick="toast('🚫 ${motivo}');event.stopPropagation();"></div>`;
+        } else {
+          ct=isAdmin()?`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`:`<div class="fc"></div>`;
+        }
       }
       th+=`<td class="dc${it?' tod':''}">${ct}</td>`;}
     th+='</tr>';
