@@ -471,6 +471,7 @@ function mapRoomToCam(roomNum){
 }
 
 function casa(){return CASE[casaId];}
+function turnoTypes(t){return String(t||'').split('+').filter(Boolean);}
 function fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function parseD(s){return new Date(s+'T12:00:00');}
 function addD(d,n){return new Date(d.getTime()+n*86400000);}
@@ -493,7 +494,7 @@ function turniDelGiorno(key){
   const turni=turniCache[casaId+'_'+key]||{};
   const result={};
   Object.entries(turni).forEach(([persona,tp])=>{
-    if(tp.t==='T2'){
+    if(turnoTypes(tp.t).includes('T2')){
       // co è il giorno di check-out: la camera si pulisce quel giorno stesso,
       // dopo la partenza dell'ospite
       const arr=prenCache[casaId]||[];
@@ -895,7 +896,7 @@ function renderTurni(){
       const ex=extraCache[casaId+'_'+k+'_'+p];
       const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
       let ct='<div class="gt-cell">';
-      if(tp){ct+=`<span class="tt ${tp.t==='T1'?'tt1':tp.t==='T2'?'tt2':tp.t==='T3'?'tt3':'tt4'}">${tp.t}</span>`;if(tp.c&&tp.c.length)ct+=`<div class="cm">${tp.c.slice(0,2).join(' ')}</div>`;}
+      if(tp){turnoTypes(tp.t).forEach(tt=>{ct+=`<span class="tt ${tt==='T1'?'tt1':tt==='T2'?'tt2':tt==='T3'?'tt3':'tt4'}">${tt}</span>`;});if(tp.c&&tp.c.length)ct+=`<div class="cm">${tp.c.slice(0,2).join(' ')}</div>`;}
       if(hasEx)ct+=`<div style="font-size:8px;color:var(--t3t);background:var(--t3);border-radius:2px;padding:1px 3px;margin-top:1px;">+</div>`;
       ct+='</div>';
       th+=`<td class="dc${it?' tod':''}" onclick="${isAdmin()?`openTurno('${k}','${p.replace(/'/g,"\\'")}',event)`:''}">${ct}</td>`;}
@@ -968,12 +969,12 @@ function renderMio(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   const offset=(new Date(Y,M,1).getDay()||7)-1;
   let totGG=0,totT2=0;
-  for(let d=1;d<=days;d++){const k=fmtD(new Date(Y,M,d)),tp=turniDelGiorno(k)[persona];if(tp){totGG++;if(tp.t==='T2')totT2++;}}
-  const tpOggi=turniDelGiorno(TK)[persona],infoOggi=tpOggi?TI[tpOggi.t]:null;
+  for(let d=1;d<=days;d++){const k=fmtD(new Date(Y,M,d)),tp=turniDelGiorno(k)[persona];if(tp){totGG++;if(turnoTypes(tp.t).includes('T2'))totT2++;}}
+  const tpOggi=turniDelGiorno(TK)[persona],typesOggi=tpOggi?turnoTypes(tpOggi.t):[],infoOggi=typesOggi.length?TI[typesOggi[0]]:null;
   let oggiHtml='';
   if(tpOggi){
     let camSec='';
-    if(tpOggi.t==='T2'&&tpOggi.c&&tpOggi.c.length){
+    if(typesOggi.includes('T2')&&tpOggi.c&&tpOggi.c.length){
       const cards=tpOggi.c.map(n=>{
         const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK);
         const stato=getStatoCamera(TK,n);
@@ -1012,10 +1013,10 @@ function renderMio(){
     }
     // Bottone completato per T1 e T4
     let completatoSec='';
-    if(tpOggi.t==='T1'||tpOggi.t==='T4'){
+    if(typesOggi.includes('T1')||typesOggi.includes('T4')){
       const ck=casaId+'_'+TK+'_'+persona;
       const completato=turniCache[ck+'_completato']||false;
-      const label=tpOggi.t==='T1'?'colazione':'brunch';
+      const label=typesOggi.includes('T1')?'colazione':'brunch';
       const exT1T4=getEx(TK,persona);
       completatoSec=`<div style="margin-top:12px;">
         <button style="width:100%;padding:13px;border-radius:var(--r-md);border:1px solid ${completato?'var(--success)':'var(--border)'};background:${completato?'#f0faf0':'white'};color:${completato?'var(--success)':'var(--text2)'};font-size:13px;font-weight:600;cursor:pointer;" onclick="toggleCompletato('${TK}','${persona.replace(/'/g,"\\'")}','${tpOggi.t}')">
@@ -1035,8 +1036,8 @@ function renderMio(){
     const camName=tpOggi.c&&tpOggi.c.length===1?tpOggi.c[0]:null;
     oggiHtml=`<div class="mt-card" style="border-left-color:${infoOggi.tc};background:${infoOggi.bg}30;">
       <div style="font-size:10px;font-weight:600;color:${infoOggi.tc};margin-bottom:6px;">OGGI — ${fmtLbl(TODAY)}</div>
-      <span class="tt ${infoOggi.c}" style="display:inline-block;margin-bottom:6px;">${tpOggi.t}</span>
-      <div class="mt-tit">${infoOggi.l}</div><div class="mt-ora">${infoOggi.o}</div>
+      ${typesOggi.map(tt=>`<span class="tt ${TI[tt].c}" style="display:inline-block;margin-bottom:6px;margin-right:4px;">${tt}</span>`).join('')}
+      <div class="mt-tit">${typesOggi.map(tt=>TI[tt].l).join('  +  ')}</div><div class="mt-ora">${typesOggi.map(tt=>TI[tt].o).join('  ·  ')}</div>
       ${camSec}
       ${completatoSec}
       ${tpOggi.note?`<div style="margin-top:10px;background:white;border-radius:var(--r-md);padding:10px;border-left:3px solid var(--t3t);"><div style="font-size:10px;font-weight:600;color:var(--t3t);margin-bottom:4px;">📋 NOTE</div><div style="font-size:13px;">${tpOggi.note}</div></div>`:''}
@@ -1049,11 +1050,12 @@ function renderMio(){
   const stats=`<div class="stats"><div class="sbox"><div class="sv">${totGG}</div><div class="sl">Giorni lavoro</div></div><div class="sbox"><div class="sv">${totT2}</div><div class="sl">Pulizie</div></div><div class="sbox"><div class="sv">${days-totGG}</div><div class="sl">Giorni liberi</div></div></div>`;
   let cal=`<div class="card" style="padding:10px;"><div class="mio-cal">${['Lu','Ma','Me','Gi','Ve','Sa','Do'].map(g=>`<div style="text-align:center;font-size:10px;color:var(--text2);font-weight:500;padding:4px 0;">${g}</div>`).join('')}`;
   for(let i=0;i<offset;i++)cal+=`<div></div>`;
-  for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=turniDelGiorno(k)[persona],info=tp?TI[tp.t]:null;
+  for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,tp=turniDelGiorno(k)[persona];
     const ex=extraCache[casaId+'_'+k+'_'+persona];const hasEx=ex&&(Object.values(ex.items||{}).some(v=>v)||(ex.vetri&&ex.vetri.length>0)||ex.letti>0||ex.ore>0||ex.min>0);
-    const hasCamere=tp&&tp.t==='T2'&&tp.c&&tp.c.length>0;
+    const hasCamere=tp&&turnoTypes(tp.t).includes('T2')&&tp.c&&tp.c.length>0;
     const camLabel=hasCamere?tp.c.map(n=>n.length>4?n.slice(0,4):n).join(' '):'';
-    cal+=`<div class="giorno-box${it?' oggi':''}" style="${(hasCamere&&!it)?'cursor:pointer;':''}" onclick="${(hasCamere&&!it)?`openGiornoCamere('${k}','${persona.replace(/'/g,"\\'")}')`:''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tp?`<span class="gb-tag" style="background:${info.bg};color:${info.tc};">${tp.t}</span>`:''}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${hasCamere?`<div class="gb-cam" style="font-size:6px;line-height:1.3;">${camLabel}</div>`:''}</div>`;}
+    const tagsHtml=tp?turnoTypes(tp.t).map(tt=>`<span class="gb-tag" style="background:${TI[tt].bg};color:${TI[tt].tc};">${tt}</span>`).join(''):'';
+    cal+=`<div class="giorno-box${it?' oggi':''}" style="${(hasCamere&&!it)?'cursor:pointer;':''}" onclick="${(hasCamere&&!it)?`openGiornoCamere('${k}','${persona.replace(/'/g,"\\'")}')`:''}">${it?`<div class="gb-num oggi-n">${d}</div>`:`<div class="gb-num">${d}</div>`}${tagsHtml}${hasEx?`<span class="gb-tag" style="background:var(--t3);color:var(--t3t);">+</span>`:''}${hasCamere?`<div class="gb-cam" style="font-size:6px;line-height:1.3;">${camLabel}</div>`:''}</div>`;}
   cal+='</div></div>';
   el.innerHTML=oggiHtml+mnav+stats+cal;
 }
@@ -1128,9 +1130,11 @@ function renderComp(){
   const tarT1=camIeri<=3?50:camIeri<=5?60:70;
   const tg=turniDelGiorno(key);let rows=[],tot=0;
   Object.entries(tg).forEach(([p,tp])=>{
-    if(tp.t==='T1'||tp.t==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt ${tp.t==='T1'?'tt1':'tt4'}">${tp.t}</span></td><td>${camIeri} cam→Fr.${tarT1}</td><td class="amt">Fr.${tarT1}</td></tr>`);tot+=tarT1;}
-    else if(tp.t==='T2'){const nc=tp.c?tp.c.length:0,comp=nc*30;rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${nc}×Fr.30</td><td class="amt">Fr.${comp}</td></tr>`);tot+=comp;}
-    else if(tp.t==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena</td><td class="amt">—</td></tr>`);}
+    turnoTypes(tp.t).forEach(tt=>{
+      if(tt==='T1'||tt==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt ${tt==='T1'?'tt1':'tt4'}">${tt}</span></td><td>${camIeri} cam→Fr.${tarT1}</td><td class="amt">Fr.${tarT1}</td></tr>`);tot+=tarT1;}
+      else if(tt==='T2'){const nc=tp.c?tp.c.length:0,comp=nc*30;rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${nc}×Fr.30</td><td class="amt">Fr.${comp}</td></tr>`);tot+=comp;}
+      else if(tt==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena</td><td class="amt">—</td></tr>`);}
+    });
     const ex=extraCache[casaId+'_'+key+'_'+p];
     if(ex){const et=calcExTot(ex,tp.c&&tp.c.length===1?tp.c[0]:null);if(et>0){rows.push(`<tr><td>${p}</td><td><span style="background:var(--t3);color:var(--t3t);border-radius:3px;padding:2px 5px;font-size:9px;">EXTRA</span></td><td>vedi dettaglio</td><td class="amt">Fr.${et}</td></tr>`);tot+=et;}
     if(ex.ore>0||ex.min>0)rows.push(`<tr><td>${p}</td><td><span style="background:#f0f0f0;border-radius:3px;padding:2px 5px;font-size:9px;">ORE+</span></td><td>${ex.ore}h ${ex.min>0?ex.min+'m':''}</td><td class="amt">a fine mese</td></tr>`);}
@@ -1173,12 +1177,12 @@ async function importaTurni(input){
         cols.forEach(c=>{
           const v=String(r[c.pi]||'').trim();
           if(v&&v!=='-'&&v!=='NaN'){
-            if(!persMap[v])persMap[v]={t:c.t,count:0};
-            persMap[v].t=c.t;persMap[v].count++;
+            if(!persMap[v])persMap[v]={types:[]};
+            if(!persMap[v].types.includes(c.t))persMap[v].types.push(c.t);
           }
         });
         for(const [persona,info] of Object.entries(persMap)){
-          try{await saveTurnoDB(key,persona,info.t,[],note&&note!=='NaN'?note:'');salvati++;}
+          try{await saveTurnoDB(key,persona,info.types.join('+'),[],note&&note!=='NaN'?note:'');salvati++;}
           catch(e){errori++;}
         }
       } else {
@@ -1381,21 +1385,26 @@ function chRiep(v){vMonth=new Date(vMonth.getFullYear(),parseInt(v),1);renderRie
 function openTurno(key,persona,e){
   e&&e.stopPropagation();if(!isAdmin())return;
   const tp=turniDelGiorno(key)[persona];
-  popTipo=tp?tp.t:null;popCamere=tp?tp.c||[]:[];
+  popTipo=tp?turnoTypes(tp.t):[];popCamere=tp?tp.c||[]:[];
   const dt=parseD(key);
   const types=casa().turniTypes;
-  const tOpts=types.map(t=>`<div class="topt${popTipo===t?' st'+t.toLowerCase():''}" onclick="selTipo('${t}',this)">${t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
-  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts">${tOpts}</div><div id="cam-sec" style="${popTipo==='T2'?'':'display:none'}"><div class="lbl">Camere</div><div class="ckopts">${casa().camere.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCamP('${c.n}',this)"><div class="cn2">${c.n}</div><div style="font-size:9px">${c.nm}</div></div>`).join('')}</div><div class="lbl" style="margin-top:10px;">Note operative</div><textarea id="pop-note" placeholder="Es: prepara 2 letti in 102, culla in 201..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;">${tp&&tp.note||''}</textarea></div><button class="bsave" onclick="saveTurno('${key}','${persona.replace(/'/g,"\\'")}')">Salva</button><button class="bcl" onclick="clearTurno('${key}','${persona.replace(/'/g,"\\'")}')">Rimuovi</button></div></div>`;
+  const tOpts=types.map(t=>`<div class="topt${popTipo.includes(t)?' st'+t.toLowerCase():''}" onclick="selTipo('${t}',this)">${t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
+  document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts">${tOpts}</div><div id="cam-sec" style="${popTipo.includes('T2')?'':'display:none'}"><div class="lbl">Camere</div><div class="ckopts">${casa().camere.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCamP('${c.n}',this)"><div class="cn2">${c.n}</div><div style="font-size:9px">${c.nm}</div></div>`).join('')}</div><div class="lbl" style="margin-top:10px;">Note operative</div><textarea id="pop-note" placeholder="Es: prepara 2 letti in 102, culla in 201..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;">${tp&&tp.note||''}</textarea></div><button class="bsave" onclick="saveTurno('${key}','${persona.replace(/'/g,"\\'")}')">Salva</button><button class="bcl" onclick="clearTurno('${key}','${persona.replace(/'/g,"\\'")}')">Rimuovi</button></div></div>`;
 }
 
-function selTipo(t,el){popTipo=t;document.querySelectorAll('.topt').forEach(x=>x.className='topt');el.className='topt st'+t.toLowerCase();const cs=document.getElementById('cam-sec');if(cs)cs.style.display=t==='T2'?'':'none';}
+function selTipo(t,el){
+  if(!Array.isArray(popTipo))popTipo=popTipo?[popTipo]:[];
+  if(popTipo.includes(t)){popTipo=popTipo.filter(x=>x!==t);el.className='topt';}
+  else{popTipo.push(t);el.className='topt st'+t.toLowerCase();}
+  const cs=document.getElementById('cam-sec');if(cs)cs.style.display=popTipo.includes('T2')?'':'none';
+}
 function togCamP(n,el){if(popCamere.includes(n))popCamere=popCamere.filter(x=>x!==n);else popCamere.push(n);el.classList.toggle('ck');}
 
 async function saveTurno(key,persona){
-  if(!popTipo){toast('Scegli un turno');return;}
+  if(!popTipo||!popTipo.length){toast('Scegli un turno');return;}
   const noteEl=document.getElementById('pop-note');
   const note=noteEl?noteEl.value:'';
-  await saveTurnoDB(key,persona,popTipo,popCamere,note);
+  await saveTurnoDB(key,persona,(Array.isArray(popTipo)?popTipo.join('+'):popTipo),popCamere,note);
   closePopDirect();renderTurni();renderMio();
 }
 
