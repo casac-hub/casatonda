@@ -1388,14 +1388,14 @@ function openTurno(key,persona,e){
   popTipo=tp?turnoTypes(tp.t):[];popCamere=tp?tp.c||[]:[];
   const dt=parseD(key);
   const types=casa().turniTypes;
-  const tOpts=types.map(t=>`<div class="topt${popTipo.includes(t)?' st'+t.toLowerCase():''}" onclick="selTipo('${t}',this)">${t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
+  const tOpts=types.map(t=>`<div class="topt${popTipo.includes(t)?' st'+t.slice(1):''}" onclick="selTipo('${t}',this)">${t}<br><span style="font-size:10px;opacity:0.7;">${TI[t]?TI[t].o:''}</span></div>`).join('');
   document.getElementById('pop-root').innerHTML=`<div class="pbg" onclick="closePop(event)"><div class="pbox"><button class="pcl" onclick="closePopDirect()">&#215;</button><h3>${persona}</h3><p class="psub">${GGF[dt.getDay()]} ${dt.getDate()} ${MESI[dt.getMonth()]}</p><div class="lbl">Turno</div><div class="topts">${tOpts}</div><div id="cam-sec" style="${popTipo.includes('T2')?'':'display:none'}"><div class="lbl">Camere</div><div class="ckopts">${casa().camere.map(c=>`<div class="cko${popCamere.includes(c.n)?' ck':''}" onclick="togCamP('${c.n}',this)"><div class="cn2">${c.n}</div><div style="font-size:9px">${c.nm}</div></div>`).join('')}</div><div class="lbl" style="margin-top:10px;">Note operative</div><textarea id="pop-note" placeholder="Es: prepara 2 letti in 102, culla in 201..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:10px;font-size:13px;font-family:inherit;resize:none;margin-bottom:10px;">${tp&&tp.note||''}</textarea></div><button class="bsave" onclick="saveTurno('${key}','${persona.replace(/'/g,"\\'")}')">Salva</button><button class="bcl" onclick="clearTurno('${key}','${persona.replace(/'/g,"\\'")}')">Rimuovi</button></div></div>`;
 }
 
 function selTipo(t,el){
   if(!Array.isArray(popTipo))popTipo=popTipo?[popTipo]:[];
   if(popTipo.includes(t)){popTipo=popTipo.filter(x=>x!==t);el.className='topt';}
-  else{popTipo.push(t);el.className='topt st'+t.toLowerCase();}
+  else{popTipo.push(t);el.className='topt st'+t.slice(1);}
   const cs=document.getElementById('cam-sec');if(cs)cs.style.display=popTipo.includes('T2')?'':'none';
 }
 function togCamP(n,el){if(popCamere.includes(n))popCamere=popCamere.filter(x=>x!==n);else popCamere.push(n);el.classList.toggle('ck');}
