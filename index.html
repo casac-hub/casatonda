@@ -599,10 +599,11 @@ async function loadIndispFromCybHotel(){
     let trovati=0;
     d.data.forEach(b=>{
       if(!b.from||!b.to)return;
-      // Le date arrivano in UTC (es. 22:00 del giorno prima = mezzanotte locale):
-      // new Date le converte automaticamente nel fuso locale
+      // Le date arrivano in UTC (es. 22:00 del giorno prima = mezzanotte locale).
+      // Nel gestionale la data di fine è INCLUSIVA (ultima notte bloccata),
+      // quindi il giorno di "check-out" del blocco è il giorno successivo
       const ci=fmtD(new Date(b.from));
-      const co=fmtD(new Date(b.to));
+      const co=fmtD(addD(new Date(b.to),1));
       const roomNum=b.room&&b.room.number?b.room.number:'';
       let cams=[];
       if(!b.room){
