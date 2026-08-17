@@ -414,7 +414,7 @@ const CASE={
 };
 
 let casaId='piumogna', profile='admin', curTab='pren';
-const TODAY=new Date(), TK=fmtD(TODAY);
+let TODAY=new Date(), TK=fmtD(TODAY);
 let vMonth=new Date(TODAY.getFullYear(),TODAY.getMonth(),1), vDay=new Date(TODAY);
 let nextId=100, selCan='diretto', popTipo=null, popCamere=[];
 
@@ -1710,6 +1710,22 @@ window.onload=async()=>{
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
   showLogin();
 };
+
+// Se l'app resta aperta oltre la mezzanotte (o torna dal background il giorno dopo),
+// aggiorna la data e ricarica i dati
+async function checkNuovoGiorno(){
+  if(fmtD(new Date())===TK)return;
+  TODAY=new Date();TK=fmtD(TODAY);
+  vMonth=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
+  vDay=new Date(TODAY);
+  const dl=document.getElementById('dlbl-c');if(dl)dl.textContent=fmtLbl(vDay);
+  if(document.getElementById('app-root').style.display!=='none'){
+    await loadAll();renderAll();
+  }
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkNuovoGiorno();});
+window.addEventListener('focus',checkNuovoGiorno);
+
 </script>
 </body>
 </html>
