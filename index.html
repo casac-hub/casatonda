@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v17.08-H';
+const APP_VERSION='v17.08-J';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -361,7 +361,7 @@ const CASE={
     bucatoBasePersone:2,
     personale:['Clara','Serena','Isa','Julka','Marlen','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
-    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'},{id:'bagni4',nome:'4 bagni completi',prezzo:20,icon:'🚿'},{id:'bagniveloce',nome:'Passata veloce 4 bagni',prezzo:10,icon:'🧻'},{id:'salacolazioni',nome:'Sala colazioni',prezzo:8,icon:'☕'},{id:'pavcucina',nome:'Pavimento cucina',prezzo:8,icon:'🧽'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'},{id:'bagni4',nome:'4 bagni completi',prezzo:20,icon:'🚿'},{id:'bagniveloce',nome:'Passata veloce 4 bagni',prezzo:10,icon:'🧻'},{id:'salacolazioni',nome:'Sala colazioni',prezzo:8,icon:'☕'},{id:'pavcucina',nome:'Pavimento cucina',prezzo:8,icon:'🧽'}],
     hasVetri:true,vetriPrezzo:20,tariffaT1Base:true,
     defaultPulizia:25,defaultBucato:10
   },
@@ -376,7 +376,7 @@ const CASE={
     supOspiti:5,
     personale:['Fernanda','Marlen','Personale 2','Personale 3','Personale 4'],
     turniTypes:['T2'],
-    extras:[{id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},{id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},{id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'spazzatura',nome:'Spazzatura',prezzo:5,icon:'🗑️'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:10,icon:'🧹'},{id:'wc',nome:'WC comune',prezzo:5,icon:'🚽'},{id:'negozio',nome:'Negozio',prezzo:15,icon:'🏪'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'esterno',nome:'Pulizia esterno',prezzo:10,icon:'🌿'},{id:'spazzatura',nome:'Spazzatura',prezzo:5,icon:'🗑️'}],
     hasVetri:true,vetriPrezzi:{Piazzetta:5,Tiglio:5,Ticinella:5,Cascata0:5,Nala:10,Loft:10,Cascata1:10,Cascata2:10},
     defaultPulizia:20,defaultBucato:10
   },
@@ -389,7 +389,7 @@ const CASE={
     supOspiti:5,
     personale:['Isa','Marlen','Personale 2','Personale 3','Personale 4'],
     turniTypes:['T2'],
-    extras:[{id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:15,icon:'🧹'},{id:'riciclo',nome:'Zona riciclo',prezzo:10,icon:'♻️'},{id:'lavanderia',nome:'Pulizia lavanderia',prezzo:10,icon:'👕'}],
     hasVetri:false,defaultPulizia:35,defaultBucato:10
   },
   rustico:{
@@ -399,7 +399,7 @@ const CASE={
     bucatoPerPersona:10, // Fr.10 a persona da 0
     personale:['Manuela','Personale 2','Personale 3'],
     turniTypes:['T2'],
-    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'}],
+    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'}],
     hasVetri:false,hasLetti:true,lettoPrezzzo:10,hasOre:true,
     defaultPulizia:0,defaultBucato:0
   },
@@ -410,7 +410,7 @@ const CASE={
     bucatoPerPersona:10, // Fr.10 a persona da 0
     personale:['Isa','Personale 2','Personale 3'],
     turniTypes:['T2'],
-    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'}],
+    extras:[{id:'trasferta',nome:'Trasferta',prezzo:15,icon:'🚗'}],
     hasVetri:false,hasLetti:true,lettoPrezzzo:10,hasOre:true,
     defaultPulizia:0,defaultBucato:0
   }
@@ -1024,13 +1024,45 @@ function calcExTot(ex,camName){
   return t;
 }
 
+// Un extra (item o vetro) è condiviso tra tutte le persone che lavorano quel giorno in quella
+// casa: se qualcuno l'ha già segnato, ritorna il suo nome — così nessun altro lo rispunta.
+function extraGiaFattoAltri(key,itemId,personaCorrente){
+  const prefix=casaId+'_'+key+'_';
+  for(const k in extraCache){
+    if(!k.startsWith(prefix))continue;
+    const altra=k.slice(prefix.length);
+    if(altra===personaCorrente)continue;
+    if(extraCache[k]&&extraCache[k].items&&extraCache[k].items[itemId])return altra;
+  }
+  return null;
+}
+function vetroGiaFattoAltri(key,cam,personaCorrente){
+  const prefix=casaId+'_'+key+'_';
+  for(const k in extraCache){
+    if(!k.startsWith(prefix))continue;
+    const altra=k.slice(prefix.length);
+    if(altra===personaCorrente)continue;
+    if(extraCache[k]&&extraCache[k].vetri&&extraCache[k].vetri.includes(cam))return altra;
+  }
+  return null;
+}
+
 function buildExtra(key,persona,camName){
   const ex=getEx(key,persona);const c=casa();const showPrices=isAdmin();
-  const items=c.extras.map(e=>`<div class="extra-item${ex.items[e.id]?' sel':''}" onclick="togExItem('${key}','${persona.replace(/'/g,"\\'")}','${e.id}')"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div>${showPrices?`<div class="ei-price">Fr.${e.prezzo}</div>`:''}</div>`).join('');
+  const items=c.extras.map(e=>{
+    const altra=extraGiaFattoAltri(key,e.id,persona);
+    if(altra)return `<div class="extra-item sel" style="opacity:0.5;cursor:not-allowed;" title="Già segnato da ${altra}"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div><div class="ei-price">✓ ${altra}</div></div>`;
+    return `<div class="extra-item${ex.items[e.id]?' sel':''}" onclick="togExItem('${key}','${persona.replace(/'/g,"\\'")}','${e.id}')"><div class="ei-icon">${e.icon}</div><div class="ei-name">${e.nome}</div>${showPrices?`<div class="ei-price">Fr.${e.prezzo}</div>`:''}</div>`;
+  }).join('');
   let vetriHtml='';
   if(c.hasVetri){
-    const vp=c.vetriPrezzi?c.camere.map(cam=>`<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}${showPrices?`<br><span style="font-size:9px">Fr.${c.vetriPrezzi[cam.n]||0}</span>`:''}</div>`).join(''):
-    c.camere.map(cam=>`<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}</div>`).join('');
+    const vetriCella=(cam)=>{
+      const altra=vetroGiaFattoAltri(key,cam.n,persona);
+      if(altra)return `<div class="vetri-cam sel" style="opacity:0.5;cursor:not-allowed;" title="Già segnato da ${altra}">${cam.n}<br><span style="font-size:8px">✓${altra}</span></div>`;
+      const prezzoLbl=showPrices?(c.vetriPrezzi?`<br><span style="font-size:9px">Fr.${c.vetriPrezzi[cam.n]||0}</span>`:''):'';
+      return `<div class="vetri-cam${ex.vetri.includes(cam.n)?' sel':''}" onclick="togVetri('${key}','${persona.replace(/'/g,"\\'")}','${cam.n}')">${cam.n}${prezzoLbl}</div>`;
+    };
+    const vp=c.camere.map(vetriCella).join('');
     vetriHtml=`<div class="extra-vetri"><div class="extra-vetri-title">🪟 Vetri${showPrices&&!c.vetriPrezzi?' — Fr.'+(c.vetriPrezzo||0)+'/camera':''}</div><div class="vetri-cam-grid">${vp}</div></div>`;
   }
   let lettiHtml='';
