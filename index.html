@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v17.08-E';
+const APP_VERSION='v17.08-F';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -535,6 +535,59 @@ async function loadPren(){
   await loadIndispFromCybHotel();
 }
 
+// Divide l'importo di una prenotazione multi-camera tra le sue camere,
+// usando i costRows dell'ordine (CybHotel li etichetta con il nome/tipo camera in "detail").
+// roomInfos: [{roomNum, cam}, ...] nello stesso ordine di p.bookedRooms.
+// Ritorna un array parallelo di {totale} in franchi.
+function allocateOrderToRooms(ordine, roomInfos){
+  const n=roomInfos.length;
+  if(!ordine)return roomInfos.map(()=>({totale:0}));
+  if(!ordine.costRows||!ordine.costRows.length){
+    const tot=Math.round(ordine.totalPrice/100/n);
+    return roomInfos.map(()=>({totale:tot}));
+  }
+  const stanzaRows=ordine.costRows.filter(r=>r.type===0);
+  const altreCents=ordine.costRows.filter(r=>r.type!==0).reduce((s,r)=>s+(r.price_cents||0),0);
+
+  if(stanzaRows.length!==n){
+    // Numero di righe "stanza" diverso dal numero di camere prenotate: non possiamo
+    // abbinare con sicurezza, dividiamo l'importo in parti uguali
+    const tot=Math.round(ordine.totalPrice/100/n);
+    return roomInfos.map(()=>({totale:tot}));
+  }
+
+  const usedRows=new Array(stanzaRows.length).fill(false);
+  const assigned=new Array(n).fill(-1);
+
+  // 1° giro: abbinamento per testo (nome camera nel room_number vs "detail" della riga)
+  roomInfos.forEach((ri,i)=>{
+    const upRoom=(ri.roomNum||'').toUpperCase();
+    const upCam=(ri.cam||'').toUpperCase();
+    let bestJ=-1;
+    stanzaRows.forEach((r,j)=>{
+      if(usedRows[j]||bestJ>=0)return;
+      const d=(r.detail||'').toUpperCase();
+      if(d&&(upRoom.includes(d)||d.includes(upCam)||upCam.includes(d)))bestJ=j;
+    });
+    if(bestJ>=0){assigned[i]=bestJ;usedRows[bestJ]=true;}
+  });
+  // 2° giro: le righe/camere rimaste senza abbinamento testuale si abbinano per posizione
+  let cursore=0;
+  for(let i=0;i<n;i++){
+    if(assigned[i]>=0)continue;
+    while(cursore<usedRows.length&&usedRows[cursore])cursore++;
+    if(cursore<usedRows.length){assigned[i]=cursore;usedRows[cursore]=true;cursore++;}
+  }
+
+  const totStanzeCents=stanzaRows.reduce((s,r)=>s+(r.price_cents||0),0);
+  return roomInfos.map((ri,i)=>{
+    const j=assigned[i];
+    const baseCents=j>=0?(stanzaRows[j].price_cents||0):0;
+    const quotaAltre=totStanzeCents>0?(baseCents/totStanzeCents)*altreCents:altreCents/n;
+    return {totale:Math.round((baseCents+quotaAltre)/100)};
+  });
+}
+
 async function loadPrenFromCybHotel(){
   try{
     const hotelId=casa().hotelExtId||'160';
@@ -557,7 +610,11 @@ async function loadPrenFromCybHotel(){
       const co=p.expectedDepartureDate?p.expectedDepartureDate.slice(0,10):null;
       if(!ci||!co)return;
 
-      p.bookedRooms.forEach(br=>{
+      const ordine=p.orders&&p.orders.length?p.orders[0]:null;
+      const roomInfos=p.bookedRooms.map(br=>({roomNum:br.room&&br.room.number?br.room.number:'',cam:mapRoomToCam(br.room&&br.room.number?br.room.number:'')}));
+      const quote=allocateOrderToRooms(ordine,roomInfos);
+
+      p.bookedRooms.forEach((br,idx)=>{
         const roomNum=br.room&&br.room.number?br.room.number:'';
         const cam=mapRoomToCam(roomNum);
         if(!cam)return;
@@ -568,9 +625,7 @@ async function loadPrenFromCybHotel(){
         const ospTot=ospAdulti+ospBambini||2;
         const nome=p.mainGuest?`${p.mainGuest.last_name||''} ${p.mainGuest.first_name||''}`.trim():'Ospite';
         const can=CAN_MAP[p.reservationChannel]||'altro';
-        // Calcola tariffa da ordini
-        const ordine=p.orders&&p.orders.length?p.orders[0]:null;
-        const totale=ordine?Math.round(ordine.totalPrice/100):0;
+        const totale=quote[idx]?quote[idx].totale:0;
         const notti=diffD(ci,co)||1;
         const tar=notti>0?Math.round(totale/notti):0;
         const pagato=ordine&&ordine.paymentType&&ordine.paymentType!=='Non pagato';
