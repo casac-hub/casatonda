@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v17.08-F';
+const APP_VERSION='v17.08-H';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -361,9 +361,9 @@ const CASE={
     bucatoBasePersone:2,
     personale:['Clara','Serena','Isa','Julka','Marlen','Personale 4','Personale 5'],
     turniTypes:['T1','T2','T3','T4'],
-    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'}],
+    extras:[{id:'scale',nome:'Scale',prezzo:20,icon:'🧹'},{id:'culla',nome:'Culla',prezzo:5,icon:'🛏'},{id:'sputnik',nome:'Sputnik',prezzo:35,icon:'🌙'},{id:'bagni4',nome:'4 bagni completi',prezzo:20,icon:'🚿'},{id:'bagniveloce',nome:'Passata veloce 4 bagni',prezzo:10,icon:'🧻'},{id:'salacolazioni',nome:'Sala colazioni',prezzo:8,icon:'☕'},{id:'pavcucina',nome:'Pavimento cucina',prezzo:8,icon:'🧽'}],
     hasVetri:true,vetriPrezzo:20,tariffaT1Base:true,
-    defaultPulizia:20,defaultBucato:10
+    defaultPulizia:25,defaultBucato:10
   },
   cvb:{
     nome:'Casa Vino e Birra',hotelExtId:'160',
@@ -693,6 +693,35 @@ function getIndisp(cam,key){
   return arr.find(b=>b.cam===cam&&b.ci<=key&&b.co>key);
 }
 
+// Ospiti della prenotazione che fa check-out in questa camera in questo giorno
+// (usa il casaId correntemente selezionato — per Compensi/toggleCam va bene,
+// per Riepilogo si usa invece il valore salvato in stato_camere.ospiti_checkout)
+function ospitiCheckoutCamera(cam,key){
+  const arr=prenCache[casaId]||[];
+  const p=arr.find(x=>x.cam===cam&&x.co===key);
+  return p&&p.osp?p.osp:null;
+}
+
+// Importo pulizia per una camera. Per Piumogna: Fr.25 base (1-2 ospiti) +
+// Fr.1.50 "togliere lenzuola" + Fr.1.50 "mettere lenzuola" per ogni ospite oltre i 2
+// (entrambi calcolati sugli ospiti appena partiti). Per le altre case: tariffa fissa per camera.
+function calcPuliziaImporto(cid,cam,ospiti){
+  const c=CASE[cid];if(!c)return 0;
+  if(cid==='piumogna'){
+    const osp=ospiti||2;
+    const extraLetti=Math.max(0,osp-2);
+    return 25+extraLetti*3; // 25 base + (1.50 togliere + 1.50 mettere) per letto extra
+  }
+  return c.tariffePulizia&&c.tariffePulizia[cam]!=null?c.tariffePulizia[cam]:(c.defaultPulizia||0);
+}
+
+// Importo bucato per una camera (nessuna variazione per n° ospiti, confermato)
+function calcBucatoImporto(cid,cam){
+  const c=CASE[cid];if(!c)return 0;
+  if(c.bucatoPerPersona)return c.bucatoPerPersona*2;
+  return c.tariffeBucato&&c.tariffeBucato[cam]!=null?c.tariffeBucato[cam]:(c.defaultBucato||0);
+}
+
 async function loadTurni(){
   const Y=vMonth.getFullYear(),M=vMonth.getMonth();
   const from=fmtD(new Date(Y,M,1)),to=fmtD(new Date(Y,M+1,0));
@@ -795,14 +824,14 @@ async function deleteTurnoDB(key,persona){
   }
 }
 
-async function saveStatoCameraDB(key,cam,pronta,persona){
-  const {error}=await sb.from('stato_camere').upsert({
-    casa_id:casaId,data:key,camera:cam,pronta,persona,updated_at:new Date().toISOString()
-  },{onConflict:'casa_id,data,camera'});
+async function saveStatoCameraDB(key,cam,pronta,persona,ospitiCheckout){
+  const payload={casa_id:casaId,data:key,camera:cam,pronta,persona,updated_at:new Date().toISOString()};
+  if(ospitiCheckout!==undefined)payload.ospiti_checkout=ospitiCheckout;
+  const {error}=await sb.from('stato_camere').upsert(payload,{onConflict:'casa_id,data,camera'});
   if(error)console.error('Errore stato camera:',error);
   else{
     const curr=statoCamereCache[casaId+'_'+key+'_'+cam]||{};
-    statoCamereCache[casaId+'_'+key+'_'+cam]={...curr,pronta,persona};
+    statoCamereCache[casaId+'_'+key+'_'+cam]={...curr,pronta,persona,...(ospitiCheckout!==undefined?{ospiti_checkout:ospitiCheckout}:{})};
   }
 }
 
@@ -1175,7 +1204,8 @@ async function toggleCam(n,persona,key){
   const stato=getStatoCamera(key,n);
   if(stato.pronta&&stato.persona&&stato.persona!==persona){toast('Pulizia già segnata da '+stato.persona);return;}
   const ready=!stato.pronta;
-  await saveStatoCameraDB(key,n,ready,persona);
+  const ospitiCheckout=ready?ospitiCheckoutCamera(n,key):undefined;
+  await saveStatoCameraDB(key,n,ready,persona,ospitiCheckout);
   renderMio();
   toast(ready?`${n} — pulizia completata!`:`${n} — pulizia annullata`);
 }
@@ -1210,15 +1240,29 @@ function chMMio(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);r
 function renderComp(){
   if(!isAdmin())return;
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
-  const key=fmtD(vDay),ieri=fmtD(addD(vDay,-1));
+  const key=fmtD(vDay);
   const arr=prenCache[casaId]||[];
-  const camIeri=arr.filter(p=>p.ci<=ieri&&p.co>ieri).length;
-  const tarT1=camIeri<=3?50:camIeri<=5?60:70;
   const tg=turniDelGiorno(key);let rows=[],tot=0;
   Object.entries(tg).forEach(([p,tp])=>{
-    turnoTypes(tp.t).forEach(tt=>{
-      if(tt==='T1'||tt==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt ${tt==='T1'?'tt1':'tt4'}">${tt}</span></td><td>${camIeri} cam→Fr.${tarT1}</td><td class="amt">Fr.${tarT1}</td></tr>`);tot+=tarT1;}
-      else if(tt==='T2'){const nc=tp.c?tp.c.length:0,comp=nc*30;rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${nc}×Fr.30</td><td class="amt">Fr.${comp}</td></tr>`);tot+=comp;}
+    const tipiTurno=turnoTypes(tp.t);
+    tipiTurno.forEach(tt=>{
+      if(tt==='T1'){
+        const hasT2anche=tipiTurno.includes('T2');
+        const t1Rate=hasT2anche?80:100;
+        rows.push(`<tr><td>${p}</td><td><span class="tt tt1">T1</span></td><td>${hasT2anche?'Colazione (+bucato)':'Colazione'}</td><td class="amt">Fr.${t1Rate}</td></tr>`);
+        tot+=t1Rate;
+      }
+      else if(tt==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt tt4">T4</span></td><td>Forfait</td><td class="amt">Fr.50</td></tr>`);tot+=50;}
+      else if(tt==='T2'){
+        const camere=tp.c||[];
+        let comp=0;
+        camere.forEach(cam=>{
+          const osp=ospitiCheckoutCamera(cam,key);
+          comp+=calcPuliziaImporto(casaId,cam,osp)+calcBucatoImporto(casaId,cam);
+        });
+        rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${camere.length} cam. (pulizia+bucato)</td><td class="amt">Fr.${comp}</td></tr>`);
+        tot+=comp;
+      }
       else if(tt==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena</td><td class="amt">—</td></tr>`);}
     });
     const ex=extraCache[casaId+'_'+key+'_'+p];
@@ -1318,7 +1362,7 @@ async function renderRiep(){
     const c=CASE[s.casa_id];if(!c)return;
     if(s.pronta&&s.persona){
       initP(s.persona);initC(s.persona,s.casa_id);initG(s.persona,s.casa_id,s.data);
-      const tarP=c.tariffePulizia&&c.tariffePulizia[s.camera]!=null?c.tariffePulizia[s.camera]:(c.defaultPulizia||0);
+      const tarP=calcPuliziaImporto(s.casa_id,s.camera,s.ospiti_checkout);
       const g=perPersona[s.persona].case[s.casa_id].giorni[s.data];
       const entry=g.camere.find(x=>x.cam===s.camera);
       if(entry)entry.pulizia=tarP;else g.camere.push({cam:s.camera,pulizia:tarP,bucato:0});
@@ -1327,8 +1371,7 @@ async function renderRiep(){
     if(s.bucato_fatto&&s.bucato_persona){
       const p=s.bucato_persona;
       initP(p);initC(p,s.casa_id);initG(p,s.casa_id,s.data);
-      let tarB=c.tariffeBucato&&c.tariffeBucato[s.camera]!=null?c.tariffeBucato[s.camera]:(c.defaultBucato||0);
-      if(c.bucatoPerPersona)tarB=c.bucatoPerPersona*2;
+      const tarB=calcBucatoImporto(s.casa_id,s.camera);
       const g=perPersona[p].case[s.casa_id].giorni[s.data];
       const entry=g.camere.find(x=>x.cam===s.camera);
       if(entry)entry.bucato=tarB;else g.camere.push({cam:s.camera,pulizia:0,bucato:tarB});
@@ -1337,9 +1380,18 @@ async function renderRiep(){
   });
 
   tuttiTurni.forEach(t=>{
-    if((t.turno==='T1'||t.turno==='T4')&&t.completato){
+    if(!t.completato)return;
+    const tipi=turnoTypes(t.turno);
+    if(tipi.includes('T1')){
       initP(t.persona);initC(t.persona,t.casa_id);initG(t.persona,t.casa_id,t.data);
-      perPersona[t.persona].case[t.casa_id].giorni[t.data].extra.push({nome:t.turno==='T1'?'Colazione T1':'Brunch T4',importo:50});
+      const hasT2anche=tipi.includes('T2');
+      const importoT1=hasT2anche?80:100;
+      perPersona[t.persona].case[t.casa_id].giorni[t.data].extra.push({nome:'Colazione T1'+(hasT2anche?' (+bucato)':''),importo:importoT1});
+      perPersona[t.persona].totT1T4+=importoT1;
+    }
+    if(tipi.includes('T4')){
+      initP(t.persona);initC(t.persona,t.casa_id);initG(t.persona,t.casa_id,t.data);
+      perPersona[t.persona].case[t.casa_id].giorni[t.data].extra.push({nome:'Brunch T4',importo:50});
       perPersona[t.persona].totT1T4+=50;
     }
   });
