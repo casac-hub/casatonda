@@ -84,6 +84,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bb{position:absolute;top:5px;bottom:5px;left:0;right:0;display:flex;align-items:center;overflow:hidden;}
 .bb.ci{left:50%;border-radius:5px 0 0 5px;}.bb.co{right:calc(100% - 50%);border-radius:0 5px 5px 0;}.bb.solo{left:20%;right:20%;border-radius:5px;}
 .b-bk{background:var(--bk);color:white;}.b-di{background:var(--di);color:white;}.b-ab{background:var(--ab);color:white;}.b-al{background:var(--al);color:white;}
+.b-ind{background:repeating-linear-gradient(45deg,#dcdcdc,#dcdcdc 5px,#c3c3c3 5px,#c3c3c3 10px);color:#444;}
 .bl{font-size:9px;font-weight:500;white-space:nowrap;padding:0 3px;overflow:hidden;text-overflow:ellipsis;}
 .fc{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);}
 .fc:hover::after{content:'+';}
@@ -597,18 +598,28 @@ async function loadIndispFromCybHotel(){
     if(!indispCache[casaId])indispCache[casaId]=[];
     let trovati=0;
     d.data.forEach(b=>{
-      const roomNum=b.room&&b.room.number?b.room.number:'';
-      const cam=mapRoomToCam(roomNum);
-      if(!cam||!b.from||!b.to)return;
+      if(!b.from||!b.to)return;
       // Le date arrivano in UTC (es. 22:00 del giorno prima = mezzanotte locale):
       // new Date le converte automaticamente nel fuso locale
       const ci=fmtD(new Date(b.from));
       const co=fmtD(new Date(b.to));
-      const id='ind_'+casaId+'_'+cam+'_'+ci+'_'+co;
-      if(!indispCache[casaId].find(x=>x.id===id)){
-        indispCache[casaId].push({id,cam,ci,co,reason:b.reason||''});
-        trovati++;
+      const roomNum=b.room&&b.room.number?b.room.number:'';
+      let cams=[];
+      if(!b.room){
+        // Blocco senza camera specifica: vale per tutta la casa
+        cams=casa().camere.map(c=>c.n);
+      } else {
+        const cam=mapRoomToCam(roomNum);
+        if(cam)cams=[cam];
+        else{console.log('Indisponibilità NON mappata (camera sconosciuta):',JSON.stringify({room:roomNum,from:ci,to:co,reason:b.reason||''}));return;}
       }
+      cams.forEach(cam=>{
+        const id='ind_'+casaId+'_'+cam+'_'+ci+'_'+co;
+        if(!indispCache[casaId].find(x=>x.id===id)){
+          indispCache[casaId].push({id,cam,ci,co,reason:b.reason||''});
+          trovati++;
+        }
+      });
     });
     if(trovati>0)console.log('eroomAPI: '+trovati+' blocchi indisponibilità per '+casa().nome);
   }catch(e){console.log('Indisponibilità non disponibili:',e.message);}
@@ -847,12 +858,18 @@ function renderPren(){
   casa().camere.forEach(cam=>{
     th+=`<tr><td class="tdc"><div class="cn">${cam.n}</div><div class="cs">${cam.nm}</div></td>`;
     for(let d=1;d<=days;d++){const dt=new Date(Y,M,d),k=fmtD(dt),it=k===TK,p=getPren(cam.n,k);let ct='';
-      // Prenotazione in partenza oggi (check-out): mezza casella a sinistra, come CybHotel
+      // Prenotazione o blocco in partenza oggi (check-out): mezza casella a sinistra, come CybHotel
       const pOut=arr.find(x=>x.cam===cam.n&&x.co===k);
+      const indArr=indispCache[casaId]||[];
+      const indOut=indArr.find(b=>b.cam===cam.n&&b.co===k);
       let outHtml='';
       if(pOut){
         const onclickO=isAdmin()?`openDet('${pOut.id}',event)`:`openDetStaff('${pOut.id}',event)`;
         outHtml=`<div class="bb co b-${CL[pOut.can]||'al'}" onclick="${onclickO}"><span class="bl"></span></div>`;
+      }
+      if(indOut){
+        const motivoO=(indOut.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,'');
+        outHtml+=`<div class="bb co b-ind" title="${motivoO}" onclick="toast('🚫 ${motivoO}');event.stopPropagation();"><span class="bl"></span></div>`;
       }
       if(p){
         const isCI=p.ci===k;
@@ -871,7 +888,8 @@ function renderPren(){
         const ind=getIndisp(cam.n,k);
         if(ind){
           const motivo=(ind.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,'');
-          ct=`<div class="ind" title="${motivo}" onclick="toast('🚫 ${motivo}');event.stopPropagation();"></div>`+outHtml;
+          const isCI=ind.ci===k;
+          ct=outHtml+`<div class="bb b-ind${isCI?' ci':''}" title="${motivo}" onclick="toast('🚫 ${motivo}');event.stopPropagation();"><span class="bl">${isCI?motivo:''}</span></div>`;
         } else {
           ct=(isAdmin()?`<div class="fc" onclick="openNew('${cam.n}','${k}',event)"></div>`:`<div class="fc"></div>`)+outHtml;
         }
