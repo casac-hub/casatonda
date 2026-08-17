@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v17.08-C';
+const APP_VERSION='v17.08-E';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -499,11 +499,16 @@ function turniDelGiorno(key){
   Object.entries(turni).forEach(([persona,tp])=>{
     if(turnoTypes(tp.t).includes('T2')){
       // co è il giorno di check-out: la camera si pulisce quel giorno stesso,
-      // dopo la partenza dell'ospite
+      // dopo la partenza dell'ospite (prenotazioni + blocchi con motivo che
+      // inizia per "USCITA", trattati come veri check-out)
       const arr=prenCache[casaId]||[];
+      const indArr=indispCache[casaId]||[];
       const camereCheckout=arr
         .filter(p=>p.co===key)
         .map(p=>p.cam)
+        .concat(
+          indArr.filter(b=>b.co===key&&/^uscita/i.test((b.reason||'').trim())).map(b=>b.cam)
+        )
         .filter((v,i,a)=>a.indexOf(v)===i);
       result[persona]={...tp, c: camereCheckout.length>0 ? camereCheckout : (tp.c||[])};
     } else {
@@ -871,7 +876,7 @@ function renderPren(){
         outHtml=`<div class="bb co b-${CL[pOut.can]||'al'}" onclick="${onclickO}"><span class="bl"></span></div>`;
       }
       if(indOut){
-        const motivoO=(indOut.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,'');
+        const motivoO=isAdmin()?(indOut.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,''):'Non disponibile';
         outHtml+=`<div class="bb co b-ind" title="${motivoO}" onclick="toast('🚫 ${motivoO}');event.stopPropagation();"><span class="bl"></span></div>`;
       }
       if(p){
@@ -890,7 +895,7 @@ function renderPren(){
       } else {
         const ind=getIndisp(cam.n,k);
         if(ind){
-          const motivo=(ind.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,'');
+          const motivo=isAdmin()?(ind.reason||'Bloccata').replace(/'/g,"\\'").replace(/"/g,''):'Non disponibile';
           const isCI=ind.ci===k;
           ct=outHtml+`<div class="bb b-ind${isCI?' ci':''}" title="${motivo}" onclick="toast('🚫 ${motivo}');event.stopPropagation();"><span class="bl">${isCI?motivo:''}</span></div>`;
         } else {
@@ -998,16 +1003,18 @@ function renderMio(){
     if(typesOggi.includes('T2')&&tpOggi.c&&tpOggi.c.length){
       const cards=tpOggi.c.map(n=>{
         const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK);
+        const indB=!pr?(indispCache[casaId]||[]).find(b=>b.cam===n&&b.co===TK):null;
         const stato=getStatoCamera(TK,n);
         const ready=stato.pronta;
         const fattaDaAltri=ready&&stato.persona&&stato.persona!==persona;
         const bucatoFatto=stato.bucato_fatto;
         const bucatoDaAltri=bucatoFatto&&stato.bucato_persona&&stato.bucato_persona!==persona;
         const ospiti=pr&&pr.osp?pr.osp:2;
+        const infoRigaExtra=indB?`<div class="cam-osp" style="color:var(--t3t);">📋 Uscita programmata</div>`:`<div class="cam-osp">👥 ${ospiti} ospiti</div>`;
         return`<div class="cam-status-card${ready?' pronta':''}" id="csc-${n.replace(/\s/g,'_')}">
           <div class="cam-num-big">${n}</div>
           <div class="cam-name-s">${ci?ci.nm:''}</div>
-          <div class="cam-osp">👥 ${ospiti} ospiti</div>
+          ${infoRigaExtra}
           <div class="cam-stato" style="color:${ready?'var(--success)':'var(--text3)'};">
             ${fattaDaAltri?`✓ Pulizia: ${stato.persona}`:ready?'✓ Pulizia completata':'Pulizia in attesa'}
           </div>
@@ -1088,11 +1095,14 @@ function openGiornoCamere(key,persona){
   const cards=tp.c.map(n=>{
     const ci=casa().camere.find(c=>c.n===n);
     const pr=prenCache[casaId]&&prenCache[casaId].find(p=>p.cam===n&&p.co===key);
+    const indB=!pr?(indispCache[casaId]||[]).find(b=>b.cam===n&&b.co===key):null;
     const ospiti=pr&&pr.osp?pr.osp:2;
+    const rigaExtra=indB?`<div class="cam-osp" style="color:var(--t3t);">📋 Uscita programmata</div>`
+      :(ospiti?`<div class="cam-osp">👥 ${ospiti} ospiti in arrivo</div>`:'<div class="cam-osp" style="color:var(--text3);">ospiti n.d.</div>');
     return`<div class="cam-status-card" style="opacity:0.85;">
       <div class="cam-num-big">${n}</div>
       <div class="cam-name-s">${ci?ci.nm:''}</div>
-      ${ospiti?`<div class="cam-osp">👥 ${ospiti} ospiti in arrivo</div>`:'<div class="cam-osp" style="color:var(--text3);">ospiti n.d.</div>'}
+      ${rigaExtra}
       <div class="cam-stato" style="color:var(--text3);">Programmata</div>
     </div>`;
   }).join('');
