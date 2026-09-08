@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v08.09-A';
+const APP_VERSION='v08.09-B';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -1244,12 +1244,27 @@ function openGiornoCamere(key,persona){
 // ── Sincronizzazione stato pulizia verso CybHotel ──────────────────────────
 // L'API update_rooms_status vuole il nome camera nel formato esatto del gestionale
 // e accetta solo due valori: 4 = pulita, 0 = da pulire.
-// Attiva solo per le case elencate qui (per ora Piumogna, verificata sul campo).
+// Nomi presi da get_rooms di ogni casa (verificati uno a uno).
 const CYB_ROOM_NAMES={
   piumogna:{
     '101':'101 LA CELESTE, 1P','102':'102 LA ROSSA,1P','201':'201 LA GIALLA, 2P',
     '202':'202 LA DECORATA, 2P','301':'301 LA VERDE - 3P','302':'302 LA BIANCA, 3P',
     '401':'401 MANSARDA PIZZO PETTINE, 4P','402':'402 MANSARDA PIZZO FORNO, 4P'
+  },
+  cvb:{
+    'Piazzetta':'STUDIO PIAZZETTA, PT','Ticinella':'STUDIO TICINELLA, 1P',
+    'Tiglio':'STUDIO IL TIGLIO, 1P','Nala':'OPENSPACE LA NALA, 2P',
+    'Loft':'LOFT AL POZZON, 3P','Cascata1':'CASA ALLA CASCATA 1, 1P',
+    'Cascata2':'CASA ALLA CASCATA 2, 2P','Cascata0':'CASA CASCASTA 0, PT'
+  },
+  liberty:{
+    'DolceVita':'1','VoceLuna':'2','Mansarda':'3'
+  },
+  rustico:{
+    'R1':'1'
+  },
+  rurale:{
+    'CR1':'1'
   }
 };
 const CYB_STATUS_PULITA=4, CYB_STATUS_DA_PULIRE=0;
