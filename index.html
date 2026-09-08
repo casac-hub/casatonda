@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v17.08-J';
+const APP_VERSION='v17.08-L';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -752,7 +752,8 @@ async function loadStatoCamere(){
         pronta:s.pronta,persona:s.persona||null,
         bucato_fatto:s.bucato_fatto||false,
         bucato_persona:s.bucato_persona||null,
-        bucato_data:s.bucato_data||null
+        bucato_data:s.bucato_data||null,
+        ospiti_checkout:s.ospiti_checkout||null
       };
     });
   }
@@ -766,10 +767,12 @@ async function loadStatoCamereGiorno(key){
         pronta:s.pronta,persona:s.persona||null,
         bucato_fatto:s.bucato_fatto||false,
         bucato_persona:s.bucato_persona||null,
-        bucato_data:s.bucato_data||null
+        bucato_data:s.bucato_data||null,
+        ospiti_checkout:s.ospiti_checkout||null
       };
     });
   }
+
 }
 
 async function loadExtra(){
@@ -927,7 +930,14 @@ async function chM(d){
   loading(false);
   renderPren();renderTurni();
 }
-function chD(d){vDay=addD(vDay,d);document.getElementById('dlbl-c').textContent=fmtLbl(vDay);renderComp();}
+async function chD(d){
+  vDay=addD(vDay,d);
+  document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
+  loading(true);
+  await loadStatoCamereGiorno(fmtD(vDay));
+  loading(false);
+  renderComp();
+}
 function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 
 function renderPren(){
@@ -1269,43 +1279,73 @@ async function toggleBucato(n,persona,key){
 
 function chMMio(d){vMonth=new Date(vMonth.getFullYear(),vMonth.getMonth()+d,1);renderMio();}
 
+// Camere realmente segnate pulite/bucato in un giorno, raggruppate per persona
+// (usa i dati reali di stato_camere — mai un elenco stimato/duplicato)
+function camereSegnateGiorno(key){
+  const prefix=casaId+'_'+key+'_';
+  const pulizia={},bucato={};
+  Object.keys(statoCamereCache).forEach(k=>{
+    if(!k.startsWith(prefix))return;
+    const cam=k.slice(prefix.length);
+    const s=statoCamereCache[k];
+    if(s.pronta&&s.persona)(pulizia[s.persona]=pulizia[s.persona]||[]).push(cam);
+    if(s.bucato_fatto&&s.bucato_persona)(bucato[s.bucato_persona]=bucato[s.bucato_persona]||[]).push(cam);
+  });
+  return {pulizia,bucato};
+}
+
 function renderComp(){
   if(!isAdmin())return;
   document.getElementById('dlbl-c').textContent=fmtLbl(vDay);
   const key=fmtD(vDay);
   const arr=prenCache[casaId]||[];
   const tg=turniDelGiorno(key);let rows=[],tot=0;
+  const segnate=camereSegnateGiorno(key);
   Object.entries(tg).forEach(([p,tp])=>{
     const tipiTurno=turnoTypes(tp.t);
+    const completato=turniCache[casaId+'_'+key+'_'+p+'_completato']||false;
     tipiTurno.forEach(tt=>{
       if(tt==='T1'){
         const hasT2anche=tipiTurno.includes('T2');
-        const t1Rate=hasT2anche?80:100;
-        rows.push(`<tr><td>${p}</td><td><span class="tt tt1">T1</span></td><td>${hasT2anche?'Colazione (+bucato)':'Colazione'}</td><td class="amt">Fr.${t1Rate}</td></tr>`);
-        tot+=t1Rate;
+        if(completato){
+          const t1Rate=hasT2anche?80:100;
+          rows.push(`<tr><td>${p}</td><td><span class="tt tt1">T1</span></td><td>${hasT2anche?'Colazione (+bucato)':'Colazione'}</td><td class="amt">Fr.${t1Rate}</td></tr>`);
+          tot+=t1Rate;
+        } else {
+          rows.push(`<tr><td>${p}</td><td><span class="tt tt1">T1</span></td><td style="color:var(--text3);">non ancora segnata</td><td class="amt" style="color:var(--text3);">—</td></tr>`);
+        }
       }
-      else if(tt==='T4'){rows.push(`<tr><td>${p}</td><td><span class="tt tt4">T4</span></td><td>Forfait</td><td class="amt">Fr.50</td></tr>`);tot+=50;}
-      else if(tt==='T2'){
-        const camere=tp.c||[];
-        let comp=0;
-        camere.forEach(cam=>{
-          const osp=ospitiCheckoutCamera(cam,key);
-          comp+=calcPuliziaImporto(casaId,cam,osp)+calcBucatoImporto(casaId,cam);
-        });
-        rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td>${camere.length} cam. (pulizia+bucato)</td><td class="amt">Fr.${comp}</td></tr>`);
-        tot+=comp;
+      else if(tt==='T4'){
+        if(completato){rows.push(`<tr><td>${p}</td><td><span class="tt tt4">T4</span></td><td>Forfait</td><td class="amt">Fr.50</td></tr>`);tot+=50;}
+        else rows.push(`<tr><td>${p}</td><td><span class="tt tt4">T4</span></td><td style="color:var(--text3);">non ancora segnato</td><td class="amt" style="color:var(--text3);">—</td></tr>`);
       }
       else if(tt==='T3'){rows.push(`<tr><td>${p}</td><td><span class="tt tt3">T3</span></td><td>Cena</td><td class="amt">—</td></tr>`);}
     });
+    if(tipiTurno.includes('T2')){
+      const camerePulite=segnate.pulizia[p]||[];
+      const camereBucato=segnate.bucato[p]||[];
+      let comp=0;
+      camerePulite.forEach(cam=>{
+        const s=statoCamereCache[casaId+'_'+key+'_'+cam];
+        comp+=calcPuliziaImporto(casaId,cam,s&&s.ospiti_checkout);
+      });
+      camereBucato.forEach(cam=>{comp+=calcBucatoImporto(casaId,cam);});
+      const parti=[];
+      if(camerePulite.length)parti.push(camerePulite.length+' pulizia');
+      if(camereBucato.length)parti.push(camereBucato.length+' bucato');
+      const dettaglio=parti.length?parti.join(' + '):'ancora nessuna';
+      rows.push(`<tr><td>${p}</td><td><span class="tt tt2">T2</span></td><td${parti.length?'':' style="color:var(--text3);"'}>${dettaglio}</td><td class="amt"${parti.length?'':' style="color:var(--text3);"'}>${parti.length?'Fr.'+comp:'—'}</td></tr>`);
+      tot+=comp;
+    }
     const ex=extraCache[casaId+'_'+key+'_'+p];
     if(ex){const et=calcExTot(ex,tp.c&&tp.c.length===1?tp.c[0]:null);if(et>0){rows.push(`<tr><td>${p}</td><td><span style="background:var(--t3);color:var(--t3t);border-radius:3px;padding:2px 5px;font-size:9px;">EXTRA</span></td><td>vedi dettaglio</td><td class="amt">Fr.${et}</td></tr>`);tot+=et;}
     if(ex.ore>0||ex.min>0)rows.push(`<tr><td>${p}</td><td><span style="background:#f0f0f0;border-radius:3px;padding:2px 5px;font-size:9px;">ORE+</span></td><td>${ex.ore}h ${ex.min>0?ex.min+'m':''}</td><td class="amt">a fine mese</td></tr>`);}
   });
   document.getElementById('comp-body').innerHTML=rows.length?rows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--text2);padding:20px;">Nessun turno</td></tr>';
   document.getElementById('comp-tot').textContent='Fr.'+tot;
-  const prenOggi=arr.filter(p=>p.ci<=key&&p.co>key);
-  const ent=prenOggi.reduce((s,p)=>s+(p.tar||0),0),marg=ent-tot;
-  document.getElementById('stats-comp').innerHTML=`<div class="sbox"><div class="sv">${prenOggi.length}</div><div class="sl">Camere occ.</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent}</div><div class="sl">Entrata</div></div><div class="sbox"><div class="sv" style="color:${marg>=0?'var(--success)':'var(--danger)'}">Fr.${marg}</div><div class="sl">Margine</div></div>`;
+  const prenCheckout=arr.filter(p=>p.co===key);
+  const ent=prenCheckout.reduce((s,p)=>s+(p.tar||0),0),marg=ent-tot;
+  document.getElementById('stats-comp').innerHTML=`<div class="sbox"><div class="sv">${prenCheckout.length}</div><div class="sl">Camere checkout</div></div><div class="sbox"><div class="sv" style="color:var(--success)">Fr.${ent}</div><div class="sl">Entrata</div></div><div class="sbox"><div class="sv" style="color:${marg>=0?'var(--success)':'var(--danger)'}">Fr.${marg}</div><div class="sl">Margine</div></div>`;
 }
 
 async function importaTurni(input){
