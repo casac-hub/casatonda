@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v17.08-L';
+const APP_VERSION='v08.09-A';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -1241,6 +1241,39 @@ function openGiornoCamere(key,persona){
   </div></div>`;
 }
 
+// ── Sincronizzazione stato pulizia verso CybHotel ──────────────────────────
+// L'API update_rooms_status vuole il nome camera nel formato esatto del gestionale
+// e accetta solo due valori: 4 = pulita, 0 = da pulire.
+// Attiva solo per le case elencate qui (per ora Piumogna, verificata sul campo).
+const CYB_ROOM_NAMES={
+  piumogna:{
+    '101':'101 LA CELESTE, 1P','102':'102 LA ROSSA,1P','201':'201 LA GIALLA, 2P',
+    '202':'202 LA DECORATA, 2P','301':'301 LA VERDE - 3P','302':'302 LA BIANCA, 3P',
+    '401':'401 MANSARDA PIZZO PETTINE, 4P','402':'402 MANSARDA PIZZO FORNO, 4P'
+  }
+};
+const CYB_STATUS_PULITA=4, CYB_STATUS_DA_PULIRE=0;
+
+// Aggiorna lo stato della camera su CybHotel. Non blocca mai l'app:
+// se fallisce lo segnala in Console e la spunta resta comunque salvata da noi.
+async function syncStatoCamereCyb(cam,pulita){
+  try{
+    const mappa=CYB_ROOM_NAMES[casaId];
+    if(!mappa)return;                    // casa non ancora abilitata
+    const nomeCyb=mappa[cam];
+    if(!nomeCyb){console.log('Sync CybHotel: nome camera non mappato per',cam);return;}
+    const hotelId=casa().hotelExtId;
+    const r=await fetch(`/api/eroom?action=update_rooms_status&hotel_id=${hotelId}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({rooms:[{room_number:nomeCyb,room_status:pulita?CYB_STATUS_PULITA:CYB_STATUS_DA_PULIRE}]})
+    });
+    const d=await r.json();
+    const esito=d&&d.rooms_update&&d.rooms_update[0]?d.rooms_update[0].room_status_update:'?';
+    if(esito==='success')console.log('Sync CybHotel:',cam,pulita?'→ pulita':'→ da pulire','✓');
+    else console.log('Sync CybHotel: NON riuscito per',cam,'- risposta:',JSON.stringify(d));
+  }catch(e){console.log('Sync CybHotel non disponibile:',e.message);}
+}
+
 async function toggleCam(n,persona,key){
   key=key||TK;
   const stato=getStatoCamera(key,n);
@@ -1248,6 +1281,8 @@ async function toggleCam(n,persona,key){
   const ready=!stato.pronta;
   const ospitiCheckout=ready?ospitiCheckoutCamera(n,key):undefined;
   await saveStatoCameraDB(key,n,ready,persona,ospitiCheckout);
+  // Allinea il gestionale CybHotel (solo per oggi: lo stato camera è il presente)
+  if(key===TK)syncStatoCamereCyb(n,ready);
   renderMio();
   toast(ready?`${n} — pulizia completata!`:`${n} — pulizia annullata`);
 }
