@@ -282,7 +282,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v08.09-B';
+const APP_VERSION='v09.09-A';
 console.log('Casatonda app '+APP_VERSION);
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
@@ -1128,7 +1128,10 @@ function renderMio(){
     let camSec='';
     if(typesOggi.includes('T2')&&tpOggi.c&&tpOggi.c.length){
       const cards=tpOggi.c.map(n=>{
-        const ci=casa().camere.find(c=>c.n===n),pr=getPren(n,TK);
+        const ci=casa().camere.find(c=>c.n===n);
+        // Gli ospiti da mostrare (e da pagare per i letti extra) sono quelli
+        // della prenotazione che ESCE oggi, non di chi arriva
+        const pr=(prenCache[casaId]||[]).find(p=>p.cam===n&&p.co===TK);
         const indB=!pr?(indispCache[casaId]||[]).find(b=>b.cam===n&&b.co===TK):null;
         const stato=getStatoCamera(TK,n);
         const ready=stato.pronta;
