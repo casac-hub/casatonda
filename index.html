@@ -219,6 +219,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 
+<div id="verbadge" style="position:fixed;left:6px;bottom:6px;z-index:9999;pointer-events:none;
+  background:rgba(0,0,0,0.55);color:#fff;font-size:10px;letter-spacing:.3px;
+  padding:3px 7px;border-radius:10px;font-family:system-ui,sans-serif;">versione</div>
+
 <div id="login-root" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg);"></div>
 
 <div id="app-root" style="display:none;">
@@ -282,8 +286,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v09.09-A';
+const APP_VERSION='v10.09-A';
 console.log('Casatonda app '+APP_VERSION);
+document.getElementById('verbadge').textContent=APP_VERSION;
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sfL9XyJzhnYnuHC8_iOjgg_7ux5znde';
 const { createClient } = supabase;
