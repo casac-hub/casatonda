@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Casatonda</title>
+<style>
+html{color-scheme:only light}
+:root{
+  --pietra:#E3E4DF;      /* gneiss chiaro, fondo pagina */
+  --carta:#FBFBF9;       /* fondo dei blocchi */
+  --inchiostro:#1E211D;  /* testo */
+  --grigio:#6C7069;      /* testo secondario */
+  --muschio:#3F5545;     /* azione, castagno/bosco */
+  --ocra:#9A7318;        /* attenzione, passaggio mancante */
+  --linea:#CFD1CA;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--pietra);color:var(--inchiostro);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3{font-family:Iowan Old Style,Palatino,Georgia,"Times New Roman",serif;font-weight:600;margin:0}
+.wrap{max-width:34rem;margin:0 auto;padding:0 1.1rem 6rem}
+
+/* ---------- barra lingue ---------- */
+.lingue{display:flex;gap:.15rem;justify-content:flex-end;padding:.9rem 0 .3rem}
+.lingue button{
+  background:none;border:0;padding:.35rem .5rem;cursor:pointer;
+  font:inherit;font-size:.82rem;color:var(--grigio);border-radius:3px;
+}
+.lingue button[aria-current="true"]{color:var(--inchiostro);text-decoration:underline;text-underline-offset:4px}
+.lingue button:focus-visible,a:focus-visible,button:focus-visible{outline:2px solid var(--muschio);outline-offset:2px}
+
+/* ---------- testata ---------- */
+header{padding:.4rem 0 1.4rem}
+.saluto{color:var(--grigio);font-size:.95rem;margin:0 0 .25rem}
+h1{font-size:1.9rem;line-height:1.15;letter-spacing:-.01em}
+.camera{display:block;font-size:1rem;font-weight:400;color:var(--grigio);margin-top:.3rem}
+.date{margin:.5rem 0 0;color:var(--grigio);font-size:.95rem}
+
+/* ---------- percorso a spunte ---------- */
+.stato{background:var(--carta);border-radius:14px;padding:1.25rem 1.2rem;border-top:5px solid var(--linea)}
+.stato.attesa{border-top-color:var(--ocra)}
+.stato.pronto{border-top-color:var(--muschio)}
+.stato > h2{font-size:1rem;font-family:inherit;font-weight:600;color:var(--grigio);margin-bottom:1rem}
+ol.passi{list-style:none;margin:0;padding:0}
+ol.passi li{position:relative;padding:0 0 1.15rem 2.1rem}
+ol.passi li:last-child{padding-bottom:0}
+ol.passi li::before{
+  content:'';position:absolute;left:0;top:.15rem;width:1.15rem;height:1.15rem;
+  border-radius:50%;border:1.5px solid var(--linea);background:var(--carta);
+}
+ol.passi li::after{
+  content:'';position:absolute;left:.55rem;top:1.3rem;bottom:.1rem;width:1.5px;background:var(--linea);
+}
+ol.passi li:last-child::after{display:none}
+ol.passi li.fatto::before{
+  background:var(--muschio);border-color:var(--muschio);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-size:1.15rem 1.15rem;
+}
+ol.passi li.ora::before{border-color:var(--ocra);border-width:3px}
+ol.passi .eti{font-weight:600;font-size:.95rem}
+ol.passi li.futuro .eti{color:var(--grigio);font-weight:400}
+ol.passi .quando{display:block;font-size:.82rem;color:var(--grigio);margin-top:.05rem}
+.stato h3{font-family:inherit;font-size:1.05rem;margin:.2rem 0 .35rem}
+.stato p{margin:0;color:var(--grigio);font-size:.95rem}
+.azione{
+  display:block;margin-top:.9rem;padding:1rem;border-radius:10px;
+  background:var(--muschio);color:#fff;text-align:center;text-decoration:none;
+  font-size:1.05rem;font-weight:600;
+}
+.azione:active{background:#33452F}
+.sotto{margin-top:.7rem;font-size:.86rem;color:var(--grigio)}
+.dafare{margin-top:1.15rem;padding-top:1.1rem;border-top:1px solid var(--linea)}
+
+/* ---------- l'essenziale ---------- */
+.essenziale{background:var(--carta);border-radius:14px;padding:.3rem 1.2rem;margin-top:1rem}
+.essenziale .voce:last-child{border-bottom:0}
+
+/* ---------- sezioni ---------- */
+section{margin-top:2.2rem}
+section > h2{
+  font-size:.98rem;font-family:inherit;font-weight:600;color:var(--grigio);
+  padding-bottom:.45rem;border-bottom:1px solid var(--linea);margin-bottom:.2rem;
+}
+.voce{padding:.95rem 0;border-bottom:1px solid var(--linea)}
+.voce:last-child{border-bottom:0}
+.voce h3{font-family:inherit;font-size:.94rem;font-weight:600;margin-bottom:.2rem}
+.voce p{margin:0;color:var(--grigio)}
+.voce a{color:var(--muschio)}
+.mancante{color:#B23A3A;font-style:italic}
+.wifi{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.05rem;color:var(--inchiostro)}
+
+/* ---------- contatto fisso in basso ---------- */
+.barra{
+  position:fixed;left:0;right:0;bottom:0;background:var(--carta);
+  border-top:1px solid var(--linea);padding:.7rem 1.1rem;
+  padding-bottom:calc(.7rem + env(safe-area-inset-bottom));
+}
+.barra .wrap2{max-width:34rem;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.barra span{font-size:.85rem;color:var(--grigio)}
+.barra a{
+  color:var(--muschio);text-decoration:none;font-weight:600;font-size:.95rem;
+  border:1px solid var(--muschio);border-radius:8px;padding:.5rem .9rem;white-space:nowrap;
+}
+footer{margin-top:2.5rem;font-size:.8rem;color:var(--grigio);text-align:center}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="lingue" id="lingue"></nav>
+  <header>
+    <p class="saluto" id="saluto"></p>
+    <h1 id="titolo"></h1>
+    <p class="date" id="date"></p>
+  </header>
+
+  <div class="stato" id="stato"></div>
+  <div class="essenziale" id="essenziale"></div>
+  <main id="sezioni"></main>
+
+  <footer>Casatonda Sagl</footer>
+</div>
+
+<div class="barra">
+  <div class="wrap2">
+    <span id="aiutoTesto"></span>
+    <a id="aiutoLink" href="#"></a>
+  </div>
+</div>
+
+<script>
+const PAGE_VERSION='ospite-v10.09-D';
+console.log('Casatonda '+PAGE_VERSION);
+
+/* =========================================================================
+   1. TESTI DELL'INTERFACCIA
+   Le frasi fisse della pagina, uguali per tutte le case.
+   Da rivedere e correggere: sono bozze.
+   ========================================================================= */
+const T={
+  it:{
+    camera:'camera', manca_persone:'Mancano i dati di {n} ospiti su {tot}.',
+    ann_tit:'Prenotazione annullata', ann_txt:'Questa prenotazione risulta annullata. Se non è corretto ci scriva.',
+    soggiorno:'Il suo soggiorno',
+    p1:'Prenotazione confermata', p2:'Dati degli ospiti', p3:'Check-in confermato', p4:'Codice della porta inviato',
+    p4_nota:'arriva per email, in automatico',
+    essenziale:'L\'essenziale', rete:'Rete', password:'Password', telefono:'Telefono',
+    alle:'alle',
+    saluto:'Buongiorno',
+    dal:'Dal', al:'al', notti:'notti', notte:'notte',
+    // stato 1: i dati non sono stati compilati
+    s1_tit:'Manca un passaggio',
+    s1_txt:'Per ricevere il codice che apre la porta dobbiamo registrare i dati di tutti gli ospiti. È una notifica obbligatoria alla Polizia cantonale e richiede due minuti.',
+    s1_btn:'Completa i dati',
+    s1_sotto:'Appena i dati sono completi il codice le arriva per email.',
+    // stato 2: dati salvati ma check-in non confermato
+    s2_tit:'Ci siamo quasi',
+    s2_txt:'I suoi dati sono salvati ma la procedura non è ancora conclusa: manca la conferma finale. Senza quella il codice della porta non parte.',
+    s2_btn:'Conferma il check-in',
+    s2_sotto:'Riapra la pagina dei dati e prema il pulsante di check-in in fondo.',
+    // stato 3: tutto fatto
+    s3_tit:'Tutto pronto',
+    s3_txt:'Il codice che apre la porta le è stato inviato per email. Cerchi il messaggio di Casatonda, il codice è nell\'allegato.',
+    s3_sotto:'Non trova l\'email? Ci scriva, gliela rimandiamo subito.',
+    sez_arrivare:'Arrivare',
+    sez_entrare:'Entrare in casa',
+    sez_casa:'In casa',
+    sez_dintorni:'Qui intorno',
+    sez_partenza:'Partenza',
+    indirizzo:'Indirizzo', mappa:'Apri nelle mappe',
+    auto:'In auto e parcheggio', treno:'In treno e bus',
+    orari:'Orari', wifi:'Wifi', colazione:'Colazione', rifiuti:'Rifiuti',
+    regole:'Buone maniere', mangiare:'Dove mangiare', servizi:'Servizi vicini',
+    fare:'Cosa fare', pioggia:'Se piove', checkout:'Check-out',
+    aiuto:'Domande?', scrivici:'Scriva su WhatsApp',
+    manca:'da completare'
+  },
+  de:{
+    camera:'Zimmer', manca_persone:'Es fehlen die Daten von {n} von {tot} Gästen.',
+    ann_tit:'Buchung storniert', ann_txt:'Diese Buchung ist storniert. Sollte das nicht stimmen, schreiben Sie uns.',
+    soggiorno:'Ihr Aufenthalt',
+    p1:'Buchung bestätigt', p2:'Gästedaten', p3:'Check-in bestätigt', p4:'Türcode verschickt',
+    p4_nota:'kommt automatisch per E-Mail',
+    essenziale:'Das Wichtigste', rete:'Netz', password:'Passwort', telefono:'Telefon',
+    alle:'um',
+    saluto:'Guten Tag',
+    dal:'Vom', al:'bis', notti:'Nächte', notte:'Nacht',
+    s1_tit:'Ein Schritt fehlt noch',
+    s1_txt:'Damit Sie den Türcode erhalten, müssen wir die Daten aller Gäste erfassen. Das ist eine gesetzliche Meldung an die Kantonspolizei und dauert zwei Minuten.',
+    s1_btn:'Daten ausfüllen',
+    s1_sotto:'Sobald die Daten vollständig sind, erhalten Sie den Code per E-Mail.',
+    s2_tit:'Fast geschafft',
+    s2_txt:'Ihre Daten sind gespeichert, aber der Vorgang ist noch nicht abgeschlossen: Die letzte Bestätigung fehlt. Ohne sie wird der Türcode nicht verschickt.',
+    s2_btn:'Check-in bestätigen',
+    s2_sotto:'Öffnen Sie die Datenseite erneut und drücken Sie unten auf Check-in.',
+    s3_tit:'Alles bereit',
+    s3_txt:'Der Türcode wurde Ihnen per E-Mail geschickt. Suchen Sie die Nachricht von Casatonda, der Code ist im Anhang.',
+    s3_sotto:'Keine E-Mail gefunden? Schreiben Sie uns, wir senden sie sofort erneut.',
+    sez_arrivare:'Anreise',
+    sez_entrare:'Ins Haus',
+    sez_casa:'Im Haus',
+    sez_dintorni:'In der Umgebung',
+    sez_partenza:'Abreise',
+    indirizzo:'Adresse', mappa:'In Karten öffnen',
+    auto:'Mit dem Auto und Parkplatz', treno:'Mit Zug und Bus',
+    orari:'Zeiten', wifi:'WLAN', colazione:'Frühstück', rifiuti:'Abfall',
+    regole:'Gutes Miteinander', mangiare:'Essen gehen', servizi:'Geschäfte in der Nähe',
+    fare:'Was unternehmen', pioggia:'Bei Regen', checkout:'Check-out',
+    aiuto:'Fragen?', scrivici:'Auf WhatsApp schreiben',
+    manca:'noch offen'
+  },
+  fr:{
+    camera:'chambre', manca_persone:'Il manque les données de {n} personnes sur {tot}.',
+    ann_tit:'Réservation annulée', ann_txt:'Cette réservation est annulée. Si ce n\'est pas correct, écrivez-nous.',
+    soggiorno:'Votre séjour',
+    p1:'Réservation confirmée', p2:'Données des hôtes', p3:'Arrivée confirmée', p4:'Code de la porte envoyé',
+    p4_nota:'arrive par e-mail, automatiquement',
+    essenziale:'L\'essentiel', rete:'Réseau', password:'Mot de passe', telefono:'Téléphone',
+    alle:'à',
+    saluto:'Bonjour',
+    dal:'Du', al:'au', notti:'nuits', notte:'nuit',
+    s1_tit:'Il manque une étape',
+    s1_txt:'Pour recevoir le code qui ouvre la porte, nous devons enregistrer les données de tous les hôtes. C\'est une annonce obligatoire à la Police cantonale et cela prend deux minutes.',
+    s1_btn:'Remplir les données',
+    s1_sotto:'Dès que les données sont complètes, vous recevez le code par e-mail.',
+    s2_tit:'Presque terminé',
+    s2_txt:'Vos données sont enregistrées mais la procédure n\'est pas encore terminée: la confirmation finale manque. Sans elle, le code de la porte n\'est pas envoyé.',
+    s2_btn:'Confirmer l\'arrivée',
+    s2_sotto:'Rouvrez la page des données et appuyez sur le bouton en bas.',
+    s3_tit:'Tout est prêt',
+    s3_txt:'Le code qui ouvre la porte vous a été envoyé par e-mail. Cherchez le message de Casatonda, le code est en pièce jointe.',
+    s3_sotto:'Vous ne trouvez pas l\'e-mail? Écrivez-nous, nous le renvoyons tout de suite.',
+    sez_arrivare:'Arriver',
+    sez_entrare:'Entrer',
+    sez_casa:'Dans la maison',
+    sez_dintorni:'Aux alentours',
+    sez_partenza:'Départ',
+    indirizzo:'Adresse', mappa:'Ouvrir dans les cartes',
+    auto:'En voiture et parking', treno:'En train et bus',
+    orari:'Horaires', wifi:'Wifi', colazione:'Petit-déjeuner', rifiuti:'Déchets',
+    regole:'Bonnes manières', mangiare:'Où manger', servizi:'Commerces à proximité',
+    fare:'Que faire', pioggia:'S\'il pleut', checkout:'Départ',
+    aiuto:'Des questions?', scrivici:'Écrire sur WhatsApp',
+    manca:'à compléter'
+  },
+  en:{
+    camera:'room', manca_persone:'Details are missing for {n} of {tot} guests.',
+    ann_tit:'Booking cancelled', ann_txt:'This booking is cancelled. If that is not correct, write to us.',
+    soggiorno:'Your stay',
+    p1:'Booking confirmed', p2:'Guest details', p3:'Check-in confirmed', p4:'Door code sent',
+    p4_nota:'arrives by email, automatically',
+    essenziale:'The essentials', rete:'Network', password:'Password', telefono:'Phone',
+    alle:'at',
+    saluto:'Hello',
+    dal:'From', al:'to', notti:'nights', notte:'night',
+    s1_tit:'One step is missing',
+    s1_txt:'To receive the code that opens the door we need to register the details of every guest. This is a mandatory notification to the cantonal police and takes two minutes.',
+    s1_btn:'Fill in the details',
+    s1_sotto:'As soon as the details are complete, the code reaches you by email.',
+    s2_tit:'Almost there',
+    s2_txt:'Your details are saved but the procedure is not finished: the final confirmation is missing. Without it the door code is not sent.',
+    s2_btn:'Confirm check-in',
+    s2_sotto:'Open the details page again and press the check-in button at the bottom.',
+    s3_tit:'You are all set',
+    s3_txt:'The code that opens the door has been sent to you by email. Look for the message from Casatonda, the code is attached.',
+    s3_sotto:'Cannot find the email? Write to us and we will send it again.',
+    sez_arrivare:'Getting here',
+    sez_entrare:'Getting in',
+    sez_casa:'In the house',
+    sez_dintorni:'Around here',
+    sez_partenza:'Leaving',
+    indirizzo:'Address', mappa:'Open in maps',
+    auto:'By car and parking', treno:'By train and bus',
+    orari:'Times', wifi:'Wifi', colazione:'Breakfast', rifiuti:'Waste',
+    regole:'House manners', mangiare:'Where to eat', servizi:'Shops nearby',
+    fare:'What to do', pioggia:'If it rains', checkout:'Check-out',
+    aiuto:'Questions?', scrivici:'Message us on WhatsApp',
+    manca:'to be written'
+  }
+};
+
+/* =========================================================================
+   2. LE CINQUE CASE
+   Qui vanno i contenuti delle schede. Ogni campo può avere le quattro
+   lingue; se una lingua manca la pagina usa l'italiano.
+   I campi con null sono quelli ancora da scrivere: in pagina si vedono
+   in rosso, così è chiaro cosa manca.
+   ========================================================================= */
+const CASE={
+  cvb:{
+    nome:'Casa Vino e Birra',
+    indirizzo:'Via ... , 6703 Osogna',
+    mappa:'https://maps.google.com/?q=',
+    whatsapp:'41000000000',
+    wifi:{rete:'DA CONFERMARE',pw:'DA CONFERMARE'},
+    orari:{ci:'15:00',co:'10:00'},
+    auto:{it:'Testo da inserire: come arrivare in auto e dove parcheggiare.'},
+    treno:{it:'Testo da inserire: stazione, bus, quanto si cammina.'},
+    colazione:{it:'Testo da inserire.'},
+    rifiuti:{it:'Testo da inserire.'},
+    regole:{it:'Non si fuma dentro. Silenzio dalle 22:00 alle 7:00.'},
+    mangiare:{it:'Testo da inserire.'},
+    servizi:{it:'Testo da inserire.'},
+    fare:{it:'Testo da inserire.'},
+    pioggia:{it:'Testo da inserire.'},
+    checkout:{it:'Testo da inserire: chiavi, finestre, cosa lasciare com\'era.'}
+  },
+  piumogna:{
+    nome:'Casa Piumogna',
+    indirizzo:'6760 Faido',
+    mappa:'https://maps.google.com/?q=',
+    whatsapp:'41000000000',
+    wifi:{rete:'',pw:''},
+    orari:{ci:'15:00',co:'10:00'},
+    auto:{it:null}, treno:{it:null}, colazione:{it:null},
+    rifiuti:{it:null}, regole:{it:null}, mangiare:{it:null},
+    servizi:{it:null}, fare:{it:null}, pioggia:{it:null}, checkout:{it:null}
+  },
+  liberty:{
+    nome:'Casa Liberty',
+    indirizzo:'DA COMPLETARE',
+    mappa:'https://maps.google.com/?q=',
+    whatsapp:'41000000000',
+    wifi:{rete:'',pw:''},
+    orari:{ci:'',co:''},
+    auto:{it:null}, treno:{it:null}, colazione:{it:null},
+    rifiuti:{it:null}, regole:{it:null}, mangiare:{it:null},
+    servizi:{it:null}, fare:{it:null}, pioggia:{it:null}, checkout:{it:null}
+  },
+  rustico:{
+    nome:'Rustico Orabino',
+    indirizzo:'6703 Osogna',
+    mappa:'https://maps.google.com/?q=',
+    whatsapp:'41000000000',
+    wifi:{rete:'',pw:''},
+    orari:{ci:'15:00',co:'10:00'},
+    auto:{it:null}, treno:{it:null}, colazione:{it:null},
+    rifiuti:{it:null}, regole:{it:null}, mangiare:{it:null},
+    servizi:{it:null}, fare:{it:null}, pioggia:{it:null}, checkout:{it:null}
+  },
+  rurale:{
+    nome:'Casa Rurale',
+    indirizzo:'6703 Osogna',
+    mappa:'https://maps.google.com/?q=',
+    whatsapp:'41000000000',
+    wifi:{rete:'',pw:''},
+    orari:{ci:'15:00',co:'10:00'},
+    auto:{it:null}, treno:{it:null}, colazione:{it:null},
+    rifiuti:{it:null}, regole:{it:null}, mangiare:{it:null},
+    servizi:{it:null}, fare:{it:null}, pioggia:{it:null}, checkout:{it:null}
+  }
+};
+
+/* =========================================================================
+   3. DATI FINTI PER LA PROVA
+   Al posto di questo blocco arriverà la chiamata al server con il codice
+   del link. Per ora si cambia tutto dall'indirizzo, per esempio:
+   ospite.html?casa=piumogna&stato=2&lang=fr
+   ========================================================================= */
+const q=new URLSearchParams(location.search);
+
+// Se nell'indirizzo c'è la firma, i dati arrivano dal server.
+// Se non c'è, la pagina resta in modalità prova con dati finti,
+// così si può continuare a lavorarci senza una prenotazione vera.
+const HA_LINK = q.get('r') && q.get('h') && q.get('d') && q.get('s');
+
+let PREN={
+  casa:   q.get('casa')||'cvb',
+  nome:   q.get('nome')||'Marina Morgenthaler',
+  lang:   q.get('lang')||'de',
+  camera: q.get('camera')||'Tiglio',
+  ci:     q.get('ci')||'2026-09-18',
+  co:     q.get('co')||'2026-09-20',
+  fatta:  q.get('fatta')||'2026-08-26T06:39:58',
+  ospiti: parseInt(q.get('ospiti')||'3',10),
+  ospitiOk:parseInt(q.get('ospitiOk')||'1',10),
+  stato:  parseInt(q.get('stato')||'1',10),   // 1 dati mancanti, 2 manca conferma, 3 fatto
+  annullata: q.get('annullata')==='1',
+  linkDati:'#'
+};
+
+async function caricaDati(){
+  const r=await fetch('/api/ospite?r='+encodeURIComponent(q.get('r'))+
+                      '&h='+encodeURIComponent(q.get('h'))+
+                      '&d='+encodeURIComponent(q.get('d'))+
+                      '&s='+encodeURIComponent(q.get('s')));
+  const d=await r.json();
+  if(d.error)throw new Error(d.error);
+
+  // I tre stati si ricavano così:
+  // tutti gli ospiti registrati + check-in fatto -> 3
+  // tutti registrati ma check-in mancante        -> 2  (il caso più frequente)
+  // qualcuno ancora da registrare                -> 1
+  let stato=1;
+  if(d.checkin)stato=3;
+  else if(d.ospitiOk>=d.ospiti)stato=2;
+
+  PREN={...d,stato,linkDati:'#'};
+}
+
+/* =========================================================================
+   4. COSTRUZIONE DELLA PAGINA
+   ========================================================================= */
+let lang='it';
+let casa=CASE.cvb;
+
+function t(k){return (T[lang]&&T[lang][k])||T.it[k]||k;}
+
+// prende un testo della casa nella lingua giusta, con ripiego sull'italiano
+function testo(campo){
+  const c=casa[campo];
+  if(!c)return null;
+  return c[lang]||c.it||null;
+}
+
+function fmtData(iso){
+  const d=new Date(iso+'T12:00:00');
+  const loc={it:'it-CH',de:'de-CH',fr:'fr-CH',en:'en-GB'}[lang];
+  return d.toLocaleDateString(loc,{day:'numeric',month:'long'});
+}
+
+function fmtDataOra(iso){
+  const d=new Date(iso);
+  const loc={it:'it-CH',de:'de-CH',fr:'fr-CH',en:'en-GB'}[lang];
+  return d.toLocaleDateString(loc,{day:'numeric',month:'long'})+' '+t('alle')+' '+
+         d.toLocaleTimeString(loc,{hour:'2-digit',minute:'2-digit'});
+}
+
+function voce(titolo,contenuto,extra){
+  if(contenuto===null||contenuto===undefined||contenuto===''){
+    contenuto='<span class="mancante">'+t('manca')+'</span>';
+  }
+  return '<div class="voce"><h3>'+titolo+'</h3><p>'+contenuto+(extra||'')+'</p></div>';
+}
+
+function render(){
+  document.documentElement.lang=lang;
+
+  // barra lingue
+  document.getElementById('lingue').innerHTML=['it','de','fr','en'].map(l=>
+    '<button data-l="'+l+'" aria-current="'+(l===lang)+'">'+l.toUpperCase()+'</button>').join('');
+  document.querySelectorAll('.lingue button').forEach(b=>{
+    b.onclick=()=>{lang=b.dataset.l;render();};
+  });
+
+  // testata
+  const primoNome=PREN.nome.split(' ')[0];
+  document.getElementById('saluto').textContent=t('saluto')+' '+primoNome;
+  document.getElementById('titolo').innerHTML=casa.nome+
+    (PREN.camera?'<span class="camera">'+t('camera')+' '+PREN.camera+'</span>':'');
+  const notti=Math.round((new Date(PREN.co)-new Date(PREN.ci))/86400000);
+  document.getElementById('date').textContent=
+    t('dal')+' '+fmtData(PREN.ci)+' '+t('al')+' '+fmtData(PREN.co)+
+    ' · '+notti+' '+(notti===1?t('notte'):t('notti'));
+
+  // pannello stato: percorso a spunte
+  const box=document.getElementById('stato');
+  const st=PREN.stato;                       // 1 dati mancanti, 2 manca conferma, 3 fatto
+  if(PREN.annullata){
+    box.className='stato';box.style.borderTopColor='#B23A3A';
+    box.innerHTML='<h3>'+t('ann_tit')+'</h3><p>'+t('ann_txt')+'</p>';
+    document.getElementById('essenziale').innerHTML='';
+    document.getElementById('sezioni').innerHTML='';
+    document.getElementById('aiutoTesto').textContent=t('aiuto');
+    const a0=document.getElementById('aiutoLink');
+    a0.textContent=t('scrivici');a0.href='https://wa.me/'+casa.whatsapp;
+    return;
+  }
+  box.className='stato '+(st===3?'pronto':'attesa');
+  const cl=n=>st>n?'fatto':(st===n?'ora':'futuro');
+  box.innerHTML=
+    '<h2>'+t('soggiorno')+'</h2>'+
+    '<ol class="passi">'+
+      '<li class="fatto"><span class="eti">'+t('p1')+'</span>'+
+        '<span class="quando">'+fmtDataOra(PREN.fatta)+'</span></li>'+
+      '<li class="'+cl(1)+'"><span class="eti">'+t('p2')+'</span>'+
+        (st===1&&PREN.ospiti>PREN.ospitiOk
+          ? '<span class="quando">'+t('manca_persone')
+              .replace('{n}',PREN.ospiti-PREN.ospitiOk).replace('{tot}',PREN.ospiti)+'</span>'
+          : '')+'</li>'+
+      '<li class="'+cl(2)+'"><span class="eti">'+t('p3')+'</span></li>'+
+      '<li class="'+(st===3?'fatto':'futuro')+'"><span class="eti">'+t('p4')+'</span>'+
+        '<span class="quando">'+t('p4_nota')+'</span></li>'+
+    '</ol>'+
+    (st===3
+      ? '<div class="dafare"><h3>'+t('s3_tit')+'</h3><p>'+t('s3_txt')+'</p>'+
+        '<p class="sotto">'+t('s3_sotto')+'</p></div>'
+      : '<div class="dafare"><h3>'+t('s'+st+'_tit')+'</h3><p>'+t('s'+st+'_txt')+'</p>'+
+        '<a class="azione" href="'+PREN.linkDati+'">'+t('s'+st+'_btn')+'</a>'+
+        '<p class="sotto">'+t('s'+st+'_sotto')+'</p></div>');
+
+  // l'essenziale: i dati che servono sempre, subito sotto il percorso
+  document.getElementById('essenziale').innerHTML=
+    voce(t('indirizzo'),casa.indirizzo,
+      '<br><a href="'+casa.mappa+encodeURIComponent(casa.indirizzo)+'">'+t('mappa')+'</a>')+
+    voce(t('wifi'), casa.wifi&&casa.wifi.rete
+      ? t('rete')+': <span class="wifi">'+casa.wifi.rete+'</span><br>'+t('password')+': <span class="wifi">'+casa.wifi.pw+'</span>'
+      : null)+
+    voce(t('telefono'),'<a href="https://wa.me/'+casa.whatsapp+'">+'+casa.whatsapp+'</a>');
+
+  // sezioni
+  const orari=casa.orari&&casa.orari.ci
+    ? t('sez_arrivare')+': '+casa.orari.ci+' · '+t('checkout')+': '+casa.orari.co
+    : null;
+
+  document.getElementById('sezioni').innerHTML=
+    '<section><h2>'+t('sez_arrivare')+'</h2>'+
+      voce(t('auto'),testo('auto'))+
+      voce(t('treno'),testo('treno'))+
+    '</section>'+
+    '<section><h2>'+t('sez_entrare')+'</h2>'+
+      voce(t('orari'),orari)+
+    '</section>'+
+    '<section><h2>'+t('sez_casa')+'</h2>'+
+      voce(t('colazione'),testo('colazione'))+
+      voce(t('rifiuti'),testo('rifiuti'))+
+      voce(t('regole'),testo('regole'))+
+    '</section>'+
+    '<section><h2>'+t('sez_dintorni')+'</h2>'+
+      voce(t('mangiare'),testo('mangiare'))+
+      voce(t('servizi'),testo('servizi'))+
+      voce(t('fare'),testo('fare'))+
+      voce(t('pioggia'),testo('pioggia'))+
+    '</section>'+
+    '<section><h2>'+t('sez_partenza')+'</h2>'+
+      voce(t('checkout'),testo('checkout'))+
+    '</section>';
+
+  // barra in basso
+  document.getElementById('aiutoTesto').textContent=t('aiuto');
+  const a=document.getElementById('aiutoLink');
+  a.textContent=t('scrivici');
+  a.href='https://wa.me/'+casa.whatsapp;
+}
+
+function avvia(){
+  lang=['it','de','fr','en'].includes(PREN.lang)?PREN.lang:'en';
+  casa=CASE[PREN.casa]||CASE.cvb;
+  render();
+}
+
+if(HA_LINK){
+  caricaDati().then(avvia).catch(()=>{
+    document.getElementById('stato').innerHTML=
+      '<h3>Link non valido</h3><p>Questo link non funziona o è scaduto. '+
+      'Ci scriva su WhatsApp e gliene mandiamo uno nuovo.</p>'+
+      '<p>This link is not working. Please write to us on WhatsApp.</p>';
+    document.getElementById('aiutoTesto').textContent='';
+    const a=document.getElementById('aiutoLink');
+    a.textContent='WhatsApp';a.href='https://wa.me/'+CASE.cvb.whatsapp;
+  });
+}else{
+  avvia();
+}
+</script>
+</body>
+</html>
