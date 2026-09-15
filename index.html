@@ -253,6 +253,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div class="sec" id="sec-pren">
   <div class="row-bw" style="margin-bottom:10px;"><div class="mnav" style="margin:0;"><button onclick="chM(-1)">&#8249;</button><span class="mnav-lbl" id="mlbl-p"></span><button onclick="chM(1)">&#8250;</button></div></div>
+  <div id="airbnb-box"></div>
   <div class="stats" id="stats-p"></div>
   <div class="leg"><div class="li"><div class="ld" style="background:var(--bk)"></div>Booking</div><div class="li"><div class="ld" style="background:var(--di)"></div>Interno</div><div class="li"><div class="ld" style="background:var(--ab)"></div>Airbnb</div><div class="li"><div class="ld" style="background:var(--al)"></div>Altro</div></div>
   <div class="scroll-x"><table class="cal" id="cal-p"></table></div>
@@ -286,7 +287,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div><!-- end app-root -->
 
 <script>
-const APP_VERSION='v10.09-B';
+const APP_VERSION='v15.09-A';
 console.log('Casatonda app '+APP_VERSION);
 document.getElementById('verbadge').textContent=APP_VERSION;
 const SUPABASE_URL = 'https://qygrzzsukutoegkjpxea.supabase.co';
@@ -643,6 +644,7 @@ async function loadPrenFromCybHotel(){
             tar,totale,can,
             note:'',pagato,
             reservationNumber:p.reservationNumber,
+            email:(p.mainGuest&&p.mainGuest.email)||'',
             _cyb:true
           });
         }
@@ -945,7 +947,51 @@ async function chD(d){
 }
 function fmtLbl(d){return GGF[d.getDay()]+' '+d.getDate()+' '+MESI[d.getMonth()];}
 
+// Elenco delle prenotazioni Airbnb in arrivo che hanno ancora l'email finta.
+// Airbnb non fornisce l'email vera: va chiesta nella chat e incollata nel
+// gestionale a mano. Senza quella non partono conferma, modulo dati, QR e
+// Ticino Ticket. Qui sotto quelle ancora da sistemare.
+function emailFinta(e){
+  if(!e)return true;
+  return /@guest\.airbnb\.com$/i.test(e.trim());
+}
+
+function renderAirbnbBox(){
+  const box=document.getElementById('airbnb-box');
+  if(!box)return;
+  if(!isAdmin()){box.innerHTML='';return;}
+
+  const oggi=fmtD(new Date());
+  const visti={};
+  (prenCache[casaId]||[]).forEach(p=>{
+    if(p.can!=='airbnb')return;
+    if(p.ci<oggi)return;                       // solo arrivi da oggi in poi
+    if(!emailFinta(p.email))return;
+    if(visti[p.reservationNumber])return;
+    visti[p.reservationNumber]=p;
+  });
+  const lista=Object.values(visti).sort((a,b)=>a.ci<b.ci?-1:1);
+
+  if(!lista.length){box.innerHTML='';return;}
+
+  const righe=lista.map(p=>{
+    const gg=diffD(oggi,p.ci);
+    const quando=gg<=0?'oggi':(gg===1?'domani':'fra '+gg+' giorni');
+    return `<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(0,0,0,0.07)">
+      <div><b>${p.nome}</b><div style="font-size:12px;color:#666">${p.cam} · ${p.ci} · ${quando}</div></div>
+      <div style="font-size:12px;color:#666;white-space:nowrap">${p.reservationNumber}</div>
+    </div>`;
+  }).join('');
+
+  box.innerHTML=`<div style="background:#FFF6E5;border:1px solid #E8C97A;border-radius:10px;padding:12px 14px;margin:10px 0">
+    <div style="font-weight:600;margin-bottom:4px">Airbnb: manca l'email (${lista.length})</div>
+    <div style="font-size:12px;color:#666">Chiedila nella chat di Airbnb e incollala nel gestionale, altrimenti non partono conferma, QR e Ticino Ticket.</div>
+    ${righe}
+  </div>`;
+}
+
 function renderPren(){
+  renderAirbnbBox();
   const Y=vMonth.getFullYear(),M=vMonth.getMonth(),days=new Date(Y,M+1,0).getDate();
   document.getElementById('mlbl-p').textContent=MESI[M]+' '+Y;
   const ms=fmtD(new Date(Y,M,1)),me=fmtD(new Date(Y,M,days));
